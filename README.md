@@ -67,7 +67,8 @@ Window properties can be used as follows -
 
 #####Similarly, to display the track name 
 
-```<control type="label">
+```
+<control type="label">
     <label>$INFO[Window(12006).Property(trackstring)]</label>
     <scroll>true</scroll>
     <scrollout>false</scrollout>
@@ -77,7 +78,8 @@ Window properties can be used as follows -
 
 #####Displaying a logo
 
-```<control type="image">
+```
+<control type="image">
     <left>0</left>
     <top>-90</top>
     <width>400</width>
