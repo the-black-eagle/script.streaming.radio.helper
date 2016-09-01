@@ -60,7 +60,8 @@ Window properties can be used as follows -
 	<label>$INFO[Window(12006).Property(artiststring)]</label>
 	<scroll>true</scroll>
 		<visible>Player.IsInternetStream</visible>
-</control>```
+</control>
+```
 
 #####Similarly, to display the track name 
 
