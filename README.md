@@ -15,7 +15,7 @@ information in the same way as with a track from a local library.
 
 The script also supplies the full path to a logo (if found) as a property.  If there is no logo in
 the local music library the script will look in it's own cached logos.  If it still does not find
-one it will attempt to download one from fanart.tv and cache it for future re-use.
+one it will attempt to download one from fanart.tv or theaudiodb and cache it for future re-use.
 
 All window properties are set for the full screen visualisation window (12006).
 
@@ -38,6 +38,8 @@ eg - set 'replace' to 'planetrock' and 'with' to 'Planet Rock' to pretty format 
 The actual stream will be something like 'http://some-streaming-radio-server/station-related-name.mp3'
 Without setting any replacement strings, the addon will display 'station-related-name'
 You can use replace 'station-related-name' with 'Proper Station Name'
+
+This can be done for five radio stations.
 
 
 Window properties set by the script
