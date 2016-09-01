@@ -29,12 +29,13 @@ import xbmc ,xbmcvfs, xbmcaddon
 import xbmcgui
 import urllib
 import sys
+from resources.lib.audiodb import audiodbinfo as settings
 if sys.version_info >= (2, 7):
     import json as _json
 else:
     import simplejson as _json
 # Addon Stuff
-
+rusty_gate = settings.rusty_gate
 addon = xbmcaddon.Addon()
 addonname = addon.getAddonInfo('name')
 addonversion = addon.getAddonInfo('version')
@@ -45,7 +46,6 @@ addonid = addon.getAddonInfo('id').decode('utf-8')
 BaseString = addon.getSetting('musicdirectory')     # Base directory for Music albums
 logostring = xbmc.translatePath('special://profile/addon_data/' + addonid +'/').decode('utf-8') # Base directory to store downloaded logos
 was_playing =""
-API_KEY = '64526564694f534d656544'
 BaseString = xbmc.validatePath(BaseString)
 fanart = addon.getSetting('usefanarttv')
 tadb = addon.getSetting('usetadb')
@@ -127,10 +127,11 @@ def get_hdlogo(mbid, artist):
     else:
         return None
 def search_tadb(mbid,artist):
-    artist = artist.replace(" ","+")
-    url = "http://www.theaudiodb.com/api/v1/json/"+API_KEY+"/search.php?s="+artist
+    artist = artist.replace(" ","+").replace('/','\/')
+    url = 'http://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
+    searchurl = url + '/search.php?s=' + artist
     log("Looking up %s on tadb.com" % artist)
-    response = urllib.urlopen(url).read()
+    response = urllib.urlopen(searchurl).read()
     index1 = response.find("strArtistLogo")
     if index1 != -1:
         index2 = response.find(',"strArtistFanart')
@@ -138,7 +139,7 @@ def search_tadb(mbid,artist):
         if chop == "":
             log("No logo found for %s, trying The %s" % (artist, artist))
             artist = 'The+' + artist
-            url = "http://www.theaudiodb.com/api/v1/json/"+API_KEY+"/search.php?s="+artist
+            searchurl = url + '/search.php?s=' + artist
             log("Looking up %s on tadb.com" % artist)
             response = urllib.urlopen(url).read()
             index1 = response.find("strArtistLogo")
@@ -184,7 +185,8 @@ try:
         log("Script already running")
         exit(0)
     if BaseString == "":
-        Addon.OpenSettings(addonname)
+        addon.openSettings(addonname)
+        
     WINDOW.setProperty("radio-streaming-helper-running","true")
     log("Version %s started" % addonversion)
     log("----------Settings----------")
