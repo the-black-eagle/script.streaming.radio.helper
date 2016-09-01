@@ -8,19 +8,19 @@
     </category>
     <category label="32005">
         <setting type="lsep" label="32006"/>
-        <setting type="text" label="32007" id="st1find"/>
-        <setting type="text" label="32008" id="st1rep"/>
+        <setting type="text" label="32007" id="st1find" default=" "/>
+        <setting type="text" label="32008" id="st1rep" default=" "/>
         <setting type="lsep" label="32009"/>
-        <setting type="text" label="32007" id="st2find"/>
-        <setting type="text" label="32008" id="st2rep"/>
+        <setting type="text" label="32007" id="st2find" default=" "/>
+        <setting type="text" label="32008" id="st2rep" default=" "/>
         <setting type="lsep" label="32010"/>
-        <setting type="text" label="32007" id="st3find"/>
-        <setting type="text" label="32008" id="st3rep"/>
+        <setting type="text" label="32007" id="st3find" default=" "/>
+        <setting type="text" label="32008" id="st3rep" default=" "/>
         <setting type="lsep" label="32011"/>
-        <setting type="text" label="32007" id="st4find"/>
-        <setting type="text" label="32008" id="st4rep"/>
+        <setting type="text" label="32007" id="st4find" default=" "/>
+        <setting type="text" label="32008" id="st4rep" default=" "/>
         <setting type="lsep" label="32012"/>
-        <setting type="text" label="32007" id="st5find"/>
-        <setting type="text" label="32008" id="st5rep"/>
+        <setting type="text" label="32007" id="st5find" default=" "/>
+        <setting type="text" label="32008" id="st5rep" default=" "/>
     </category>
 </settings>
