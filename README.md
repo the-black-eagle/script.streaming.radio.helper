@@ -57,34 +57,36 @@ Window properties can be used as follows -
 
 ```
 <control type="label">
-	<label>$INFO[Window(12006).Property(artiststring)]</label>
-	<scroll>true</scroll>
-		<visible>Player.IsInternetStream</visible>
+    <label>$INFO[Window(12006).Property(artiststring)]</label>
+    <scroll>true</scroll>
+    <visible>Player.IsInternetStream</visible>
 </control>
 ```
 
 #####Similarly, to display the track name 
 
 ```<control type="label">
-	<label>$INFO[Window(12006).Property(trackstring)]</label>
-	<scroll>true</scroll>
-	<scrollout>false</scrollout>
-	<visible>Player.IsInternetStream</visible>
-</control>```
+    <label>$INFO[Window(12006).Property(trackstring)]</label>
+    <scroll>true</scroll>
+    <scrollout>false</scrollout>
+    <visible>Player.IsInternetStream</visible>
+</control>
+```
 
 #####Displaying a logo
 
 ```<control type="image">
-	<left>0</left>
-	<top>-90</top>
-	<width>400</width>
-	<height>155</height>
-	<texture>$INFO[Window.(12006).Property(logopath)]</texture>
-	<fadetime>300</fadetime>
-	<aspectratio align="left">keep</aspectratio>
-	<animation effect="fade" end="100" condition="true">Conditional</animation>
-	<visible>Player.IsInternetStream+StringCompare(Window.(12006).Property(haslogo),Control.GetLabel(9998))</visible>
-</control>```
+    <left>0</left>
+    <top>-90</top>
+    <width>400</width>
+    <height>155</height>
+    <texture>$INFO[Window.(12006).Property(logopath)]</texture>
+    <fadetime>300</fadetime>
+    <aspectratio align="left">keep</aspectratio>
+    <animation effect="fade" end="100" condition="true">Conditional</animation>
+    <visible>Player.IsInternetStream+StringCompare(Window.(12006).Property(haslogo),Control.GetLabel(9998))</visible>
+</control>
+```
 
 In the above, label id 9998 is an invisible label with the text set to 'true'
 
