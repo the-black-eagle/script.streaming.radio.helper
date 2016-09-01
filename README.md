@@ -90,9 +90,9 @@ In the above, label id 9998 is an invisible label with the text set to 'true'
 
 
 The script is started by adding the following line to MusicVisualisation.xml
-
-######<onload>RunScript(script.radio.streaming.helper)</onload>
-
+```
+<onload>RunScript(script.radio.streaming.helper)</onload>
+```
 This means the script is started when entering the full screen music visualisation window.  It will
 continue to run as long as kodi is playing audio however it only sets any window properties or downloads
 logos if the audio is an internet stream.  The script exits when kodi stops playing audio.
