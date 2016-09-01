@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<addon id="script.radio.streaming.helper"
+      name="Streaming Radio Helper"
+      version="0.2"
+      provider-name="black_eagle">
+  <requires>
+    <import addon="xbmc.python" version="2.1.0"/>
+  </requires>
+  <extension point="xbmc.python.script"
+            library="default.py" />
+  <extension point="xbmc.addon.metadata">
+    <platform>all</platform>
+    <summary lang="en">A Script to help skins display icy radio streams correctly as seperate artist and track</summary>
+    <description lang="en">Parses ICY and Shoutcast radio streams into window properties for a skin to display.  Also provides local or online logos</description>
+  </extension>
+</addon>

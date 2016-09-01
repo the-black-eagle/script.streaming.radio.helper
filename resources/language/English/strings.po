@@ -1,0 +1,59 @@
+# XBMC Media Center language file
+# Addon Name: Streaming Radio Helper
+# Addon id: script.streaming.radio.helper
+# Addon Provider: black_eagle
+msgid ""
+msgstr ""
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: en\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgctxt "#32001"
+msgid "Settings"
+msgstr ""
+
+msgctxt "#32002"
+msgid "Path to Music Library"
+msgstr ""
+
+msgctxt "#32003"
+msgid "Look up logos on Fanart.tv"
+msgstr ""
+
+msgctxt "#32004"
+msgid "Look up logos on theaudiodb"
+msgstr ""
+
+msgctxt "#32005"
+msgid "Station Names"
+msgstr ""
+
+msgctxt "#32006"
+msgid "Station 1"
+msgstr ""
+
+msgctxt "#32007"
+msgid "Replace - "
+msgstr ""
+
+msgctxt "#32008"
+msgid "With - "
+msgstr ""
+
+msgctxt "#32009"
+msgid "Station 2"
+msgstr ""
+
+msgctxt "#32010"
+msgid "Station 3"
+msgstr ""
+
+msgctxt "#32011"
+msgid "Station 4"
+msgstr ""
+
+msgctxt "#32012"
+msgid "Station 5"
+msgstr ""
