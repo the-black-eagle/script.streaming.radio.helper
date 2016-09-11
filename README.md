@@ -17,6 +17,11 @@ The script also supplies the full path to a logo (if found) as a property.  If t
 the local music library the script will look in it's own cached logos.  If it still does not find
 one it will attempt to download one from fanart.tv or theaudiodb and cache it for future re-use.
 
+Further, the script attempts to match the currently playing track to an album and year.  This is done with
+a search on theaudiodb.  To avoid excessive lookups, track, album and year data is cached by the script and online
+lookups are performed if the track has not been played before, or the cached data is older than 7 days.
+Cached data is saved either when the script stops or every 15 minutes when its running.
+
 All window properties are set for the full screen visualisation window (12006).
 
 ##Settings
@@ -52,6 +57,10 @@ trackstring - string. Contains track name.
 haslogo - boolean. true if the script found or downloaded a logo, false otherwise.
 
 logopath - fully qualified path to any logo found.
+
+albumtitle - title of an album the track is on, if found
+
+year - year of the album, if found
 
 Window properties can be used as follows -
 
