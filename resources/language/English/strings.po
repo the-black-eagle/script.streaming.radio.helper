@@ -57,3 +57,39 @@ msgstr ""
 msgctxt "#32012"
 msgid "Station 5"
 msgstr ""
+
+msgctxt "#32013"
+msgid "Look up logos online"
+msgstr ""
+
+msgctxt "#32014"
+msgid "INFORMATION"
+msgstr ""
+
+msgctxt "#32015"
+msgid "If you are seeing this screen for the first time"
+msgstr ""
+
+msgctxt "#32016"
+msgid "you MUST as a minimum set the path for your local music directory"
+msgstr ""
+
+msgctxt "#32017"
+msgid "and restart your radio stream for the change to take effect"
+msgstr ""
+
+msgctxt "#32018"
+msgid "If you change any addon settings you must stop and restart your stream"
+msgstr ""
+
+msgctxt "#32019"
+msgid "for the changes to take effect"
+msgstr ""
+
+msgctxt "#32020"
+msgid "If you do not set any substitutions for station names"
+msgstr ""
+
+msgctxt "#32021"
+msgid "it is possible you may not see a station name at all"
+msgstr ""
