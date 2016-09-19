@@ -9,17 +9,18 @@ had to see if I could do something about it and find a way to make my streaming 
 
 This script is the result of that.
 
-It runs in the background when kodi is streaming audio, split the track info into 
-seperate artist and track details and set some window properties so that skins can present the 
+It runs in the background when kodi is streaming audio, splits the track info into 
+separate artist and track details and sets some window properties so that skins can present the 
 information in the same way as with a track from a local library.
 
 The script also supplies the full path to a logo (if found) as a property.  If there is no logo in
 the local music library the script will look in it's own cached logos.  If it still does not find
 one it will attempt to download one from fanart.tv or theaudiodb and cache it for future re-use.
 
-Further, the script attempts to match the currently playing track to an album and year.  This is done with
+The script attempts to match the currently playing track to an album and year.  This is done with
 a search on theaudiodb.  To avoid excessive lookups, track, album and year data is cached by the script and online
-lookups are performed if the track has not been played before, or the cached data is older than 7 days.
+lookups are performed if the track has not been played before, or the cached data is older than 7 days. It is possible to 
+force all tracks to be re-cached by creating an empty file in the add-ons data directory called "refreshdata".
 Cached data is saved either when the script stops or every 15 minutes when its running.
 
 All window properties are set for the full screen visualisation window (12006).
@@ -120,3 +121,6 @@ logos if the audio is an internet stream.  The script exits when kodi stops play
 
 [![screenshot035.png](https://s5.postimg.org/8eqlyd72f/screenshot035.png)](https://postimg.org/image/fupvk5urn/)
 
+The modifed MusicVisualisation.xml for AeonMQ7 used in the example screenshots can be downloaded from https://github.com/the-black-eagle/MQ7-MusicVisualisation.mod  Install Aeon MQ7, overwrite the MusicVisualisation.xml file with the one from github, install the add-on and set the path to your music directory and any radio station names you require. 
+
+Enjoy !!
