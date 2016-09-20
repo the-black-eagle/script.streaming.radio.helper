@@ -114,22 +114,22 @@ def get_year(artist,track,dict1,dict2,dict3):
         albumname = dict1[keydata]
         log("Album Name is %s" % albumname, xbmc.LOGDEBUG)
         datechecked = dict3[keydata]
-        log("Data for track '%s' on album '%s' last checked %s" % (track, albumname, str(datechecked.strftime("%d-%m-%Y"))))
+        log("Data for track '%s' on album '%s' added to cache on %s" % (track, albumname, str(datechecked.strftime("%d-%m-%Y"))))
         if datechecked < (todays_date - time_diff) or (xbmcvfs.exists(logostring + "refreshdata")):
             log( "Data needs refreshing - Looking up on TADB", xbmc.LOGWARNING)
             dict1[keydata], dict2[keydata] = tadb_trackdata(artist,track,dict1,dict2,dict3)
             dict3[keydata] = datetime.datetime.combine(datetime.date.today(),datetime.datetime.min.time())
-            log( "Got new data!!")
+            log( "Got new data for %s, %s" %( artist, track ))
             return dict1[keydata], dict2[keydata] 
         else:
-            log( "Using cached data" )
+            log( "Using cached data for %s, %s" %( artist, track) )
             return dict1[keydata],dict2[keydata]
     else:
-        log("New track - get data")
+        log("Track %s for artist %s not in cache - looking up" %( artist, track ))
         dict1[keydata], dict2[keydata] = tadb_trackdata(artist,track,dict1,dict2,dict3)
         
         dict3[keydata] = datetime.datetime.combine(datetime.date.today(),datetime.datetime.min.time())
-        log( "New data has been cached")
+        log( "Data for %s by %s added to cache" %( track, artist))
         return dict1[keydata], dict2[keydata]
      
 def tadb_trackdata(artist,track,dict1,dict2,dict3):
