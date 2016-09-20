@@ -111,12 +111,3 @@ The script is started by adding the following line to MusicVisualisation.xml
 This means the script is started when entering the full screen music visualisation window.  It will
 continue to run as long as kodi is playing audio however it only sets any window properties or downloads
 logos if the audio is an internet stream.  The script exits when kodi stops playing audio.
-
-###Examples
-
-[![screenshot034.png](https://s5.postimg.org/gvq49abrb/screenshot034.png)](https://postimg.org/image/jd1vgjvnn/)
-
-[![screenshot033.png](https://s5.postimg.org/5i3ky318n/screenshot033.png)](https://postimg.org/image/9r8b094hv/)
-
-[![screenshot035.png](https://s5.postimg.org/8eqlyd72f/screenshot035.png)](https://postimg.org/image/fupvk5urn/)
-
