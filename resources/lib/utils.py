@@ -127,7 +127,7 @@ def get_year(artist,track,dict1,dict2,dict3):
         log("Data for track '%s' on album '%s' last checked %s" % (track, albumname, str(datechecked.strftime("%d-%m-%Y"))), xbmc.LOGDEBUG)
         if (datechecked < (todays_date - time_diff)) or (xbmcvfs.exists(logostring + "refreshdata")):
             log( "Data might need refreshing", xbmc.LOGDEBUG)
-            if (dict1[keydata] == '') or (dict1[keydata] == None) or (dict1[keydata] == 'None') or (dict1[keydata] == 'null'):
+            if (dict1[keydata] == '') or (dict1[keydata] == None) or (dict1[keydata] == 'None') or (dict1[keydata] == 'null') or (xbmcvfs.exists(logostring + "refreshdata")):
                 log("No album data - checking TADB again", xbmc.LOGDEBUG)
                 dict1[keydata], dict2[keydata] = tadb_trackdata(artist,track,dict1,dict2,dict3)
                 dict3[keydata] = datetime.datetime.combine(datetime.date.today(),datetime.datetime.min.time())
@@ -168,9 +168,9 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3):
     try:
         response = urllib.urlopen(searchurl).read().decode('utf-8')
         if "service" in response:                # theaudiodb not available
-            log("No response from theaudiodb",, xbmc.LOGDEBUG)
+            log("No response from theaudiodb", xbmc.LOGDEBUG)
             if keydata in dict1:
-                log("Using data from cache and not refreshing", , xbmc.LOGDEBUG)
+                log("Using data from cache and not refreshing", xbmc.LOGDEBUG)
                 return dict1[keydata], dict2[keydata]    # so return the data we already have
             else:
                 return None,None # unless we don't have any
