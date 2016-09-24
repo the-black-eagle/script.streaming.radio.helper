@@ -4,17 +4,17 @@
 #  it under the terms of the GNU General Public License as published by
 #  the Free Software Foundation; either version 3 of the License, or
 #  (at your option) any later version.
-#  
+#
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-#  
+#
 #  You should have received a copy of the GNU General Public License
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
-#  
+#
 #  (C) Black_eagle 2016
 #
 #  WINDOW PROPERTIES SET BY THIS SCRIPT
@@ -43,7 +43,7 @@ from threading import Timer
 
 def script_exit():
     """Clears all the window properties and stops the timer used for auto-saving the data"""
-    
+
     WINDOW.clearProperty("radio-streaming-helper-running")
     WINDOW.clearProperty("artiststring")
     WINDOW.clearProperty("trackstring")
@@ -54,27 +54,27 @@ def script_exit():
     log("Script Stopped")
     rt.stop()
     exit()
-    
+
 def no_track():
     """Sets the appropriate window properties when we have no track to display"""
-    
+
     WINDOW.setProperty("artiststring","")
     WINDOW.setProperty("trackstring","")
     WINDOW.setProperty("haslogo","false")
     WINDOW.setProperty("logopath","")
     WINDOW.setProperty("albumtitle","")
     WINDOW.setProperty("year","")
-try:      
+try:
     WINDOW = xbmcgui.Window(12006)
     if WINDOW.getProperty("radio-streaming-helper-running") == "true" :
-        log("Script already running", xbmc.LOGWARNING)
+        log("Script already running - Not starting a new instance")
         exit(0)
     if BaseString == "":
         addon.openSettings(addonname)
-        
+
     WINDOW.setProperty("radio-streaming-helper-running","true")
     log("Version %s started" % addonversion)
-    log("----------Settings----------")
+    log("----------Settings-------------------------")
     log("Use fanart.tv : %s" % fanart)
     log("use tadb : %s" % tadb)
     log("changing %s to %s" % (st1find, st1rep))
@@ -83,16 +83,15 @@ try:
     log("changing %s to %s" % (st4find, st4rep))
     log("changing %s to %s" % (st5find, st5rep))
 
-    log("----------Settings----------")
+    log("----------Settings-------------------------")
     log("Setting up addon")
     if xbmcvfs.exists(logostring + "data.pickle"):
         dict1,dict2,dict3 = load_pickle()
     my_size = len(dict1)
-    log("Cache contains %d tracks" % my_size)
+    log("Cache contains %d tracks" % my_size, xbmc.LOGDEBUG)
     cut_off_date = todays_date - time_diff
-    log("Cached data obtained before before %s will be re-cached" % (cut_off_date.strftime("%d-%m-%Y")))
+    log("Cached data obtained before before %s will be refreshed if details are missing" % (cut_off_date.strftime("%d-%m-%Y")), xbmc.LOGDEBUG)
     rt = RepeatedTimer(900, save_pickle, dict1,dict2,dict3)
-    log("Auto saving data every 15 minutes")
 
 # Main Loop
     while (not xbmc.abortRequested):
@@ -125,7 +124,7 @@ try:
                     station = st2rep
                 if st1find in station_list:
                     station = st1rep
-                log("Station name was : %s - changed to %s" % ( station_list, station))
+                log("Station name was : %s - changed to %s" % ( station_list, station), xbmc.LOGDEBUG)
                 WINDOW.setProperty("stationname",station)
             if "T - Rex" in current_track:
                 current_track = current_track.replace("T - Rex","T-Rex")
@@ -163,14 +162,14 @@ try:
                     testpath = BaseString + artist + "/logo.png"
                     testpath = xbmc.validatePath(testpath)
                     if xbmcvfs.exists(testpath):     # See if there is a logo in the music directory
-                        WINDOW.setProperty("haslogo", "true") 
+                        WINDOW.setProperty("haslogo", "true")
                         WINDOW.setProperty("logopath", testpath)
                         log("Logo in Music Directory : Path is %s" % testpath, xbmc.LOGDEBUG)
                     else:
                         WINDOW.setProperty("haslogo", "false")
                         log("No logo in music directory", xbmc.LOGDEBUG)
                         searchartist = artist.replace('feat ','~').replace('ft ','~').strip('.')
-                        
+
                         x = searchartist.find('~')
                         if x != -1:
                             searchartist = artist[: x-1]
@@ -219,7 +218,7 @@ try:
             log("Not playing audio")
             save_pickle(dict1,dict2,dict3)
             script_exit()
-                
+
 except Exception as e:
     log("There was an error : %s" %e, xbmc.LOGERROR)
     save_pickle(dict1,dict2,dict3)
