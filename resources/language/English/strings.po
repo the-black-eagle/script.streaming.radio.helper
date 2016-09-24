@@ -99,5 +99,5 @@ msgid "Thanks"
 msgstr ""
 
 msgctxt "#32023"
-msgid "Debug to Kodi debug log"
+msgid "Debug to Kodi log"
 msgstr ""
