@@ -93,3 +93,11 @@ msgstr ""
 msgctxt "#32021"
 msgid "it is possible you may not see a station name at all"
 msgstr ""
+
+msgctxt "#32022"
+msgid "Thanks"
+msgstr ""
+
+msgctxt "#32023"
+msgid "Debug to Kodi debug log"
+msgstr ""
