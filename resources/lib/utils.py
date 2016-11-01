@@ -133,7 +133,7 @@ def get_year(artist,track,dict1,dict2,dict3):
                 dict3[keydata] = datetime.datetime.combine(datetime.date.today(),datetime.datetime.min.time())
                 log("Data refreshed")
             elif (dict2[keydata] == None) or (dict2[keydata] == '0') or (dict2[keydata] == ''):
-                log("No year data for album %s - checking TADB again", xbmc.LOGDEBUG)
+                log("No year data for album %s - checking TADB again" % dict1[keydata], xbmc.LOGDEBUG)
                 dict1[keydata], dict2[keydata] = tadb_trackdata(artist,track,dict1,dict2,dict3)
                 dict3[keydata] = datetime.datetime.combine(datetime.date.today(),datetime.datetime.min.time())
                 log("Data refreshed", xbmc.LOGDEBUG)
@@ -200,8 +200,8 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3):
             return album_title, None
         log("Got '%s' as the year for '%s'" % ( the_year, album_title), xbmc.LOGDEBUG)
         return album_title, the_year
-    except Exception as e:
-        log("Error searching theaudiodb for album and year data : %S" %e, xbmc.LOGERROR)
+    except:
+        log("Error searching theaudiodb for album and year data", xbmc.LOGERROR)
         if keydata in dict1:
             return dict1[keydata], dict2[keydata]
         else:
@@ -217,7 +217,9 @@ def get_mbid(artist):
 
     log("Getting mbid for artist %s " % artist, xbmc.LOGDEBUG)
     try:
-        url = "http://musicbrainz.org/ws/2/artist/?query=artist:" + artist.encode('utf-8')
+
+        url = 'http://musicbrainz.org/ws/2/artist/?query=artist:%s' % artist
+        url = url.encode('utf-8')
         response = urllib.urlopen(url).read()
         if response == '':
             log("Unable to contact Musicbrainz to get an MBID", xbmc.LOGDEBUG)
@@ -227,13 +229,15 @@ def get_mbid(artist):
         mbid = response[index1+11:index2-2].strip()
         if '"' in mbid:
             mbid = mbid.strip('"')
+        if len(mbid )> 36:
+            mbid = mbid[0:36]
         log('Got an MBID of : %s' % mbid, xbmc.LOGDEBUG)
         if mbid == '':
             log("Didn't get an MBID for artist : %s", xbmc.LOGDEBUG)
             return None
         return mbid
-    except Exception as e:
-        log ("Error getting Musicbrainz ID" %e, xbmc.LOGERROR)
+    except:
+        log ("There was an error getting the Musicbrainz ID", xbmc.LOGERROR)
         return None
 
 def get_hdlogo(mbid, artist):
@@ -284,9 +288,10 @@ def get_hdlogo(mbid, artist):
                 log("Logo downloaded previously", xbmc.LOGDEBUG)
                 return logopath
             else:
+                log("No logo found on fanart.tv", xbmc.LOGDEBUG)
                 return None
-    except Exception as e:
-        log("Error searching fanart.tv for a logo : %S" %e, xbmc.LOGERROR)
+    except:
+        log("Error searching fanart.tv for a logo", xbmc.LOGERROR)
         return None
 
 def search_tadb(mbid,artist):
@@ -318,13 +323,12 @@ def search_tadb(mbid,artist):
                     log("No logo found for %s" % artist, xbmc.LOGDEBUG)
                     return None
             else:
-                xbmc.sleep(1000)
                 searchartist = 'The+' + searchartist
-                url = 'http://www.theaudiodb.com/api/v1/json/1'
+                url = 'http://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
 
                 searchurl = url + '/search.php?s=' + searchartist
                 log("Looking up %s on tadb.com with URL %s" % (searchartist, searchurl), xbmc.LOGDEBUG)
-                response = urllib.urlopen(url).read()
+                response = urllib.urlopen(searchurl).read()
                 log(response)
                 if (response == '') or (response == '{"artists":null}') or ("!DOCTYPE" in response):
                     log("No logo found on tadb", xbmc.LOGDEBUG)
@@ -335,19 +339,33 @@ def search_tadb(mbid,artist):
                     if (chop == "") or (chop == "null"):
                         log("No logo found on tadb", xbmc.LOGDEBUG)
                         return None
+                    check_mbid = searching['artists'][0]['strMusicBrainzID']
+                    if (mbid != check_mbid) and (check_mbid != 'null'):
+                        mbid = check_mbid
             url = chop
+
             logopath = logostring + mbid + '/'
             logopath = xbmc.validatePath(logopath)
-            xbmcvfs.mkdir(logopath)
-            log("Downloading logo from tadb and cacheing in %s" % logopath, xbmc.LOGDEBUG)
-            logopath = logopath + "logo.png"
-            imagedata = urllib.urlopen(url).read()
-            f = open(logopath,'wb')
-            f.write(imagedata)
-            f.close()
-            return logopath
-        except Exception as e:
-            log("Error searching theaudiodb for a logo : %s" %e, xbmc.LOGERROR)
+            if not xbmcvfs.exists(logopath):
+                xbmcvfs.mkdir(logopath)
+                log("Downloading logo from tadb and cacheing in %s" % logopath, xbmc.LOGDEBUG)
+                logopath = logopath + "logo.png"
+                imagedata = urllib.urlopen(url).read()
+                f = open(logopath,'wb')
+                f.write(imagedata)
+                f.close()
+                return logopath
+            else:
+                logopath = logostring + mbid + '/logo.png'
+                logopath = xbmc.validatePath(logopath)
+                if xbmcvfs.exists(logopath):
+                    log("Logo has already been downloaded and is in cache. Path is %s" % logopath, xbmc.LOGDEBUG)
+                    return logopath
+                else:
+                    return None
+
+        except:
+            log("Error searching theaudiodb for a logo", xbmc.LOGERROR)
             return None
 
     else:

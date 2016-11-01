@@ -71,7 +71,7 @@ try:
         exit(0)
     if BaseString == "":
         addon.openSettings(addonname)
-
+    
     WINDOW.setProperty("radio-streaming-helper-running","true")
     log("Version %s started" % addonversion)
     log("----------Settings-------------------------")
@@ -82,7 +82,7 @@ try:
     log("changing %s to %s" % (st3find, st3rep))
     log("changing %s to %s" % (st4find, st4rep))
     log("changing %s to %s" % (st5find, st5rep))
-
+    
     log("----------Settings-------------------------")
     log("Setting up addon")
     if xbmcvfs.exists(logostring + "data.pickle"):
@@ -92,8 +92,8 @@ try:
     cut_off_date = todays_date - time_diff
     log("Cached data obtained before before %s will be refreshed if details are missing" % (cut_off_date.strftime("%d-%m-%Y")), xbmc.LOGDEBUG)
     rt = RepeatedTimer(900, save_pickle, dict1,dict2,dict3)
-
-# Main Loop
+    
+    # Main Loop
     while (not xbmc.abortRequested):
         if xbmc.getCondVisibility("Player.IsInternetStream"):
             current_track = xbmc.getInfoLabel("MusicPlayer.Title")
@@ -134,6 +134,8 @@ try:
                 track = track.strip().decode('utf-8')
                 if artist == "Pink":
                     artist = "P!nk"
+                if artist == "Florence & The Machine":
+                    artist = "Florence + The Machine"
                 if was_playing != track:
                     log("Checking station is the same" , xbmc.LOGDEBUG)
                     x = file_playing.rfind('/')
@@ -168,9 +170,10 @@ try:
                     else:
                         WINDOW.setProperty("haslogo", "false")
                         log("No logo in music directory", xbmc.LOGDEBUG)
-                        searchartist = artist.replace('feat ','~').replace('ft ','~').strip('.')
-
+                        searchartist = artist.replace(' feat ',' ~ ').replace(' ft ',' ~ ').strip('.')
+                        log("Searchartist is %s" % searchartist)
                         x = searchartist.find('~')
+                        log("searchartist.find('~') result was %s" % str(x))
                         if x != -1:
                             searchartist = artist[: x-1]
                         if onlinelookup == "true":
@@ -220,6 +223,6 @@ try:
             script_exit()
 
 except Exception as e:
-    log("There was an error : %s" %e, xbmc.LOGERROR)
+    log("Radio Streaming Helper has encountered an error and needs to close")
     save_pickle(dict1,dict2,dict3)
     script_exit()
