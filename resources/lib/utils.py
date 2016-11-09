@@ -69,7 +69,7 @@ if debugging == 'true' :
 else:
     debugging = False
 
-def log(txt, mylevel=xbmc.LOGNOTICE):
+def log(txt, mylevel=xbmc.LOGDEBUG):
     """
     Logs to Kodi's standard logfile
     """
