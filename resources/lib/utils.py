@@ -228,7 +228,8 @@ def get_mbid(artist):
 
     log("Getting mbid for artist %s " % artist, xbmc.LOGDEBUG)
     try:
-
+        if '/' in artist:
+			artist = artist.replace('/',' ')
         url = 'http://musicbrainz.org/ws/2/artist/?query=artist:%s' % artist
         url = url.encode('utf-8')
         response = urllib.urlopen(url).read()
@@ -421,6 +422,7 @@ def search_tadb(mbid, artist, dict4, dict5):
                 log("Logo has already been downloaded and is in cache. Path is %s" % logopath, xbmc.LOGDEBUG)
                 log("Checking thumb and banner data")
                 if (dict4[searchartist] != None) and (dict5[searchartist] != None): # have both banner and thumb
+                    log("Thumb and banner both cached already ")
                     return logopath, dict4[searchartist], dict5[searchartist]
                 else:
                     log("Artist or thumb data missing")
