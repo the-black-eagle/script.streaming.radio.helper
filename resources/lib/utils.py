@@ -229,7 +229,7 @@ def get_mbid(artist):
     log("Getting mbid for artist %s " % artist, xbmc.LOGDEBUG)
     try:
         if '/' in artist:
-			artist = artist.replace('/',' ')
+            artist = artist.replace('/',' ')
         url = 'http://musicbrainz.org/ws/2/artist/?query=artist:%s' % artist
         url = url.encode('utf-8')
         response = urllib.urlopen(url).read()
