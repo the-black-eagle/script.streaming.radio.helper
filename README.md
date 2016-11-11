@@ -63,6 +63,13 @@ albumtitle - title of an album the track is on, if found
 
 year - year of the album, if found
 
+NEW
+---
+
+srh.Artist.Thumb - URL to current artist thumb on theaudiodb if one exists
+
+srh.Artist.Banner - URL to current artist banner on theaudiodb if one exists
+
 Window properties can be used as follows -
 
 #####To display the artist name as parsed by the script when streaming
