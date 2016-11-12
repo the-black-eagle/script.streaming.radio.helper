@@ -65,6 +65,7 @@ st4rep = addon.getSetting('st4rep').strip()
 st5find = addon.getSetting('st5find').strip()
 st5rep = addon.getSetting('st5rep').strip()
 firstpass = 0
+WINDOW = xbmcgui.Window(12006)
 debugging = addon.getSetting('debug')
 if debugging == 'true' :
     debugging = True
@@ -316,7 +317,7 @@ def search_tadb(mbid, artist, dict4, dict5):
 
     logopath = logostring + mbid + "/logo.png"
     logopath = xbmc.validatePath(logopath)
-    if not xbmcvfs.exists(logopath):
+    if (not xbmcvfs.exists(logopath)) and (WINDOW.getProperty("haslogo") == "false"): # Don't need to look up a logo as we found one in the local directory
         log("Looking up %s on tadb.com" % artist, xbmc.LOGDEBUG)
         searchartist = artist.replace(" ","+")
         url = 'http://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
@@ -418,7 +419,7 @@ def search_tadb(mbid, artist, dict4, dict5):
         if searchartist in dict4:   # we have looked up this artist before
             logopath = logostring + mbid + '/logo.png'
             logopath = xbmc.validatePath(logopath)
-            if xbmcvfs.exists(logopath):
+            if (xbmcvfs.exists(logopath)) and (WINDOW.getProperty("haslogo") == "false"):
                 log("Logo has already been downloaded and is in cache. Path is %s" % logopath, xbmc.LOGDEBUG)
                 log("Checking thumb and banner data")
                 if (dict4[searchartist] != None) and (dict5[searchartist] != None): # have both banner and thumb
@@ -426,9 +427,14 @@ def search_tadb(mbid, artist, dict4, dict5):
                     return logopath, dict4[searchartist], dict5[searchartist]
                 else:
                     log("Artist or thumb data missing")
-            
+            elif WINDOW.getProperty("haslogo") == "true":
+                log("Using logo from local music directory - checking thumb and banner data")
+                if (dict4[searchartist] != None) and (dict5[searchartist] != None): # have both
+                    log("Thumb and banner both cached already ")
+                    return None, dict4[searchartist], dict5[searchartist] # Don't need the path as using local logo already
+                            
         # We haven't got any thumb or banner data before up OR thumb or banner data is missing so look up on tadb
-        log("Looking up thumb and banner data for artist %s (logo already in cache)" % artist)
+        log("Looking up thumb and banner data for artist %s (logo already obtained)" % artist)
         url = 'http://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
         searchurl = url + '/search.php?s=' + searchartist.encode('utf-8')
         log("URL for TADB is : %s" % searchurl, xbmc.LOGDEBUG)
