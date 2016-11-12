@@ -195,11 +195,15 @@ try:
                         log("Logo in Music Directory : Path is %s" % testpath, xbmc.LOGDEBUG)
                         
                         if onlinelookup == "true":
-                            mbid = get_mbid(searchartist)     # No logo in music directory - get artist MBID
+                            mbid = get_mbid(searchartist)   
                         else:
                             mbid = None
                         if tadb == "true":
                             logopath, ArtistThumb, ArtistBanner = search_tadb(mbid,searchartist, dict4, dict5)
+                        else:
+                            logopath=""
+                            ArtistThumb =""
+                            ArtistBanner=""
                     else:
                         WINDOW.setProperty("haslogo", "false")
                         log("No logo in music directory", xbmc.LOGDEBUG)
@@ -212,9 +216,13 @@ try:
                                 logopath = get_hdlogo(mbid, searchartist)     # Try and get a logo from cache directory or fanart.tv
                             if tadb == "true":
                                 logopath, ArtistThumb, ArtistBanner = search_tadb(mbid,searchartist, dict4, dict5)
+                            else:
+                                logopath=""
+                                ArtistThumb =""
+                                ArtistBanner=""
                         if logopath:     #     We have a logo to display
+                            log("Logo found in path %s " % logopath)
                             WINDOW.setProperty("logopath",logopath)
-                            log("Logo in script cache directory : Path is %s" % logopath, xbmc.LOGDEBUG)
                             WINDOW.setProperty("haslogo","true")
                         else:     #     No logos to display
                             WINDOW.setProperty("logopath","")
