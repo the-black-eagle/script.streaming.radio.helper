@@ -59,6 +59,44 @@ def script_exit():
     rt.stop()
     exit()
 
+def check_station(file_playing):
+    """Attempts to parse a URL to find the name of the station being played
+    and performs substitutions to 'pretty up' the name if those options
+    are set in the settings"""
+    try:
+        if 'icy-' in file_playing: # looking at an ICY stream
+            x = file_playing.rfind('/')
+            station_list = file_playing[x+1:]
+            if ('.' in station_list) and ("http" not in station_list):
+                station,ending = station_list.split('.')
+    
+        elif '|' in file_playing:
+            y = file_playing.rfind('|')
+            station_list = file_playing[:y]
+            x = station_list.rfind('/')
+            station = station_list[x+1:]
+        else:
+            station_list = file_playing.strip('http://')
+            x = station_list.rfind(':')
+            if x != -1:
+                station = station_list[:x]
+            else:
+                station = station_list
+        if st5find in station_list:
+            station = st5rep
+        if st4find in station_list:
+            station = st4rep
+        if st3find in station_list:
+            station = st3rep
+        if st2find in station_list:
+            station = st2rep
+        if st1find in station_list:
+            station = st1rep
+        return station, station_list
+    except Exception as e:
+        log("Error trying to parse station name [ %s ]" %str(e))
+        return 'Online Radio', file_playing
+
 def no_track():
     """Sets the appropriate window properties when we have no track to display"""
 
@@ -79,18 +117,18 @@ try:
         addon.openSettings(addonname)
     
     WINDOW.setProperty("radio-streaming-helper-running","true")
-    log("Version %s started" % addonversion)
-    log("----------Settings-------------------------")
-    log("Use fanart.tv : %s" % fanart)
-    log("use tadb : %s" % tadb)
-    log("changing %s to %s" % (st1find, st1rep))
-    log("changing %s to %s" % (st2find, st2rep))
-    log("changing %s to %s" % (st3find, st3rep))
-    log("changing %s to %s" % (st4find, st4rep))
-    log("changing %s to %s" % (st5find, st5rep))
+    log("Version %s started" % addonversion, xbmc.LOGNOTICE)
+    log("----------Settings-------------------------", xbmc.LOGNOTICE)
+    log("Use fanart.tv : %s" % fanart, xbmc.LOGNOTICE)
+    log("use tadb : %s" % tadb, xbmc.LOGNOTICE)
+    log("changing %s to %s" % (st1find, st1rep), xbmc.LOGNOTICE)
+    log("changing %s to %s" % (st2find, st2rep), xbmc.LOGNOTICE)
+    log("changing %s to %s" % (st3find, st3rep), xbmc.LOGNOTICE)
+    log("changing %s to %s" % (st4find, st4rep), xbmc.LOGNOTICE)
+    log("changing %s to %s" % (st5find, st5rep), xbmc.LOGNOTICE)
     
-    log("----------Settings-------------------------")
-    log("Setting up addon")
+    log("----------Settings-------------------------", xbmc.LOGNOTICE)
+    log("Setting up addon", xbmc.LOGNOTICE)
     if xbmcvfs.exists(logostring + "data.pickle"):
         dict1,dict2,dict3, dict4, dict5 = load_pickle()
     my_size = len(dict1)
@@ -111,32 +149,8 @@ try:
             if firstpass == 0:
                 firstpass = 1
                 log("File playing is %s" % file_playing, xbmc.LOGDEBUG)
-                x = file_playing.rfind('/')
-                station_check = file_playing[x+1:]
-                num = file_playing.count('/')
-                num2 = file_playing.count(':')
-                if num == 2:  # we only have an http address
-                    station_list = file_playing
-                else:
-                    station_list = station_check
-                station = station_list
-                if ('.' in station_list) and ("http" not in station_list):
-                    station,ending = station_list.split('.')
-                elif (':' in station_list) and ('http' in station_list):
-                    x = station_list.rfind(':')
-                    station = station_list[7,x]
-                else:
-                    station = station_list.strip('http://') 
-                if st5find in station_list:
-                    station = st5rep
-                if st4find in station_list:
-                    station = st4rep
-                if st3find in station_list:
-                    station = st3rep
-                if st2find in station_list:
-                    station = st2rep
-                if st1find in station_list:
-                    station = st1rep
+                station, station_list = check_station(file_playing)
+                
                 log("Station name was : %s - changed to %s" % ( station_list, station), xbmc.LOGDEBUG)
                 WINDOW.setProperty("stationname",station)
             if "T - Rex" in current_track:
@@ -144,46 +158,25 @@ try:
             if " - " in current_track:
                 artist,track = current_track.split(" - ")
                 artist = artist.strip().decode('utf-8')
+                artist = " ".join(artist.split())  # Make sure there are no extra spaces in the artist name as this causes issues
                 track = track.strip().decode('utf-8')
                 if artist == "Pink":
                     artist = "P!nk"
+                if artist == "ELO":
+                    artist = "E.L.O."
                 if artist == "Florence & The Machine":
                     artist = "Florence + The Machine"
                 if was_playing != track:
                     log("Checking station is the same" , xbmc.LOGDEBUG)
-                    x = file_playing.rfind('/')
-                    station_check = file_playing[x+1:]
-                    num = file_playing.count('/')
-                    num2 = file_playing.count(':')
-                    if num == 2:  # we only have an http address
-                        station_list = file_playing
-                    else:
-                        station_list = station_check
-                    station = station_list
-                    if ('.' in station_list) and ("http" not in station_list):
-                        station,ending = station_list.split('.')
-                    elif (':' in station_list) and ('http' in station_list):
-                        x = station_list.rfind(':')
-                        station = station_list[7,x]
-                    else:
-                        station = station_list.strip('http://') 
-                    if st5find in station_list:
-                        station = st5rep
-                    if st4find in station_list:
-                        station = st4rep
-                    if st3find in station_list:
-                        station = st3rep
-                    if st2find in station_list:
-                        station = st2rep
-                    if st1find in station_list:
-                        station = st1rep
+                    station, station_list = check_station(file_playing)
+                    
                     WINDOW.setProperty("stationname",station)
                     log("Track changed to %s by %s" % (track, artist), xbmc.LOGDEBUG)
                     log("Playing station : %s" % station, xbmc.LOGDEBUG)
                     logopath =''
                     testpath = BaseString + artist + "/logo.png"
                     testpath = xbmc.validatePath(testpath)
-                    searchartist = artist.replace(' feat ',' ~ ').replace(' ft ',' ~ ').strip('.')
+                    searchartist = artist.replace(' feat. ',' ~ ').replace(' ft. ',' ~ ').replace(' feat ', ' ~ ').replace(' ft ',' ~ ')
                     log("Searchartist is %s" % searchartist)
                     x = searchartist.find('~')
                     log("searchartist.find('~') result was %s" % str(x))
@@ -260,5 +253,7 @@ try:
 
 except Exception as e:
     log("Radio Streaming Helper has encountered an error and needs to close - %s" % str(e))
+    exc_type, exc_value, exc_traceback = sys.exc_info()
+    log(repr(traceback.format_exception(exc_type, exc_value,exc_traceback)))
     save_pickle(dict1,dict2,dict3,dict4, dict5)
     script_exit()
