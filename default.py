@@ -31,7 +31,7 @@
 
 import xbmc ,xbmcvfs, xbmcaddon
 import xbmcgui
-import urllib
+import urllib, urllib2
 import sys
 from resources.lib.audiodb import audiodbinfo as settings
 from resources.lib.utils import *
@@ -97,6 +97,13 @@ def check_station(file_playing):
         log("Error trying to parse station name [ %s ]" %str(e))
         return 'Online Radio', file_playing
 
+def slice_string(string1, string2, n):
+    start = string1.find(string2)
+    while start >= 0 and n > 1:
+        start = string1.find(string2, start+len(string2))
+        n -= 1
+    return start
+    
 def no_track():
     """Sets the appropriate window properties when we have no track to display"""
 
@@ -111,8 +118,8 @@ def no_track():
 try:
     WINDOW = xbmcgui.Window(12006)
     if WINDOW.getProperty("radio-streaming-helper-running") == "true" :
-        log("Script already running - Not starting a new instance")
-        exit(0)
+       log("Script already running - Not starting a new instance")
+       exit(0)
     if BaseString == "":
         addon.openSettings(addonname)
     
@@ -130,36 +137,49 @@ try:
     log("----------Settings-------------------------", xbmc.LOGNOTICE)
     log("Setting up addon", xbmc.LOGNOTICE)
     if xbmcvfs.exists(logostring + "data.pickle"):
-        dict1,dict2,dict3, dict4, dict5 = load_pickle()
+        dict1,dict2,dict3, dict4, dict5, dict6 = load_pickle()
     my_size = len(dict1)
     log("Cache contains %d tracks" % my_size, xbmc.LOGDEBUG)
     cut_off_date = todays_date - time_diff
     log("Cached data obtained before before %s will be refreshed if details are missing" % (cut_off_date.strftime("%d-%m-%Y")), xbmc.LOGDEBUG)
-    rt = RepeatedTimer(900, save_pickle, dict1,dict2,dict3, dict4, dict5)
+    rt = RepeatedTimer(900, save_pickle, dict1,dict2,dict3, dict4, dict5, dict6)
     
     # Main Loop
     while (not xbmc.abortRequested):
         if xbmc.getCondVisibility("Player.IsInternetStream"):
             current_track = xbmc.getInfoLabel("MusicPlayer.Title")
+#            current_track = "Gromee feat. Ma-Britt Scheffer - Fearless w Hot 100 - Gorąca Setka Hitów"
             player_details = xbmc.executeJSONRPC('{"jsonrpc":"2.0", "method":"Player.GetActivePlayers","id":1}' )
             player_id_temp = _json.loads(player_details)
             player_id = player_id_temp['result'][0]['playerid']
             json_query = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "Player.GetItem", "params": { "properties": [ "file"], "playerid":%d  }, "id": "AudioGetItem"}' % player_id)
             file_playing = _json.loads(json_query).get('result',{}).get('item',{}).get('file',[])
+            current_track = current_track.decode('utf-8')
             if firstpass == 0:
                 firstpass = 1
                 log("File playing is %s" % file_playing, xbmc.LOGDEBUG)
                 station, station_list = check_station(file_playing)
-                
                 log("Station name was : %s - changed to %s" % ( station_list, station), xbmc.LOGDEBUG)
                 WINDOW.setProperty("stationname",station)
             if "T - Rex" in current_track:
                 current_track = current_track.replace("T - Rex","T-Rex")
             if " - " in current_track:
-                artist,track = current_track.split(" - ")
-                artist = artist.strip().decode('utf-8')
-                artist = " ".join(artist.split())  # Make sure there are no extra spaces in the artist name as this causes issues
-                track = track.strip().decode('utf-8')
+                try:
+                    x = slice_string(current_track, ' - ',1)
+                    artist = current_track[:x]
+                    track = current_track[x+3:]
+                    artist = artist.strip()
+                    artist = " ".join(artist.split())  # Make sure there are no extra spaces in the artist name as this causes issues
+                    if replace1 in track:
+                        log("Found string %s to replace in track %s" %( replace1, track))
+                        track = track.replace(replace1,'')
+                    if replace2 in track:
+                        track = track.replace(replace2,'')
+                    if replace3 in track:
+                        track = track.replace(replace3,'')
+                    track = track.strip()
+                except Exception as e:
+                    log("[Exception %s] while trying to slice current_track %s" %(str(e), current_track))
                 if artist == "Pink":
                     artist = "P!nk"
                 if artist == "ELO":
@@ -169,7 +189,6 @@ try:
                 if was_playing != track:
                     log("Checking station is the same" , xbmc.LOGDEBUG)
                     station, station_list = check_station(file_playing)
-                    
                     WINDOW.setProperty("stationname",station)
                     log("Track changed to %s by %s" % (track, artist), xbmc.LOGDEBUG)
                     log("Playing station : %s" % station, xbmc.LOGDEBUG)
@@ -192,7 +211,7 @@ try:
                         else:
                             mbid = None
                         if tadb == "true":
-                            logopath, ArtistThumb, ArtistBanner = search_tadb(mbid,searchartist, dict4, dict5)
+                            artist, logopath, ArtistThumb, ArtistBanner = search_tadb(mbid,searchartist, dict4, dict5)
                         else:
                             logopath=""
                             ArtistThumb =""
@@ -208,7 +227,7 @@ try:
                             if fanart == "true":
                                 logopath = get_hdlogo(mbid, searchartist)     # Try and get a logo from cache directory or fanart.tv
                             if tadb == "true":
-                                logopath, ArtistThumb, ArtistBanner = search_tadb(mbid,searchartist, dict4, dict5)
+                                artist, logopath, ArtistThumb, ArtistBanner = search_tadb(mbid,searchartist, dict4, dict5)
                             else:
                                 logopath=""
                                 ArtistThumb =""
@@ -248,12 +267,12 @@ try:
             no_track()
         if xbmc.Player().isPlayingAudio() == False:
             log("Not playing audio")
-            save_pickle(dict1,dict2,dict3,dict4, dict5)
+            save_pickle(dict1,dict2,dict3,dict4, dict5,dict6)
             script_exit()
 
 except Exception as e:
     log("Radio Streaming Helper has encountered an error and needs to close - %s" % str(e))
     exc_type, exc_value, exc_traceback = sys.exc_info()
     log(repr(traceback.format_exception(exc_type, exc_value,exc_traceback)))
-    save_pickle(dict1,dict2,dict3,dict4, dict5)
+    save_pickle(dict1,dict2,dict3,dict4, dict5, dict6)
     script_exit()
