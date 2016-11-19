@@ -101,3 +101,23 @@ msgstr ""
 msgctxt "#32023"
 msgid "Debug to Kodi log"
 msgstr ""
+
+msgctxt "#32024"
+msgid "Remove extra info"
+msgstr ""
+
+msgctxt "#32025"
+msgid "Strings to remove"
+msgstr ""
+
+msgctxt "#32026"
+msgid "String 1"
+msgstr ""
+
+msgctxt "#32027"
+msgid "String 2"
+msgstr ""
+
+msgctxt "#32028"
+msgid "String 3"
+msgstr ""
