@@ -39,4 +39,10 @@
         <setting type="text" label="32008" id="st5rep" default=" "/>
         
     </category>
+    <category label="32024">
+		<setting type="lsep" label="32025"/>
+		<setting type="text" label="32026" id="remove1" default="w Hot 100 - Gorąca Setka Hitów"/>
+		<setting type="text" label="32027" id="remove2" default=""/>
+		<setting type="text" label="32028" id="remove3" default=""/>
+		</category>
 </settings>
