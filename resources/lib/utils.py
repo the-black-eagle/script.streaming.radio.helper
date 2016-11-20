@@ -398,7 +398,7 @@ def search_tadb(mbid, artist, dict4, dict5):
                         return artist, None, None, None
                     else:
                         searching = _json.loads(response)
-                        artist, url, dict4, dict5, mbid = parse_data (searching, searchartist, dict4, dict5, mbid)
+                        artist, url, dict4, dict5, mbid = parse_data (artist, searching, searchartist, dict4, dict5, mbid)
                 else:
                     searching = _json.loads(response)
                     artist, url, dict4, dict5, mbid = parse_data(artist, searching, searchartist, dict4, dict5, mbid)
