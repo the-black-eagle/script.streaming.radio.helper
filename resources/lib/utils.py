@@ -486,7 +486,7 @@ def search_tadb(mbid, artist, dict4, dict5):
                     log("Response was %s" %str(response))
                     if (response != '{"artists":null}') and (response != '') and ('!DOCTYPE' not in response):
                         searching = _json.loads(response)
-                        artist, url, dict4, dict5, mbid = parse_data (searching, searchartist, dict4, dict5, mbid)
+                        artist, url, dict4, dict5, mbid = parse_data (artist, searching, searchartist, dict4, dict5, mbid)
                     else:
                         log("Failed to find any artist info on theaudiodb")
                         return artist, None, None, None
