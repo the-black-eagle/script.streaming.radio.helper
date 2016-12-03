@@ -43,6 +43,7 @@ addonid = addon.getAddonInfo('id').decode('utf-8')
 # variables
 BaseString = addon.getSetting('musicdirectory')     # Base directory for Music albums
 logostring = xbmc.translatePath('special://profile/addon_data/' + addonid +'/').decode('utf-8') # Base directory to store downloaded logos
+logfile = xbmc.translatePath('special://temp/srh.log').decode('utf-8')
 was_playing =""
 dict1 = {} # Key = artistname+trackname, value = Album name
 dict2 = {} # Key = artistname+trackname, value = Album year
@@ -70,6 +71,7 @@ replace1 = addon.getSetting('remove1').strip().decode('utf-8')
 replace2 = addon.getSetting('remove2').strip()
 replace3 = addon.getSetting('remove3').strip()
 firstpass = 0
+previous_track = None
 WINDOW = xbmcgui.Window(12006)
 debugging = addon.getSetting('debug')
 if debugging == 'true' :
@@ -81,6 +83,7 @@ def log(txt, mylevel=xbmc.LOGDEBUG):
     """
     Logs to Kodi's standard logfile
     """
+    
     if debugging :
         mylevel=xbmc.LOGNOTICE
 
@@ -270,7 +273,6 @@ def get_mbid(artist):
         if mbid == '':
             log("Didn't get an MBID for artist : %s", xbmc.LOGDEBUG)
             log("using %s as emergency MBID" % em_mbid)
-
             return em_mbid
         if artist not in dict6:
             dict6[artist] = mbid
@@ -398,7 +400,7 @@ def search_tadb(mbid, artist, dict4, dict5):
                         return artist, None, None, None
                     else:
                         searching = _json.loads(response)
-                        artist, url, dict4, dict5, mbid = parse_data (searching, searchartist, dict4, dict5, mbid)
+                        artist, url, dict4, dict5, mbid = parse_data (artist, searching, searchartist, dict4, dict5, mbid)
                 else:
                     searching = _json.loads(response)
                     artist, url, dict4, dict5, mbid = parse_data(artist, searching, searchartist, dict4, dict5, mbid)
@@ -434,7 +436,13 @@ def search_tadb(mbid, artist, dict4, dict5):
         #  we need to check if we have thumb or banner data and only look up if not
         
         searchartist = artist.replace(" ","+")
-        
+        url = 'http://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
+        searchurl = url + '/artist-mb.php?i=' + mbid
+        log("MBID lookup to check artist name is correct")
+        response = urllib.urlopen(searchurl).read()
+        if (response != '{"artists":null}') and (response != '') and ('!DOCTYPE' not in response):
+            searching = _json.loads(response)
+            artist, url, dict4, dict5, mbid = parse_data (artist, searching, searchartist, dict4, dict5, mbid)
         if searchartist in dict4:   # we have looked up this artist before
             logopath = logostring + mbid + '/logo.png'
             logopath = xbmc.validatePath(logopath)
@@ -486,7 +494,7 @@ def search_tadb(mbid, artist, dict4, dict5):
                     log("Response was %s" %str(response))
                     if (response != '{"artists":null}') and (response != '') and ('!DOCTYPE' not in response):
                         searching = _json.loads(response)
-                        artist, url, dict4, dict5, mbid = parse_data (searching, searchartist, dict4, dict5, mbid)
+                        artist, url, dict4, dict5, mbid = parse_data (artist, searching, searchartist, dict4, dict5, mbid)
                     else:
                         log("Failed to find any artist info on theaudiodb")
                         return artist, None, None, None
