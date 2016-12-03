@@ -56,6 +56,7 @@ def script_exit():
     WINDOW.clearProperty("srh.Artist.Thumb")
     WINDOW.clearProperty("srh.Artist.Banner")
     log("Script Stopped")
+#    logit.close()
     rt.stop()
     exit()
 
@@ -98,6 +99,7 @@ def check_station(file_playing):
         return 'Online Radio', file_playing
 
 def slice_string(string1, string2, n):
+    if string2 == "" or string2 == None : return -1
     start = string1.find(string2)
     while start >= 0 and n > 1:
         start = string1.find(string2, start+len(string2))
@@ -139,6 +141,9 @@ try:
     if xbmcvfs.exists(logostring + "data.pickle"):
         dict1,dict2,dict3, dict4, dict5, dict6 = load_pickle()
     my_size = len(dict1)
+    if xbmcvfs.exists(logfile):
+        xbmcvfs.delete(logfile)
+#    logit = xbmcvfs.File(logfile,'w')
     log("Cache contains %d tracks" % my_size, xbmc.LOGDEBUG)
     cut_off_date = todays_date - time_diff
     log("Cached data obtained before before %s will be refreshed if details are missing" % (cut_off_date.strftime("%d-%m-%Y")), xbmc.LOGDEBUG)
@@ -170,19 +175,23 @@ try:
                     track = current_track[x+3:]
                     artist = artist.strip()
                     artist = " ".join(artist.split())  # Make sure there are no extra spaces in the artist name as this causes issues
-                    if replace1 in track:
-                        log("Found string %s to replace in track %s" %( replace1, track))
-                        track = track.replace(replace1,'')
-                    if replace2 in track:
-                        track = track.replace(replace2,'')
-                    if replace3 in track:
-                        track = track.replace(replace3,'')
+                    pos = slice_string(track,replace1,1)
+                    if pos != -1:
+                        track = track[:pos]
+                    else:
+                        pos = slice_string(track,replace2,1)
+                        if pos != -1:
+                            track = track[:pos]
+                        else:
+                            pos = slice_string(track,replace3,1)
+                            if pos != -1:
+                                track = track[:pos]
                     track = track.strip()
                 except Exception as e:
                     log("[Exception %s] while trying to slice current_track %s" %(str(e), current_track))
                 if artist == "Pink":
                     artist = "P!nk"
-                if artist == "ELO":
+                if (artist == "ELO") or (artist == "E.L.O"):
                     artist = "E.L.O."
                 if artist == "Florence & The Machine":
                     artist = "Florence + The Machine"
