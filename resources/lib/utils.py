@@ -515,9 +515,15 @@ def search_tadb(mbid, artist, dict4, dict5,checked_all_artists):
                 logopath = xbmc.validatePath(logopath)
                 if xbmcvfs.exists(logopath):
                     log("Logo has already been downloaded and is in cache. Path is %s" % logopath, xbmc.LOGDEBUG)
-                    return artist, logopath, dict4[searchartist], dict5[searchartist]
+                    if searchartist in dict4:
+                        return artist, logopath, dict4[searchartist], dict5[searchartist]
+                    else:
+                        return artist, logopath, None, None
                 else:
-                    return artist, None, dict4[searchartist], dict5[searchartist]
+                    if searchartist in dict4:
+                        return artist, None, dict4[searchartist], dict5[searchartist]
+                    else:
+                        return artist, None, None, None
             except Exception as e:
                 log("Error searching theaudiodb [ %s ]" % str(e), xbmc.LOGERROR)
                 exc_type, exc_value, exc_traceback = sys.exc_info()
