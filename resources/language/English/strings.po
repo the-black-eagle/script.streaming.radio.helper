@@ -121,3 +121,7 @@ msgstr ""
 msgctxt "#32028"
 msgid "String 3"
 msgstr ""
+
+msgctxt "#32029"
+msgid "Delay for Logo/thumb/banner rotation (in seconds)"
+msgstr ""
