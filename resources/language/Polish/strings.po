@@ -1,0 +1,123 @@
+# XBMC Media Center language file
+# Addon Name: Streaming Radio Helper
+# Addon id: script.streaming.radio.helper
+# Addon Provider: black_eagle
+msgid ""
+msgstr ""
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: en\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgctxt "#32001"
+msgid "Settings"
+msgstr "Ustawienia"
+
+msgctxt "#32002"
+msgid "Path to Music Library"
+msgstr "Ścieżka do Folderu z muzyką:"
+
+msgctxt "#32003"
+msgid "Look up logos on Fanart.tv"
+msgstr "Wyszukuj grafikę na serwisie Fanart.tv"
+
+msgctxt "#32004"
+msgid "Look up logos on theaudiodb"
+msgstr "Wyszukuj grafikę na serwisie theaudiodb"
+
+msgctxt "#32005"
+msgid "Station Names"
+msgstr "Nazwy stacji radiowych"
+
+msgctxt "#32006"
+msgid "Station 1"
+msgstr "1 stacja"
+
+msgctxt "#32007"
+msgid "Replace - "
+msgstr "Zastąp - "
+
+msgctxt "#32008"
+msgid "With - "
+msgstr "z "
+
+msgctxt "#32009"
+msgid "Station 2"
+msgstr "2 stacja"
+
+msgctxt "#32010"
+msgid "Station 3"
+msgstr "3 stacja"
+
+msgctxt "#32011"
+msgid "Station 4"
+msgstr "4 stacja"
+
+msgctxt "#32012"
+msgid "Station 5"
+msgstr "5 stacja"
+
+msgctxt "#32013"
+msgid "Look up logos online"
+msgstr "Wyszukuj logo, baner i miniaturę artysty w Internecie"
+
+msgctxt "#32014"
+msgid "INFORMATION"
+msgstr "INFORMACJA"
+
+msgctxt "#32015"
+msgid "If you are seeing this screen for the first time"
+msgstr "Jeżeli widzisz ten ekran po raz pierwszy"
+
+msgctxt "#32016"
+msgid "you MUST as a minimum set the path for your local music directory"
+msgstr "to MUSISZ przynajmniej ustawić ścieżkę do lokalnego katalogu z muzyką"
+
+msgctxt "#32017"
+msgid "and restart your radio stream for the change to take effect"
+msgstr "i ponownie uruchomić strumień radiowy."
+
+msgctxt "#32018"
+msgid "If you change any addon settings you must stop and restart your stream"
+msgstr "W przypadku dokonywania jakichkolwiek zmian w ustawieniach,"
+
+msgctxt "#32019"
+msgid "for the changes to take effect"
+msgstr "musisz - ZAWSZE - zatrzymać strumień radiowy i uruchomić go na nowo."
+
+msgctxt "#32020"
+msgid "If you do not set any substitutions for station names"
+msgstr "Jeżeli nie ustawiłeś żadnych podmian nazw stacji,"
+
+msgctxt "#32021"
+msgid "it is possible you may not see a station name at all"
+msgstr "może okazać się, że nie zobaczysz w ogóle nazwy stacj."
+
+msgctxt "#32022"
+msgid "Thanks"
+msgstr "Dzięki"
+
+msgctxt "#32023"
+msgid "Debug to Kodi log"
+msgstr "Zapisuj informacje debugera do pliku logu KODI"
+
+msgctxt "#32024"
+msgid "Remove extra info"
+msgstr "Usuwanie dodatkowych informacji na końcach nazw utworów"
+
+msgctxt "#32025"
+msgid "Strings to remove"
+msgstr "Łańcuchy znaków (łacznie z nimi) od których będzie usuwana dodatkowa informacja."
+
+msgctxt "#32026"
+msgid "String 1"
+msgstr "1 łancuch znaków:"
+
+msgctxt "#32027"
+msgid "String 2"
+msgstr "2 łancuch znaków:"
+
+msgctxt "#32028"
+msgid "String 3"
+msgstr "3 łancuch znaków:"
