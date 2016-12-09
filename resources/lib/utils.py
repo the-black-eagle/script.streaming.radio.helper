@@ -443,10 +443,13 @@ def search_tadb(mbid, artist, dict4, dict5,checked_all_artists):
         searchurl = url + '/artist-mb.php?i=' + mbid
         log("MBID lookup to check artist name is correct")
         if searchartist != "P!nk" or searchartist != "p!nk":
-            response = urllib.urlopen(searchurl).read()
-            if (response != '{"artists":null}') and (response != '') and ('!DOCTYPE' not in response):
-                searching = _json.loads(response)
-                artist, url, dict4, dict5, mbid = parse_data (artist, searching, searchartist, dict4, dict5, mbid)
+            try:
+                response = urllib.urlopen(searchurl).read()
+                if (response != '{"artists":null}') and (response != '') and ('!DOCTYPE' not in response):
+                    searching = _json.loads(response)
+                    artist, url, dict4, dict5, mbid = parse_data (artist, searching, searchartist, dict4, dict5, mbid)
+            except IOError:
+                pass
         if searchartist in dict4 and not checked_all_artists:   # we have looked up this artist before
             logopath = logostring + mbid + '/logo.png'
             logopath = xbmc.validatePath(logopath)
