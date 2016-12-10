@@ -70,6 +70,10 @@ st5rep = addon.getSetting('st5rep').strip()
 replace1 = addon.getSetting('remove1').decode('utf-8')
 replace2 = addon.getSetting('remove2').decode('utf-8')
 replace3 = addon.getSetting('remove3').decode('utf-8')
+if addon.getSetting('luma') == 'true':
+    luma = True
+else:
+    luma = False
 firstpass = 0
 delay = int(addon.getSetting('delay'))
 previous_track = None
@@ -379,8 +383,12 @@ def search_tadb(mbid, artist, dict4, dict5,checked_all_artists):
                 return artist, None ,None, None
             log(response)
             if response != '{"artists":null}':
-                searching = _json.loads(response)
-                artist, url, dict4, dict5, mbid = parse_data(artist, searching, searchartist, dict4, dict5, mbid)
+                try:
+                    searching = _json.loads(response)
+                    artist, url, dict4, dict5, mbid = parse_data(artist, searching, searchartist, dict4, dict5, mbid)
+                except:
+                    log("Error trying to unpack JSON - probably we haven't got any from TADB", xbmc.LOGERROR)
+                    return artist, None, None, None
             else:
                 searchartist = 'The+' + searchartist
                 url = 'http://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
@@ -427,7 +435,9 @@ def search_tadb(mbid, artist, dict4, dict5,checked_all_artists):
                     return artist, logopath, dict4[searchartist], dict5[searchartist]
                 else:
                     return artist, None, dict4[searchartist], dict5[searchartist]
-
+        except IOError:
+            log("IOError in function [search_tadb] No data from TADB was collected", xbmc.LOGERROR)
+            return artist, None, None, None
         except Exception as e:
             log("Error searching theaudiodb for a logo : [ %s ]" % str(e), xbmc.LOGERROR)
             exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -442,12 +452,19 @@ def search_tadb(mbid, artist, dict4, dict5,checked_all_artists):
         url = 'http://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
         searchurl = url + '/artist-mb.php?i=' + mbid
         log("MBID lookup to check artist name is correct")
-        if searchartist != "P!nk" or searchartist != "p!nk":
+        if searchartist != "P!nk" or searchartist != "p!nk" or searchartist !="Pink" or searchartist != "pink":
             try:
                 response = urllib.urlopen(searchurl).read()
                 if (response != '{"artists":null}') and (response != '') and ('!DOCTYPE' not in response):
-                    searching = _json.loads(response)
-                    artist, url, dict4, dict5, mbid = parse_data (artist, searching, searchartist, dict4, dict5, mbid)
+                    try:
+                        searching = _json.loads(response)
+                        artist, url, dict4, dict5, mbid = parse_data (artist, searching, searchartist, dict4, dict5, mbid)
+                    except ValueError:
+                        log ("JSON error in function [search_tadb]. It appears we have no data to return !!", xbmc.LOGERROR)
+                        if artist in dict4:
+                            return artist, logopath, dict4[artist], dict5[artist]  # probably no point returning these URL's as tadb is likely offline
+                        else:
+                            return artist, logopath, None, None
             except IOError:
                 pass
         if searchartist in dict4 and not checked_all_artists:   # we have looked up this artist before
@@ -469,7 +486,7 @@ def search_tadb(mbid, artist, dict4, dict5,checked_all_artists):
                 else:
                     log("Thumb or banner data missing - TADB will be re-checked")        
         # We haven't got any thumb or banner data before up OR thumb or banner data is missing so look up on tadb
-        log("Looking up thumb and banner data for artist %s (logo already obtained)" % artist)
+        log("Looking up thumb and banner data for artist %s" % artist)
         if not checked_all_artists:
             url = 'http://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
             searchurl = url + '/search.php?s=' + searchartist.encode('utf-8')
@@ -524,25 +541,23 @@ def search_tadb(mbid, artist, dict4, dict5,checked_all_artists):
                         return artist, None, dict4[searchartist], dict5[searchartist]
                     else:
                         return artist, None, None, None
+            except IOError:
+                log("IOError in function [search_tadb] No data from TADB was collected", xbmc.LOGERROR)
+                return artist, None, None, None
             except Exception as e:
                 log("Error searching theaudiodb [ %s ]" % str(e), xbmc.LOGERROR)
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 log(repr(traceback.format_exception(exc_type, exc_value,exc_traceback)))
-                log(artist, logopath, searchartist)
                 return artist, None, None, None
         logopath = logostring + mbid + '/logo.png'
         logopath = xbmc.validatePath(logopath)
-        if xbmcvfs.exists(logopath):
+        if xbmcvfs.exists(logopath) and searchartist in dict4:
             log("Logo has already been downloaded and is in cache. Path is %s" % logopath, xbmc.LOGDEBUG)
-            if searchartist in dict4:
-                return artist, logopath, dict4[searchartist], dict5[searchartist]
-            else:
-                return artist, logopath, None, None
-        else:
-            if searchartist in dict4:
+            return artist, logopath, dict4[searchartist], dict5[searchartist]
+        elif searchartist in dict4:
                 return artist, None, dict4[searchartist], dict5[searchartist]
-            else:
-                return artist, None, None, None
+        else:
+            return artist, None, None, None
 
 def parse_data(artist, searching, searchartist, dict4, dict5, mbid, logoflag="true"):
     """
@@ -552,7 +567,7 @@ def parse_data(artist, searching, searchartist, dict4, dict5, mbid, logoflag="tr
     """
     try:
         checkartist = searching['artists'][0]['strArtist']
-        if (checkartist.replace(' ','+') != searchartist):
+        if (checkartist.replace(' ','+') != searchartist) and (artist !="P!nk" or artist != "Pink"):
             artist = checkartist
             log("Updated artist name (%s) with data from tadb [%s]" % (searchartist.replace('+',' '), artist))
         _artist_thumb = searching['artists'][0]['strArtistThumb']

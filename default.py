@@ -109,11 +109,11 @@ def get_info(testpath, searchartist, artist, multi_artist, already_checked, chec
             WINDOW.setProperty("logopath","")
             log("No logo in cache directory", xbmc.LOGDEBUG)
             WINDOW.setProperty("haslogo","false")
-    if ArtistThumb != "":
+    if  ArtistThumb :
         WINDOW.setProperty("srh.Artist.Thumb", ArtistThumb)
-    if ArtistBanner != "":
+    if ArtistBanner :
         WINDOW.setProperty("srh.Artist.Banner", ArtistBanner)
-    if already_checked == False:
+    if not already_checked:
         log("Not checked the album and year data yet for this artist")
         already_checked, albumtitle, theyear = get_year(artist,track,dict1,dict2,dict3, already_checked)
         
@@ -223,6 +223,10 @@ try:
     log("changing %s to %s" % (st3find, st3rep), xbmc.LOGNOTICE)
     log("changing %s to %s" % (st4find, st4rep), xbmc.LOGNOTICE)
     log("changing %s to %s" % (st5find, st5rep), xbmc.LOGNOTICE)
+    if luma:
+        log("Lookup details for featured artists", xbmc.LOGNOTICE)
+    else:
+        log("Not looking up details for featured artists", xbmc.LOGNOTICE)
     
     log("----------Settings-------------------------", xbmc.LOGNOTICE)
     log("Setting up addon", xbmc.LOGNOTICE)
@@ -231,9 +235,6 @@ try:
     if xbmcvfs.exists(logostring + "data.pickle"):
         dict1,dict2,dict3, dict4, dict5, dict6 = load_pickle()
     my_size = len(dict1)
-    if xbmcvfs.exists(logfile):
-        xbmcvfs.delete(logfile)
-#    logit = xbmcvfs.File(logfile,'w')
     log("Cache contains %d tracks" % my_size, xbmc.LOGDEBUG)
     cut_off_date = todays_date - time_diff
     log("Cached data obtained before before %s will be refreshed if details are missing" % (cut_off_date.strftime("%d-%m-%Y")), xbmc.LOGDEBUG)
@@ -244,7 +245,7 @@ try:
         if xbmc.getCondVisibility("Player.IsInternetStream"):
             current_track = xbmc.getInfoLabel("MusicPlayer.Title")
 #            current_track = "Gromee feat. Ma-Britt Scheffer - Fearless w Hot 100 - Gorąca Setka Hitów"
-#            current_track = "Major Lazer feat. Justin Bieber - Cold Water"
+#            current_track = ""
 
             player_details = xbmc.executeJSONRPC('{"jsonrpc":"2.0", "method":"Player.GetActivePlayers","id":1}' )
             player_id_temp = _json.loads(player_details)
@@ -308,7 +309,7 @@ try:
                     else:
                         searchartists.append(searchartist)
                     num_artists = len(searchartists)
-                    if num_artists > 1:
+                    if num_artists > 1 and luma:
                         multi_artist = True
                     else:
                         multi_artist = False
@@ -332,7 +333,7 @@ try:
                 checked_all_artists, already_checked = no_track()
             xbmc.sleep(500)
         else:
-            no_track()
+            checked_all_artists, already_checked = no_track()
         if xbmc.Player().isPlayingAudio() == False:
             log("Not playing audio")
             save_pickle(dict1,dict2,dict3,dict4, dict5,dict6)
