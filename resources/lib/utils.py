@@ -234,6 +234,12 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3):
             return album_title, None
         log("Got '%s' as the year for '%s'" % ( the_year, album_title), xbmc.LOGDEBUG)
         return album_title, the_year
+    except IOError:
+        log("Timeout connecting to TADB", xbmc.LOGERROR)
+        if keydata in dict1:
+            return dict1[keydata], dict2[keydata]
+        else:
+            return None, None
     except Exception as e:
         log("Error searching theaudiodb for album and year data [ %s ]" % str(e), xbmc.LOGERROR)
         exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -437,6 +443,11 @@ def search_tadb(mbid, artist, dict4, dict5,checked_all_artists):
                     return artist, None, dict4[searchartist], dict5[searchartist]
         except IOError:
             log("IOError in function [search_tadb] No data from TADB was collected", xbmc.LOGERROR)
+            if searchartist in dict4:
+                if xbmcvfs.exists(logopath):
+                    return artist, logopath,dict4[searchartist], dict5[searchartist]
+                else:
+                    return artist, None, dict4[searchartist], dict5[searchartist]
             return artist, None, None, None
         except Exception as e:
             log("Error searching theaudiodb for a logo : [ %s ]" % str(e), xbmc.LOGERROR)
@@ -462,7 +473,7 @@ def search_tadb(mbid, artist, dict4, dict5,checked_all_artists):
                     except ValueError:
                         log ("JSON error in function [search_tadb]. It appears we have no data to return !!", xbmc.LOGERROR)
                         if artist in dict4:
-                            return artist, logopath, dict4[artist], dict5[artist]  # probably no point returning these URL's as tadb is likely offline
+                            return artist, logopath, dict4[artist], dict5[artist]  # Kodi's thumbnail cache will return images 
                         else:
                             return artist, logopath, None, None
             except IOError:
@@ -543,6 +554,11 @@ def search_tadb(mbid, artist, dict4, dict5,checked_all_artists):
                         return artist, None, None, None
             except IOError:
                 log("IOError in function [search_tadb] No data from TADB was collected", xbmc.LOGERROR)
+                if searchartist in dict4:
+                    if xbmcvfs.exists(logopath):
+                        return artist, logopath,dict4[searchartist], dict5[searchartist]
+                    else:
+                        return artist, None, dict4[searchartist], dict5[searchartist]
                 return artist, None, None, None
             except Exception as e:
                 log("Error searching theaudiodb [ %s ]" % str(e), xbmc.LOGERROR)
