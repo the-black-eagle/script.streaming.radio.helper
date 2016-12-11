@@ -300,7 +300,9 @@ try:
                     testpath = BaseString + artist + "/logo.png"
                     testpath = xbmc.validatePath(testpath)
                     searchartist = artist.replace(' feat. ',' ~ ').replace(' ft. ',' ~ ').replace(' feat ', ' ~ ').replace(' ft ',' ~ ')
-                    searchartist = searchartist.replace(' & ', ' ~ ').replace(', ',' ~ ').replace(' and ', ' ~ ').replace(' vs ', ' ~ ')
+                    if '& the' or '& The' or 'and The' or 'and the' or 'And The' or 'And the' not in searchartist:
+                        searchartist = searchartist.replace(' & ', ' ~ ').replace(' and ', ' ~ ')
+                    searchartist = searchartist.replace(' vs ',' ~ ').replace(', ',' ~ ')
                     log("Searchartist is %s" % searchartist)
                     x = searchartist.find('~')
                     log("searchartist.find('~') result was %s" % str(x))
@@ -317,7 +319,8 @@ try:
                     already_checked = get_info(testpath,searchartists[artist_index].strip(), artist, multi_artist, already_checked,checked_all_artists)
                     was_playing = track
                     et = set_timer(delay)
-                    log("et is [%d]" %(et))
+                    if multi_artist:
+                        log("et is [%d]" %(et))
                 if multi_artist:
                      cs = datetime.datetime.now().time().second
                      if cs == et:
