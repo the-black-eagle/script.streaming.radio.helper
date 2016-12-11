@@ -34,6 +34,11 @@ Use Fanart - whether or not to look up logos online at fanart.tv
 
 use theaudiodb - whether or not to look up logos at theaudiodb
 
+lookup logo/thumb for featured artists - whether or not to try to look up all artists if there is at least one featured artist on the track
+
+delay for thumb/logo/banner rotation - how many seconds to wait before changing the thumb/logo/banner to the next one for tracks with featured artists
+
+
 ###Station Names
 ***
 
@@ -46,6 +51,15 @@ Without setting any replacement strings, the addon will display 'station-related
 You can use replace 'station-related-name' with 'Proper Station Name'
 
 This can be done for five radio stations.
+
+###Strings to remove
+***
+
+The script can (optionally) remove any extra info that may be added to the stream information by a radio station.
+E.G. A radio station may add 'Top 40 hits' on the end of the artist and track information.  This can be removed by setting
+a removal string of 'Top 40'.  This would remove everything from the start of that string to the end of the line.  Three strings
+can be set for removal, the first one that matches will be used.  All strings are case sensitive and can include leading and
+trailing spaces.
 
 
 Window properties set by the script
@@ -62,9 +76,6 @@ logopath - fully qualified path to any logo found.
 albumtitle - title of an album the track is on, if found
 
 year - year of the album, if found
-
-NEW
----
 
 srh.Artist.Thumb - URL to current artist thumb on theaudiodb if one exists
 
@@ -131,4 +142,9 @@ logos if the audio is an internet stream.  The script exits when kodi stops play
 The modifed MusicVisualisation.xml for AeonMQ7 used in the example screenshots can be downloaded from https://github.com/the-black-eagle/MQ7-MusicVisualisation.mod  Install Aeon MQ7, overwrite the MusicVisualisation.xml file with the one from github, install the add-on and set the path to your music directory and any radio station names you require. 
 
 Enjoy !!
+
+Support
+---
+
+Visit http://forum.kodi.tv/showthread.php?tid=289314 or open an issue here.
 
