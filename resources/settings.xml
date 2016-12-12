@@ -19,7 +19,8 @@
         <setting id="usefanarttv" label="32003" type="bool" default="true" enable="eq(-2,true)"/>
         <setting id="usetadb" label="32004" type="bool" default="true" enable="eq(-3,true)" />
         <setting type="sep"/>
-        <setting type="labelenum" id="delay" label="32029" values="10|15|20|25|30|35|40|45|50|55|60" default="30" />
+        <setting type="bool" default="true" label="32030" id="luma" />
+        <setting type="labelenum" id="delay" label="32029" values="10|15|20|25|30|35|40|45|50|55|60" default="30"/>
         <setting id="debug" label="32023" type="bool" default="false"/>
     </category>
     <category label="32005">
