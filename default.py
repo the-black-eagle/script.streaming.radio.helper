@@ -300,7 +300,7 @@ try:
                     testpath = BaseString + artist + "/logo.png"
                     testpath = xbmc.validatePath(testpath)
                     searchartist = artist.replace(' feat. ',' ~ ').replace(' ft. ',' ~ ').replace(' feat ', ' ~ ').replace(' ft ',' ~ ')
-                    searchartist = searchartist.replace(' & ', ' ~ ').replace(' and ', ' ~ ').replace( 'And ', ' ~ ').replace(' ~ the ', ' and the ').replace(' ~ The ' , ' and The ')
+                    searchartist = searchartist.replace(' & ', ' ~ ').replace(' and ', ' ~ ').replace( ' And ', ' ~ ').replace(' ~ the ', ' and the ').replace(' ~ The ' , ' and The ')
                     searchartist = searchartist.replace(' vs ',' ~ ').replace(', ',' ~ ')
                     log("Searchartist is %s" % searchartist)
                     x = searchartist.find('~')
