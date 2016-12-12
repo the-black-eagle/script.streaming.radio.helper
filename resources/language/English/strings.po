@@ -125,3 +125,7 @@ msgstr ""
 msgctxt "#32029"
 msgid "Delay for Logo/thumb/banner rotation (in seconds)"
 msgstr ""
+
+msgctxt "#32030"
+msgid "Lookup logo/thumb info for featured artists"
+msgstr ""

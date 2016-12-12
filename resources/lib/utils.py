@@ -583,7 +583,7 @@ def parse_data(artist, searching, searchartist, dict4, dict5, mbid, logoflag="tr
     """
     try:
         checkartist = searching['artists'][0]['strArtist']
-        if (checkartist.replace(' ','+') != searchartist) and (artist !="P!nk" or artist != "Pink"):
+        if (checkartist.replace(' ','+') != searchartist) and (artist !="P!nk"):
             artist = checkartist
             log("Updated artist name (%s) with data from tadb [%s]" % (searchartist.replace('+',' '), artist))
         _artist_thumb = searching['artists'][0]['strArtistThumb']
