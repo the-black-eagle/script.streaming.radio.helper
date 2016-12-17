@@ -26,6 +26,7 @@ Cached data is saved either when the script stops or every 15 minutes when its r
 All window properties are set for the full screen visualisation window (12006).
 
 ##Settings
+***
 ###General Settings
 
 The path to the top level of the users music directory.
