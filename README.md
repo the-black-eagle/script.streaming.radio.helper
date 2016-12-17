@@ -64,18 +64,19 @@ trailing spaces.
 
 Window properties set by the script
 ---
+srh.Stationname - string.  Name of the currently playing station
 
-artiststring - string. Contains name of artist.
+srh.Artist - string. Contains name of artist.
 
-trackstring - string. Contains track name.
+srh.Track - string. Contains track name.
 
-haslogo - boolean. true if the script found or downloaded a logo, false otherwise.
+srh.Haslogo - boolean. true if the script found or downloaded a logo, false otherwise.
 
-logopath - fully qualified path to any logo found.
+srh.Logopath - fully qualified path to any logo found.
 
-albumtitle - title of an album the track is on, if found
+srh.Album - title of an album the track is on, if found
 
-year - year of the album, if found
+srh.Year - year of the album, if found
 
 srh.Artist.Thumb - URL to current artist thumb on theaudiodb if one exists
 
@@ -87,7 +88,7 @@ Window properties can be used as follows -
 
 ```
 <control type="label">
-    <label>$INFO[Window(12006).Property(artiststring)]</label>
+    <label>$INFO[Window(12006).Property(srh.Artist)]</label>
     <scroll>true</scroll>
     <visible>Player.IsInternetStream</visible>
 </control>
@@ -97,7 +98,7 @@ Window properties can be used as follows -
 
 ```
 <control type="label">
-    <label>$INFO[Window(12006).Property(trackstring)]</label>
+    <label>$INFO[Window(12006).Property(srh.Track)]</label>
     <scroll>true</scroll>
     <scrollout>false</scrollout>
     <visible>Player.IsInternetStream</visible>
@@ -112,11 +113,11 @@ Window properties can be used as follows -
     <top>-90</top>
     <width>400</width>
     <height>155</height>
-    <texture>$INFO[Window.(12006).Property(logopath)]</texture>
+    <texture>$INFO[Window.(12006).Property(srh.Logopath)]</texture>
     <fadetime>300</fadetime>
     <aspectratio align="left">keep</aspectratio>
     <animation effect="fade" end="100" condition="true">Conditional</animation>
-    <visible>Player.IsInternetStream+StringCompare(Window.(12006).Property(haslogo),Control.GetLabel(9998))</visible>
+    <visible>Player.IsInternetStream+StringCompare(Window.(12006).Property(srh.Haslogo),Control.GetLabel(9998))</visible>
 </control>
 ```
 
