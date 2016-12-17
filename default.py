@@ -18,15 +18,15 @@
 #  (C) Black_eagle 2016
 #
 #  WINDOW PROPERTIES SET BY THIS SCRIPT
-#  artiststring - contains the name of the artist
-#  trackstring - contains the track name
+#  srh.Artist - contains the name of the artist
+#  srh.Track - contains the track name
 #  stationname - name of radio station playing
-#  haslogo - true if script found a logo to display, else false
-#  logopath - path to logo if found, else empty string
+#  srh.Haslogo - true if script found a logo to display, else false
+#  srh.Logopath - path to logo if found, else empty string
 #  srh.Artist.Thumb - thumb of the current artist
 #  srh.Artist.Banner - banner of the current artist
-#  albumtitle - track the album is off if the addon can find a match (note that this may not be accurate as we just match the first album we find with that track on)
-#  year the album 'albumtitle' is from if the addon can find a match
+#  srh.Album - track the album is off if the addon can find a match (note that this may not be accurate as we just match the first album we find with that track on)
+#  srh.Year the album 'srh.Album' is from if the addon can find a match
 #  radio-streaming-helper-running - true when script running
 
 import xbmc ,xbmcvfs, xbmcaddon
@@ -47,12 +47,12 @@ def script_exit():
     """Clears all the window properties and stops the timer used for auto-saving the data"""
 
     WINDOW.clearProperty("radio-streaming-helper-running")
-    WINDOW.clearProperty("artiststring")
-    WINDOW.clearProperty("trackstring")
-    WINDOW.clearProperty("haslogo")
-    WINDOW.clearProperty("logopath")
-    WINDOW.clearProperty("albumtitle")
-    WINDOW.clearProperty("year")
+    WINDOW.clearProperty("srh.Artist")
+    WINDOW.clearProperty("srh.Track")
+    WINDOW.clearProperty("srh.Haslogo")
+    WINDOW.clearProperty("srh.Logopath")
+    WINDOW.clearProperty("srh.Album")
+    WINDOW.clearProperty("srh.Year")
     WINDOW.clearProperty("srh.Artist.Thumb")
     WINDOW.clearProperty("srh.Artist.Banner")
     log("Script Stopped")
@@ -71,8 +71,8 @@ def get_info(testpath, searchartist, artist, multi_artist, already_checked, chec
     if multi_artist:
         orig_artist = artist
     if xbmcvfs.exists(testpath):     # See if there is a logo in the music directory
-        WINDOW.setProperty("haslogo", "true")
-        WINDOW.setProperty("logopath", testpath)
+        WINDOW.setProperty("srh.Haslogo", "true")
+        WINDOW.setProperty("srh.Logopath", testpath)
         log("Logo in Music Directory : Path is %s" % testpath, xbmc.LOGDEBUG)
         
         if onlinelookup == "true":
@@ -86,7 +86,7 @@ def get_info(testpath, searchartist, artist, multi_artist, already_checked, chec
             ArtistThumb =""
             ArtistBanner=""
     else:
-        WINDOW.setProperty("haslogo", "false")
+        WINDOW.setProperty("srh.Haslogo", "false")
         log("No logo in music directory", xbmc.LOGDEBUG)
         if onlinelookup == "true":
             mbid = get_mbid(searchartist)     # No logo in music directory - get artist MBID
@@ -103,12 +103,12 @@ def get_info(testpath, searchartist, artist, multi_artist, already_checked, chec
                 ArtistBanner=""
         if logopath:     #     We have a logo to display
             log("Logo found in path %s " % logopath)
-            WINDOW.setProperty("logopath",logopath)
-            WINDOW.setProperty("haslogo","true")
+            WINDOW.setProperty("srh.Logopath",logopath)
+            WINDOW.setProperty("srh.Haslogo","true")
         elif not logopath and not multi_artist:     #     No logos to display
-            WINDOW.setProperty("logopath","")
+            WINDOW.setProperty("srh.Logopath","")
             log("No logo in cache directory", xbmc.LOGDEBUG)
-            WINDOW.setProperty("haslogo","false")
+            WINDOW.setProperty("srh.Haslogo","false")
     if  ArtistThumb :
         WINDOW.setProperty("srh.Artist.Thumb", ArtistThumb)
     if ArtistBanner :
@@ -118,22 +118,22 @@ def get_info(testpath, searchartist, artist, multi_artist, already_checked, chec
         already_checked, albumtitle, theyear = get_year(artist,track,dict1,dict2,dict3, already_checked)
         
         if albumtitle and not multi_artist:
-            WINDOW.setProperty("albumtitle",albumtitle.encode('utf-8')) # set if single artist and got album
-            log("Single artist - Window property albumtitle set")
-        elif albumtitle and multi_artist and (WINDOW.getProperty("albumtitle") == ""):
-            WINDOW.setProperty("albumtitle",albumtitle.encode('utf-8'))
+            WINDOW.setProperty("srh.Album",albumtitle.encode('utf-8')) # set if single artist and got album
+            log("Single artist - Window property srh.Album set")
+        elif albumtitle and multi_artist and (WINDOW.getProperty("srh.Album") == ""):
+            WINDOW.setProperty("srh.Album",albumtitle.encode('utf-8'))
             
-            log("Multi artist - albumtitle was empty - now set to %s" %albumtitle)
+            log("Multi artist - srh.Album was empty - now set to %s" %albumtitle)
         elif not albumtitle and (not multi_artist):
-            WINDOW.setProperty("albumtitle","") # clear if no title and not multi artist
+            WINDOW.setProperty("srh.Album","") # clear if no title and not multi artist
             log("No album title for single artist")
         log("Album set to [%s]" % albumtitle)
         if theyear and theyear != '0' and (not multi_artist):
-            WINDOW.setProperty("year",theyear)
-        elif theyear and multi_artist and(WINDOW.getProperty("year") == ""):
-            WINDOW.setProperty("year",theyear)
+            WINDOW.setProperty("srh.Year",theyear)
+        elif theyear and multi_artist and(WINDOW.getProperty("srh.Year") == ""):
+            WINDOW.setProperty("srh.Year",theyear)
         elif (not theyear or (theyear == 0 )) and (not multi_artist):
-            WINDOW.setProperty("year","")
+            WINDOW.setProperty("srh.Year","")
         if (albumtitle) and (theyear):
             log("Album & year details found : %s, %s" %( albumtitle, theyear), xbmc.LOGDEBUG)
         elif (albumtitle) and not (theyear):
@@ -141,10 +141,10 @@ def get_info(testpath, searchartist, artist, multi_artist, already_checked, chec
         else:
             log("No album or year details found", xbmc.LOGDEBUG)
     if multi_artist:
-        WINDOW.setProperty("artiststring",orig_artist.encode('utf-8'))
+        WINDOW.setProperty("srh.Artist",orig_artist.encode('utf-8'))
     else:
-        WINDOW.setProperty("artiststring",artist.encode('utf-8'))
-    WINDOW.setProperty("trackstring", track.encode('utf-8'))
+        WINDOW.setProperty("srh.Artist",artist.encode('utf-8'))
+    WINDOW.setProperty("srh.Track", track.encode('utf-8'))
     return already_checked
 
 def check_station(file_playing):
@@ -196,12 +196,12 @@ def slice_string(string1, string2, n):
 def no_track():
     """Sets the appropriate window properties when we have no track to display"""
 
-    WINDOW.setProperty("artiststring","")
-    WINDOW.setProperty("trackstring","")
-    WINDOW.setProperty("haslogo","false")
-    WINDOW.setProperty("logopath","")
-    WINDOW.setProperty("albumtitle","")
-    WINDOW.setProperty("year","")
+    WINDOW.setProperty("srh.Artist","")
+    WINDOW.setProperty("srh.Track","")
+    WINDOW.setProperty("srh.Haslogo","false")
+    WINDOW.setProperty("srh.Logopath","")
+    WINDOW.setProperty("srh.Album","")
+    WINDOW.setProperty("srh.Year","")
     WINDOW.setProperty("srh.Artist.Thumb","")
     WINDOW.setProperty("srh.Artist.Banner","")
     return False, False
