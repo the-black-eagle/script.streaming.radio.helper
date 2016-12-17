@@ -20,7 +20,7 @@
 #  WINDOW PROPERTIES SET BY THIS SCRIPT
 #  srh.Artist - contains the name of the artist
 #  srh.Track - contains the track name
-#  stationname - name of radio station playing
+#  srh.Stationname - name of radio station playing
 #  srh.Haslogo - true if script found a logo to display, else false
 #  srh.Logopath - path to logo if found, else empty string
 #  srh.Artist.Thumb - thumb of the current artist
@@ -258,7 +258,7 @@ try:
                 log("File playing is %s" % file_playing, xbmc.LOGDEBUG)
                 station, station_list = check_station(file_playing)
                 log("Station name was : %s - changed to %s" % ( station_list, station), xbmc.LOGDEBUG)
-                WINDOW.setProperty("stationname",station)
+                WINDOW.setProperty("srh.Stationname",station)
             if "T - Rex" in current_track:
                 current_track = current_track.replace("T - Rex","T-Rex")
             if " - " in current_track:
@@ -293,7 +293,7 @@ try:
                     searchartists = []
                     log("Checking station is the same" , xbmc.LOGDEBUG)
                     station, station_list = check_station(file_playing)
-                    WINDOW.setProperty("stationname",station)
+                    WINDOW.setProperty("srh.Stationname",station)
                     log("Track changed to %s by %s" % (track, artist), xbmc.LOGDEBUG)
                     log("Playing station : %s" % station, xbmc.LOGDEBUG)
                     logopath =''
