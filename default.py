@@ -18,15 +18,15 @@
 #  (C) Black_eagle 2016
 #
 #  WINDOW PROPERTIES SET BY THIS SCRIPT
-#  artiststring - contains the name of the artist
-#  trackstring - contains the track name
-#  stationname - name of radio station playing
-#  haslogo - true if script found a logo to display, else false
-#  logopath - path to logo if found, else empty string
+#  srh.Artist - contains the name of the artist
+#  srh.Track - contains the track name
+#  srh.Stationname - name of radio station playing
+#  srh.Haslogo - true if script found a logo to display, else false
+#  srh.Logopath - path to logo if found, else empty string
 #  srh.Artist.Thumb - thumb of the current artist
 #  srh.Artist.Banner - banner of the current artist
-#  albumtitle - track the album is off if the addon can find a match (note that this may not be accurate as we just match the first album we find with that track on)
-#  year the album 'albumtitle' is from if the addon can find a match
+#  srh.Album - track the album is off if the addon can find a match (note that this may not be accurate as we just match the first album we find with that track on)
+#  srh.Year the album 'srh.Album' is from if the addon can find a match
 #  radio-streaming-helper-running - true when script running
 
 import xbmc ,xbmcvfs, xbmcaddon
@@ -47,18 +47,105 @@ def script_exit():
     """Clears all the window properties and stops the timer used for auto-saving the data"""
 
     WINDOW.clearProperty("radio-streaming-helper-running")
-    WINDOW.clearProperty("artiststring")
-    WINDOW.clearProperty("trackstring")
-    WINDOW.clearProperty("haslogo")
-    WINDOW.clearProperty("logopath")
-    WINDOW.clearProperty("albumtitle")
-    WINDOW.clearProperty("year")
+    WINDOW.clearProperty("srh.Artist")
+    WINDOW.clearProperty("srh.Track")
+    WINDOW.clearProperty("srh.Haslogo")
+    WINDOW.clearProperty("srh.Logopath")
+    WINDOW.clearProperty("srh.Album")
+    WINDOW.clearProperty("srh.Year")
     WINDOW.clearProperty("srh.Artist.Thumb")
     WINDOW.clearProperty("srh.Artist.Banner")
     log("Script Stopped")
 #    logit.close()
     rt.stop()
     exit()
+
+def set_timer(delay):
+    cs = datetime.datetime.now().time().second
+    et = cs + delay
+    if (et) >= 60 :
+        et = et - 60
+    return et
+
+def get_info(testpath, searchartist, artist, multi_artist, already_checked, checked_all_artists):
+    if multi_artist:
+        orig_artist = artist
+    if xbmcvfs.exists(testpath):     # See if there is a logo in the music directory
+        WINDOW.setProperty("srh.Haslogo", "true")
+        WINDOW.setProperty("srh.Logopath", testpath)
+        log("Logo in Music Directory : Path is %s" % testpath, xbmc.LOGDEBUG)
+        
+        if onlinelookup == "true":
+            mbid = get_mbid(searchartist)   
+        else:
+            mbid = None
+        if tadb == "true":
+            artist, logopath, ArtistThumb, ArtistBanner = search_tadb(mbid,searchartist, dict4, dict5, checked_all_artists)
+        else:
+            logopath=""
+            ArtistThumb =""
+            ArtistBanner=""
+    else:
+        WINDOW.setProperty("srh.Haslogo", "false")
+        log("No logo in music directory", xbmc.LOGDEBUG)
+        if onlinelookup == "true":
+            mbid = get_mbid(searchartist)     # No logo in music directory - get artist MBID
+        else:
+            mbid = None
+        if mbid:
+            if fanart == "true":
+                logopath = get_hdlogo(mbid, searchartist)     # Try and get a logo from cache directory or fanart.tv
+            if tadb == "true":
+                artist, logopath, ArtistThumb, ArtistBanner = search_tadb(mbid,searchartist, dict4, dict5, checked_all_artists)
+            else:
+                logopath=""
+                ArtistThumb =""
+                ArtistBanner=""
+        if logopath:     #     We have a logo to display
+            log("Logo found in path %s " % logopath)
+            WINDOW.setProperty("srh.Logopath",logopath)
+            WINDOW.setProperty("srh.Haslogo","true")
+        elif not logopath and not multi_artist:     #     No logos to display
+            WINDOW.setProperty("srh.Logopath","")
+            log("No logo in cache directory", xbmc.LOGDEBUG)
+            WINDOW.setProperty("srh.Haslogo","false")
+    if  ArtistThumb :
+        WINDOW.setProperty("srh.Artist.Thumb", ArtistThumb)
+    if ArtistBanner :
+        WINDOW.setProperty("srh.Artist.Banner", ArtistBanner)
+    if not already_checked:
+        log("Not checked the album and year data yet for this artist")
+        already_checked, albumtitle, theyear = get_year(artist,track,dict1,dict2,dict3, already_checked)
+        
+        if albumtitle and not multi_artist:
+            WINDOW.setProperty("srh.Album",albumtitle.encode('utf-8')) # set if single artist and got album
+            log("Single artist - Window property srh.Album set")
+        elif albumtitle and multi_artist and (WINDOW.getProperty("srh.Album") == ""):
+            WINDOW.setProperty("srh.Album",albumtitle.encode('utf-8'))
+            
+            log("Multi artist - srh.Album was empty - now set to %s" %albumtitle)
+        elif not albumtitle and (not multi_artist):
+            WINDOW.setProperty("srh.Album","") # clear if no title and not multi artist
+            log("No album title for single artist")
+        log("Album set to [%s]" % albumtitle)
+        if theyear and theyear != '0' and (not multi_artist):
+            WINDOW.setProperty("srh.Year",theyear)
+        elif theyear and multi_artist and(WINDOW.getProperty("srh.Year") == ""):
+            WINDOW.setProperty("srh.Year",theyear)
+        elif (not theyear or (theyear == 0 )) and (not multi_artist):
+            WINDOW.setProperty("srh.Year","")
+        if (albumtitle) and (theyear):
+            log("Album & year details found : %s, %s" %( albumtitle, theyear), xbmc.LOGDEBUG)
+        elif (albumtitle) and not (theyear):
+            log("Found album %s but no year" % albumtitle, xbmc.LOGDEBUG)
+        else:
+            log("No album or year details found", xbmc.LOGDEBUG)
+    if multi_artist:
+        WINDOW.setProperty("srh.Artist",orig_artist.encode('utf-8'))
+    else:
+        WINDOW.setProperty("srh.Artist",artist.encode('utf-8'))
+    WINDOW.setProperty("srh.Track", track.encode('utf-8'))
+    return already_checked
 
 def check_station(file_playing):
     """Attempts to parse a URL to find the name of the station being played
@@ -109,14 +196,15 @@ def slice_string(string1, string2, n):
 def no_track():
     """Sets the appropriate window properties when we have no track to display"""
 
-    WINDOW.setProperty("artiststring","")
-    WINDOW.setProperty("trackstring","")
-    WINDOW.setProperty("haslogo","false")
-    WINDOW.setProperty("logopath","")
-    WINDOW.setProperty("albumtitle","")
-    WINDOW.setProperty("year","")
+    WINDOW.setProperty("srh.Artist","")
+    WINDOW.setProperty("srh.Track","")
+    WINDOW.setProperty("srh.Haslogo","false")
+    WINDOW.setProperty("srh.Logopath","")
+    WINDOW.setProperty("srh.Album","")
+    WINDOW.setProperty("srh.Year","")
     WINDOW.setProperty("srh.Artist.Thumb","")
     WINDOW.setProperty("srh.Artist.Banner","")
+    return False, False
 try:
     WINDOW = xbmcgui.Window(12006)
     if WINDOW.getProperty("radio-streaming-helper-running") == "true" :
@@ -135,15 +223,18 @@ try:
     log("changing %s to %s" % (st3find, st3rep), xbmc.LOGNOTICE)
     log("changing %s to %s" % (st4find, st4rep), xbmc.LOGNOTICE)
     log("changing %s to %s" % (st5find, st5rep), xbmc.LOGNOTICE)
+    if luma:
+        log("Lookup details for featured artists", xbmc.LOGNOTICE)
+    else:
+        log("Not looking up details for featured artists", xbmc.LOGNOTICE)
     
     log("----------Settings-------------------------", xbmc.LOGNOTICE)
     log("Setting up addon", xbmc.LOGNOTICE)
+    already_checked = False
+    log("aready_checked is set to [%s] " %str(already_checked))
     if xbmcvfs.exists(logostring + "data.pickle"):
         dict1,dict2,dict3, dict4, dict5, dict6 = load_pickle()
     my_size = len(dict1)
-    if xbmcvfs.exists(logfile):
-        xbmcvfs.delete(logfile)
-#    logit = xbmcvfs.File(logfile,'w')
     log("Cache contains %d tracks" % my_size, xbmc.LOGDEBUG)
     cut_off_date = todays_date - time_diff
     log("Cached data obtained before before %s will be refreshed if details are missing" % (cut_off_date.strftime("%d-%m-%Y")), xbmc.LOGDEBUG)
@@ -154,6 +245,8 @@ try:
         if xbmc.getCondVisibility("Player.IsInternetStream"):
             current_track = xbmc.getInfoLabel("MusicPlayer.Title")
 #            current_track = "Gromee feat. Ma-Britt Scheffer - Fearless w Hot 100 - Gorąca Setka Hitów"
+#            current_track = ""
+
             player_details = xbmc.executeJSONRPC('{"jsonrpc":"2.0", "method":"Player.GetActivePlayers","id":1}' )
             player_id_temp = _json.loads(player_details)
             player_id = player_id_temp['result'][0]['playerid']
@@ -165,7 +258,7 @@ try:
                 log("File playing is %s" % file_playing, xbmc.LOGDEBUG)
                 station, station_list = check_station(file_playing)
                 log("Station name was : %s - changed to %s" % ( station_list, station), xbmc.LOGDEBUG)
-                WINDOW.setProperty("stationname",station)
+                WINDOW.setProperty("srh.Stationname",station)
             if "T - Rex" in current_track:
                 current_track = current_track.replace("T - Rex","T-Rex")
             if " - " in current_track:
@@ -196,84 +289,53 @@ try:
                 if artist == "Florence & The Machine":
                     artist = "Florence + The Machine"
                 if was_playing != track:
+                    checked_all_artists, already_checked = no_track()          # clear all window properties on track change
+                    searchartists = []
                     log("Checking station is the same" , xbmc.LOGDEBUG)
                     station, station_list = check_station(file_playing)
-                    WINDOW.setProperty("stationname",station)
+                    WINDOW.setProperty("srh.Stationname",station)
                     log("Track changed to %s by %s" % (track, artist), xbmc.LOGDEBUG)
                     log("Playing station : %s" % station, xbmc.LOGDEBUG)
                     logopath =''
                     testpath = BaseString + artist + "/logo.png"
                     testpath = xbmc.validatePath(testpath)
                     searchartist = artist.replace(' feat. ',' ~ ').replace(' ft. ',' ~ ').replace(' feat ', ' ~ ').replace(' ft ',' ~ ')
+                    searchartist = searchartist.replace(' & ', ' ~ ').replace(' and ', ' ~ ').replace( ' And ', ' ~ ').replace(' ~ the ', ' and the ').replace(' ~ The ' , ' and The ')
+                    searchartist = searchartist.replace(' vs ',' ~ ').replace(', ',' ~ ')
                     log("Searchartist is %s" % searchartist)
                     x = searchartist.find('~')
                     log("searchartist.find('~') result was %s" % str(x))
                     if x != -1:
-                        searchartist = artist[: x-1]
-                    if xbmcvfs.exists(testpath):     # See if there is a logo in the music directory
-                        WINDOW.setProperty("haslogo", "true")
-                        WINDOW.setProperty("logopath", testpath)
-                        log("Logo in Music Directory : Path is %s" % testpath, xbmc.LOGDEBUG)
-                        
-                        if onlinelookup == "true":
-                            mbid = get_mbid(searchartist)   
-                        else:
-                            mbid = None
-                        if tadb == "true":
-                            artist, logopath, ArtistThumb, ArtistBanner = search_tadb(mbid,searchartist, dict4, dict5)
-                        else:
-                            logopath=""
-                            ArtistThumb =""
-                            ArtistBanner=""
+                        searchartists = searchartist.split('~')
                     else:
-                        WINDOW.setProperty("haslogo", "false")
-                        log("No logo in music directory", xbmc.LOGDEBUG)
-                        if onlinelookup == "true":
-                            mbid = get_mbid(searchartist)     # No logo in music directory - get artist MBID
-                        else:
-                            mbid = None
-                        if mbid:
-                            if fanart == "true":
-                                logopath = get_hdlogo(mbid, searchartist)     # Try and get a logo from cache directory or fanart.tv
-                            if tadb == "true":
-                                artist, logopath, ArtistThumb, ArtistBanner = search_tadb(mbid,searchartist, dict4, dict5)
-                            else:
-                                logopath=""
-                                ArtistThumb =""
-                                ArtistBanner=""
-                        if logopath:     #     We have a logo to display
-                            log("Logo found in path %s " % logopath)
-                            WINDOW.setProperty("logopath",logopath)
-                            WINDOW.setProperty("haslogo","true")
-                        else:     #     No logos to display
-                            WINDOW.setProperty("logopath","")
-                            log("No logo in cache directory", xbmc.LOGDEBUG)
-                            WINDOW.setProperty("haslogo","false")
-                    WINDOW.setProperty("srh.Artist.Thumb", ArtistThumb)
-                    WINDOW.setProperty("srh.Artist.Banner", ArtistBanner)
-                    albumtitle, theyear = get_year(artist,track,dict1,dict2,dict3)
-                    if albumtitle:
-                        WINDOW.setProperty("albumtitle",albumtitle.encode('utf-8'))
+                        searchartists.append(searchartist)
+                    num_artists = len(searchartists)
+                    if num_artists > 1 and luma:
+                        multi_artist = True
                     else:
-                        WINDOW.setProperty("albumtitle","")
-                    if theyear and theyear != '0':
-                        WINDOW.setProperty("year",theyear)
-                    else:
-                        WINDOW.setProperty("year","")
-                    if (albumtitle) and (theyear):
-                        log("Album & year details found : %s, %s" %( albumtitle, theyear), xbmc.LOGDEBUG)
-                    elif (albumtitle) and not (theyear):
-                        log("Found album %s but no year" % albumtitle, xbmc.LOGDEBUG)
-                    else:
-                        log("No album or year details found", xbmc.LOGDEBUG)
-                    WINDOW.setProperty("artiststring",artist.encode('utf-8'))
-                    WINDOW.setProperty("trackstring", track.encode('utf-8'))
+                        multi_artist = False
+                    artist_index = 0
+                    already_checked = get_info(testpath,searchartists[artist_index].strip(), artist, multi_artist, already_checked,checked_all_artists)
                     was_playing = track
+                    et = set_timer(delay)
+                    if multi_artist:
+                        log("et is [%d]" %(et))
+                if multi_artist:
+                     cs = datetime.datetime.now().time().second
+                     if cs == et:
+                        log("Lookup next artist")
+                        artist_index += 1
+                        if artist_index == num_artists:
+                            artist_index = 0
+                            checked_all_artists = True
+                        already_checked = get_info(testpath, searchartists[artist_index].strip(), artist, multi_artist, already_checked, checked_all_artists)
+                        et = set_timer(delay)
+                        log("et is now [%d]" %et)
             else:
-                no_track()
+                checked_all_artists, already_checked = no_track()
             xbmc.sleep(500)
         else:
-            no_track()
+            checked_all_artists, already_checked = no_track()
         if xbmc.Player().isPlayingAudio() == False:
             log("Not playing audio")
             save_pickle(dict1,dict2,dict3,dict4, dict5,dict6)
