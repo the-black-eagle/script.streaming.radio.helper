@@ -49,6 +49,7 @@ def script_exit():
     WINDOW.clearProperty("radio-streaming-helper-running")
     WINDOW.clearProperty("srh.Artist")
     WINDOW.clearProperty("srh.Track")
+    WINDOW.clearProperty("srh.TrackInfo")
     WINDOW.clearProperty("srh.Haslogo")
     WINDOW.clearProperty("srh.Logopath")
     WINDOW.clearProperty("srh.Album")
@@ -115,7 +116,7 @@ def get_info(testpath, searchartist, artist, multi_artist, already_checked, chec
         WINDOW.setProperty("srh.Artist.Banner", ArtistBanner)
     if not already_checked:
         log("Not checked the album and year data yet for this artist")
-        already_checked, albumtitle, theyear = get_year(artist,track,dict1,dict2,dict3, already_checked)
+        already_checked, albumtitle, theyear, trackinfo = get_year(artist,track,dict1,dict2,dict3, already_checked)
         
         if albumtitle and not multi_artist:
             WINDOW.setProperty("srh.Album",albumtitle.encode('utf-8')) # set if single artist and got album
@@ -128,6 +129,11 @@ def get_info(testpath, searchartist, artist, multi_artist, already_checked, chec
             WINDOW.setProperty("srh.Album","") # clear if no title and not multi artist
             log("No album title for single artist")
         log("Album set to [%s]" % albumtitle)
+        if trackinfo:
+            trackinfo = trackinfo +'\n'
+            WINDOW.setProperty("srh.TrackInfo", trackinfo.encode('utf-8'))
+        else:
+            WINDOW.setProperty("srh.TrackInfo","")
         if theyear and theyear != '0' and (not multi_artist):
             WINDOW.setProperty("srh.Year",theyear)
         elif theyear and multi_artist and(WINDOW.getProperty("srh.Year") == ""):
@@ -198,6 +204,7 @@ def no_track():
 
     WINDOW.setProperty("srh.Artist","")
     WINDOW.setProperty("srh.Track","")
+    WINDOW.setProperty("srh.TrackInfo","")
     WINDOW.setProperty("srh.Haslogo","false")
     WINDOW.setProperty("srh.Logopath","")
     WINDOW.setProperty("srh.Album","")
@@ -233,12 +240,12 @@ try:
     already_checked = False
     log("aready_checked is set to [%s] " %str(already_checked))
     if xbmcvfs.exists(logostring + "data.pickle"):
-        dict1,dict2,dict3, dict4, dict5, dict6 = load_pickle()
+        dict1,dict2,dict3, dict4, dict5, dict6, dict7 = load_pickle()
     my_size = len(dict1)
     log("Cache contains %d tracks" % my_size, xbmc.LOGDEBUG)
     cut_off_date = todays_date - time_diff
     log("Cached data obtained before before %s will be refreshed if details are missing" % (cut_off_date.strftime("%d-%m-%Y")), xbmc.LOGDEBUG)
-    rt = RepeatedTimer(900, save_pickle, dict1,dict2,dict3, dict4, dict5, dict6)
+    rt = RepeatedTimer(900, save_pickle, dict1,dict2,dict3, dict4, dict5, dict6, dict7)
     
     # Main Loop
     while (not xbmc.abortRequested):
@@ -246,7 +253,6 @@ try:
             current_track = xbmc.getInfoLabel("MusicPlayer.Title")
 #            current_track = "Gromee feat. Ma-Britt Scheffer - Fearless w Hot 100 - Gorąca Setka Hitów"
 #            current_track = ""
-
             player_details = xbmc.executeJSONRPC('{"jsonrpc":"2.0", "method":"Player.GetActivePlayers","id":1}' )
             player_id_temp = _json.loads(player_details)
             player_id = player_id_temp['result'][0]['playerid']
@@ -338,12 +344,12 @@ try:
             checked_all_artists, already_checked = no_track()
         if xbmc.Player().isPlayingAudio() == False:
             log("Not playing audio")
-            save_pickle(dict1,dict2,dict3,dict4, dict5,dict6)
+            save_pickle(dict1,dict2,dict3,dict4, dict5,dict6, dict7)
             script_exit()
 
 except Exception as e:
     log("Radio Streaming Helper has encountered an error and needs to close - %s" % str(e))
     exc_type, exc_value, exc_traceback = sys.exc_info()
     log(repr(traceback.format_exception(exc_type, exc_value,exc_traceback)))
-    save_pickle(dict1,dict2,dict3,dict4, dict5, dict6)
+    save_pickle(dict1,dict2,dict3,dict4, dict5, dict6, dict7)
     script_exit()

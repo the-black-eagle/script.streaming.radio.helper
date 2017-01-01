@@ -20,7 +20,7 @@
 
 import xbmc ,xbmcvfs, xbmcaddon
 import xbmcgui
-import urllib
+import urllib, requests, re
 import uuid
 import sys, traceback
 from resources.lib.audiodb import audiodbinfo as settings
@@ -51,6 +51,7 @@ dict3 = {} # Key = artistname+trackname, value = date last looked up
 dict4 = {} # Key = Artist Name, Value = URL to artist thumb
 dict5 = {} # Key = Artist Name, Value = URL to artist banner
 dict6 = {} # Key = artist Name, value = MBID
+dict7 = {} # Key = Artistname+trackname, value = Track details
 time_diff = datetime.timedelta(days = 7) # date to next check
 todays_date = datetime.datetime.combine(datetime.date.today(),datetime.datetime.min.time())
 BaseString = xbmc.validatePath(BaseString)
@@ -79,6 +80,7 @@ delay = int(addon.getSetting('delay'))
 previous_track = None
 already_checked = False
 checked_all_artists = False
+mbid = None
 WINDOW = xbmcgui.Window(12006)
 debugging = addon.getSetting('debug')
 if debugging == 'true' :
@@ -98,6 +100,17 @@ def log(txt, mylevel=xbmc.LOGDEBUG):
         txt = txt.decode('utf-8')
     message = u'%s : %s' % (addonname, txt)
     xbmc.log(msg=message.encode('utf-8'), level=mylevel)
+
+def clean_string(text):
+    text = re.sub('<a [^>]*>|</a>|<span[^>]*>|</span>','',text)
+    text = re.sub('&quot;','"',text)
+    text = re.sub('&amp;','&',text)
+    text = re.sub('&gt;','>',text)
+    text = re.sub('&lt;','<',text)
+    text = re.sub('User-contributed text is available under the Creative Commons By-SA License; additional terms may apply.','',text)
+    text = re.sub('Read more about .* on Last.fm.','',text)
+    text = re.sub('Read more on Last.fm.','',text)
+    return text
 
 def load_pickle():
     """
@@ -121,10 +134,15 @@ def load_pickle():
     except:
         d6={}
         log("created new pickle data for MBID storage")
+    try:
+        d7 = pickle.load(pfile)
+    except:
+        d7 = {}
+        log("Created new pickle data for track information")
     pfile.close()
-    return d1,d2,d3,d4,d5,d6
+    return d1,d2,d3,d4,d5,d6,d7
 
-def save_pickle(d1,d2,d3,d4,d5,d6):
+def save_pickle(d1,d2,d3,d4,d5,d6, d7):
     """
     Saves local cache data to file in the addon_data directory of the script
     """
@@ -137,6 +155,7 @@ def save_pickle(d1,d2,d3,d4,d5,d6):
     pickle.dump(d4,pfile)
     pickle.dump(d5,pfile)
     pickle.dump(d6,pfile)
+    pickle.dump(d7,pfile)
     pfile.close()
 
 def get_year(artist,track,dict1,dict2,dict3, already_checked):
@@ -147,7 +166,7 @@ def get_year(artist,track,dict1,dict2,dict3, already_checked):
     If all data present in cache, just retur taht and don't lookup anything online.
     """
     if (artist == "") and (track == ""):
-        return True, None,None
+        return True, None,None,None
     log("Looking up album and year data for artist %s and track %s" %(artist, track), xbmc.LOGDEBUG)
     my_size = len(dict1)
     log("Cache currently holds %d tracks" % my_size, xbmc.LOGDEBUG)
@@ -158,32 +177,43 @@ def get_year(artist,track,dict1,dict2,dict3, already_checked):
         albumname = dict1[keydata]
         log("Album Name is %s" % albumname, xbmc.LOGDEBUG)
         datechecked = dict3[keydata]
+        try:
+            trackinfo = dict7[keydata]
+        except:
+            log("Updating text info for album [%s]" % albumname)
+            dict1[keydata], dict2[keydata], dict7[keydata] = tadb_trackdata(artist, track, dict1, dict2, dict3)
+            dict3[keydata] = datetime.datetime.combine(datetime.date.today(),datetime.datetime.min.time())
+
         log("Data for track '%s' on album '%s' last checked %s" % (track, albumname, str(datechecked.strftime("%d-%m-%Y"))), xbmc.LOGDEBUG)
         if (datechecked < (todays_date - time_diff)) or (xbmcvfs.exists(logostring + "refreshdata")):
             log( "Data might need refreshing", xbmc.LOGDEBUG)
             if (dict1[keydata] == '') or (dict1[keydata] == None) or (dict1[keydata] == 'None') or (dict1[keydata] == 'null') or (xbmcvfs.exists(logostring + "refreshdata")):
                 log("No album data - checking TADB again", xbmc.LOGDEBUG)
-                dict1[keydata], dict2[keydata] = tadb_trackdata(artist,track,dict1,dict2,dict3)
+                dict1[keydata], dict2[keydata], dict7[keydata] = tadb_trackdata(artist,track,dict1,dict2,dict3)
                 dict3[keydata] = datetime.datetime.combine(datetime.date.today(),datetime.datetime.min.time())
                 log("Data refreshed")
             elif (dict2[keydata] == None) or (dict2[keydata] == '0') or (dict2[keydata] == ''):
                 log("No year data for album %s - checking TADB again" % dict1[keydata], xbmc.LOGDEBUG)
-                dict1[keydata], dict2[keydata] = tadb_trackdata(artist,track,dict1,dict2,dict3)
+                dict1[keydata], dict2[keydata], dict7[keydata] = tadb_trackdata(artist,track,dict1,dict2,dict3)
                 dict3[keydata] = datetime.datetime.combine(datetime.date.today(),datetime.datetime.min.time())
                 log("Data refreshed", xbmc.LOGDEBUG)
+            elif (dict7[keydata] == None) or (dict7[keydata] == "None") or (dict7[keydata] == ""):
+                log("No text data for track - re-checking TADB", xbmc.LOGDEBUG)
+                dict1[keydata], dict2[keydata], dict7[keydata] = tadb_trackdata(artist,track,dict1,dict2,dict3)
+                dict3[keydata] = datetime.datetime.combine(datetime.date.today(),datetime.datetime.min.time())              
             else:
                 log( "All data present - No need to refresh", xbmc.LOGDEBUG)
-            return True, dict1[keydata], dict2[keydata]
+            return True, dict1[keydata], dict2[keydata], dict7[keydata]
         else:
             log( "Using cached data", xbmc.LOGDEBUG )
-            return True, dict1[keydata],dict2[keydata]
+            return True, dict1[keydata],dict2[keydata], dict7[keydata]
     elif already_checked == False:
         log("New track - get data for %s : %s" %(artist, track), xbmc.LOGDEBUG)
-        dict1[keydata], dict2[keydata] = tadb_trackdata(artist,track,dict1,dict2,dict3)
+        dict1[keydata], dict2[keydata], dict7[keydata] = tadb_trackdata(artist,track,dict1,dict2,dict3)
 
         dict3[keydata] = datetime.datetime.combine(datetime.date.today(),datetime.datetime.min.time())
         log( "New data has been cached", xbmc.LOGDEBUG)
-        return True, dict1[keydata], dict2[keydata]
+        return True, dict1[keydata], dict2[keydata], dict7[keydata]
 
 def tadb_trackdata(artist,track,dict1,dict2,dict3):
     """
@@ -205,19 +235,68 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3):
             log("No response from theaudiodb", xbmc.LOGDEBUG)
             if keydata in dict1:
                 log("Using data from cache and not refreshing", xbmc.LOGDEBUG)
-                return dict1[keydata], dict2[keydata]    # so return the data we already have
+                if keydata in dict7:
+                    return dict1[keydata], dict2[keydata] , dict7[keydata]   # so return the data we already have
+                else:
+                    trackinfo = None
+                    lastfmurl = "http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=50e52ebb3dc6e421039ec7b1aa7a92d9&artist="
+                    lastfmurl = lastfmurl+artist.encode('utf-8')+'&track='+track.encode('utf-8')+'&format=json'
+                    response = requests.get(lastfmurl)
+                    searching = response.json()['track']
+                    log("JSON from Last-FM [%s]" % searching)
+                    if 'wiki' in searching:
+                        trackinfo = searching['wiki']['content']
+                        trackinfo = clean_string(trackinfo)
+                        log("Trackinfo - [%s]" % trackinfo)
+                    else:
+                        log("No track info found")
+                    if trackinfo is not None:
+                        return dict1[keydata], dict2[keydata], trackinfo
+                    else:
+                        return dict1[keydata], dict2[keydata], None 
             else:
-                return None,None # unless we don't have any
+                return None,None, None # unless we don't have any
         searching = _json.loads(response)
         log("JSON data = %s" % searching, xbmc.LOGDEBUG)
         try:
             album_title = searching['track'][0]['strAlbum']
+            
         except:
             album_title = None
             pass
+        try:
+            trackinfo = None
+            if 'strDescriptionEN' in searching:
+                trackinfo = searching['track'][0]['strDescriptionEN']
+            if trackinfo is not None:
+                log("Description [%s]" % trackinfo.encode('utf-8'))
+            else:
+                lastfmurl = "http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=50e52ebb3dc6e421039ec7b1aa7a92d9&artist="
+                lastfmurl = lastfmurl+artist.encode('utf-8')+'&track='+track.encode('utf-8')+'&format=json'
+                response = requests.get(lastfmurl)
+                searching = response.json()['track']
+                log("JSON from Last-FM [%s]" % searching)
+                if 'wiki' in searching:
+                    trackinfo = searching['wiki']['content']
+                    trackinfo = clean_string(trackinfo)
+                    log("Trackinfo - [%s]" % trackinfo)
+                else:
+                    log("No track info found")
+                    
+        except Exception as e:
+            trackinfo = None
+            log("No trackinfo")
+            log("ERROR [%s]" % str(e))
+            pass
         if (album_title == "") or (album_title == "null") or (album_title == None):
             log("No album data found ", xbmc.LOGDEBUG)
-            return None, None
+            log("trying to use LastFM data")
+            try:
+                album_title = searching['track']['album']['title']
+                log("Album title [%s]" % album_title)
+            except:
+                pass
+                return None, None, None
 
         album_title_search = album_title.replace(" ","+").encode('utf-8')
         searchurl = url + '/searchalbum.php?s=' + searchartist + '&a=' + album_title_search
@@ -231,23 +310,25 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3):
             pass
         if (the_year == "") or (the_year == "null"):
             log("No year found for album", xbmc.LOGDEBUG)
-            return album_title, None
+            return album_title, None, trackinfo
         log("Got '%s' as the year for '%s'" % ( the_year, album_title), xbmc.LOGDEBUG)
-        return album_title, the_year
+        return album_title, the_year, trackinfo
     except IOError:
         log("Timeout connecting to TADB", xbmc.LOGERROR)
         if keydata in dict1:
-            return dict1[keydata], dict2[keydata]
+            return dict1[keydata], dict2[keydata], dict7[keydata]
         else:
-            return None, None
+            return None, None, None
     except Exception as e:
         log("Error searching theaudiodb for album and year data [ %s ]" % str(e), xbmc.LOGERROR)
         exc_type, exc_value, exc_traceback = sys.exc_info()
         log(repr(traceback.format_exception(exc_type, exc_value,exc_traceback)), xbmc.LOGERROR)
-        if keydata in dict1:
-            return dict1[keydata], dict2[keydata]
+        if keydata in dict1 and keydata in dict7:
+            return dict1[keydata], dict2[keydata], dict7[keydata]
+        elif keydata in dict1:
+            return dict1[keydata], dict2[keydata], None
         else:
-            return None, None
+            return None, None, None
 
 def get_mbid(artist):
     """
