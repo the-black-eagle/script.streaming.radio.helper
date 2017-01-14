@@ -20,6 +20,7 @@
 #  WINDOW PROPERTIES SET BY THIS SCRIPT
 #  srh.Artist - contains the name of the artist
 #  srh.Track - contains the track name
+#  srh.TrackInfo - track information as scraped from either TADB or last.fm (if any found)
 #  srh.Stationname - name of radio station playing
 #  srh.Haslogo - true if script found a logo to display, else false
 #  srh.Logopath - path to logo if found, else empty string
@@ -57,7 +58,6 @@ def script_exit():
     WINDOW.clearProperty("srh.Artist.Thumb")
     WINDOW.clearProperty("srh.Artist.Banner")
     log("Script Stopped")
-#    logit.close()
     rt.stop()
     exit()
 
@@ -116,7 +116,7 @@ def get_info(testpath, searchartist, artist, multi_artist, already_checked, chec
         WINDOW.setProperty("srh.Artist.Banner", ArtistBanner)
     if not already_checked:
         log("Not checked the album and year data yet for this artist")
-        already_checked, albumtitle, theyear, trackinfo = get_year(artist,track,dict1,dict2,dict3, already_checked)
+        already_checked, albumtitle, theyear, trackinfo = get_year(artist,track,dict1,dict2,dict3,dict7, already_checked)
         
         if albumtitle and not multi_artist:
             WINDOW.setProperty("srh.Album",albumtitle.encode('utf-8')) # set if single artist and got album
@@ -240,12 +240,12 @@ try:
     already_checked = False
     log("aready_checked is set to [%s] " %str(already_checked))
     if xbmcvfs.exists(logostring + "data.pickle"):
-        dict1,dict2,dict3, dict4, dict5, dict6, dict7 = load_pickle()
+        dict1,dict2,dict3, dict4, dict5, dict6,dict7 = load_pickle()
     my_size = len(dict1)
     log("Cache contains %d tracks" % my_size, xbmc.LOGDEBUG)
     cut_off_date = todays_date - time_diff
     log("Cached data obtained before before %s will be refreshed if details are missing" % (cut_off_date.strftime("%d-%m-%Y")), xbmc.LOGDEBUG)
-    rt = RepeatedTimer(900, save_pickle, dict1,dict2,dict3, dict4, dict5, dict6, dict7)
+    rt = RepeatedTimer(900, save_pickle, dict1,dict2,dict3, dict4, dict5, dict6,dict7)
     
     # Main Loop
     while (not xbmc.abortRequested):
@@ -266,7 +266,7 @@ try:
                 log("Station name was : %s - changed to %s" % ( station_list, station), xbmc.LOGDEBUG)
                 WINDOW.setProperty("srh.Stationname",station)
             if "T - Rex" in current_track:
-                current_track = current_track.replace("T - Rex","T-Rex")
+                current_track = current_track.replace("T - Rex","T. Rex")
             if " - " in current_track:
                 try:
                     x = slice_string(current_track, ' - ',1)
@@ -291,7 +291,7 @@ try:
                 if artist == "Pink":
                     artist = "P!nk"
                 if (artist == "ELO") or (artist == "E.L.O"):
-                    artist = "E.L.O."
+                    artist = "Electric Light Orchestra"
                 if artist == "Florence & The Machine":
                     artist = "Florence + The Machine"
                 if was_playing != track:
