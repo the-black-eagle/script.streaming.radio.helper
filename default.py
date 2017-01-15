@@ -77,7 +77,7 @@ def get_info(testpath, searchartist, artist, multi_artist, already_checked, chec
         log("Logo in Music Directory : Path is %s" % testpath, xbmc.LOGDEBUG)
         
         if onlinelookup == "true":
-            mbid = get_mbid(searchartist)   
+            mbid = get_mbid(searchartist, dict6)   
         else:
             mbid = None
         if tadb == "true":
@@ -90,7 +90,7 @@ def get_info(testpath, searchartist, artist, multi_artist, already_checked, chec
         WINDOW.setProperty("srh.Haslogo", "false")
         log("No logo in music directory", xbmc.LOGDEBUG)
         if onlinelookup == "true":
-            mbid = get_mbid(searchartist)     # No logo in music directory - get artist MBID
+            mbid = get_mbid(searchartist, dict6)     # No logo in music directory - get artist MBID
         else:
             mbid = None
         if mbid:
@@ -294,6 +294,8 @@ try:
                     artist = "Electric Light Orchestra"
                 if artist == "Florence & The Machine":
                     artist = "Florence + The Machine"
+                if artist == "Cult":
+                    artist = "The Cult"
                 if was_playing != track:
                     checked_all_artists, already_checked = no_track()          # clear all window properties on track change
                     searchartists = []
@@ -320,8 +322,21 @@ try:
                         multi_artist = True
                     else:
                         multi_artist = False
+                    mbids = ""
+                    first_time = True
+                    
                     artist_index = 0
                     already_checked = get_info(testpath,searchartists[artist_index].strip(), artist, multi_artist, already_checked,checked_all_artists)
+                    for z in range(0, len(searchartists)):
+                        if searchartists[z] in dict6:
+                            log("Setting mbid for artist %s to %s" % (searchartists[z], dict6[searchartists[z]]))
+                            if first_time:
+                                mbids = mbids + dict6[searchartists[z]]
+                                first_time = False
+                            else:
+                                mbids = mbids +","+dict6[searchartists[z]]
+                    if mbids:
+                        WINDOW.setProperty('srh.MBIDS', mbids)
                     was_playing = track
                     et = set_timer(delay)
                     if multi_artist:
