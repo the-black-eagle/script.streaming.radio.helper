@@ -212,7 +212,9 @@ def get_year(artist,track,dict1,dict2,dict3,dict7, already_checked):
             elif (dict7[keydata] == None) or (dict7[keydata] == "None") or (dict7[keydata] == "") and (lun == False): # don't lookup again if we have just done it (Line 196)
                 log("No text data for track - re-checking TADB", xbmc.LOGDEBUG)
                 dict1[keydata], dict2[keydata], dict7[keydata] = tadb_trackdata(artist,track,dict1,dict2,dict3, dict7)
-                dict3[keydata] = datetime.datetime.combine(datetime.date.today(),datetime.datetime.min.time())              
+                dict3[keydata] = datetime.datetime.combine(datetime.date.today(),datetime.datetime.min.time())
+            elif lun == True:
+                log("Track data just looked up. No need to refresh other data right now!")              
             else:
                 log( "All data present - No need to refresh", xbmc.LOGDEBUG)
             return True, dict1[keydata], dict2[keydata], dict7[keydata]
@@ -240,6 +242,8 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
     searchartist = artist.replace(" ","+").encode('utf-8')
     searchtrack = track.replace(" ","+").encode('utf-8')
     searchtrack = searchtrack.rstrip("+")
+    if "(Radio Edit)" in searchtrack:
+        searchtrack = searchtrack.replace("(Radio Edit)","").strip()  # remove 'radio edit' from track name
     url = 'http://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
     searchurl = url + '/searchtrack.php?s=' + searchartist + '&t=' + searchtrack
     log("Search artist, track with strings : %s,%s" %(searchartist,searchtrack), xbmc.LOGDEBUG)
@@ -338,10 +342,15 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
                 log("No year found for album", xbmc.LOGDEBUG)
                 return album_title, None, dict7[keydata]
             log("Got '%s' as the year for '%s'" % ( the_year, album_title), xbmc.LOGDEBUG)
-            return album_title, the_year, dict7[keydata]
+            if keydata in dict7:
+                return album_title, the_year, dict7[keydata]
+            
         else:
             log("No album title to use as lookup - returning Null values")
-            return None, None, dict7[keydata]
+            if keydata in dict7:
+                return None, None, dict7[keydata]
+            else:
+                return None, None, None
     except IOError:
         log("Timeout connecting to TADB", xbmc.LOGERROR)
         if keydata in dict1 and keydata in dict7:
@@ -361,7 +370,7 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
         else:
             return None, None, None
 
-def get_mbid(artist):
+def get_mbid(artist, dict6):
     """
     Gets the MBID for a given artist name.
     Note that radio stations often omit 'The' from band names so this may return the wrong MBID
@@ -379,7 +388,9 @@ def get_mbid(artist):
             artist = artist.replace('/',' ')
         elif artist.lower() == 'acdc':
             artist = "AC DC"
-        
+        if artist in dict6:
+            log("Using cached MBID")
+            return dict6[artist]
         url = 'http://musicbrainz.org/ws/2/artist/?query=artist:%s' % artist
         url = url.encode('utf-8')
         response = urllib.urlopen(url).read()
@@ -387,7 +398,7 @@ def get_mbid(artist):
             log("Unable to contact Musicbrainz to get an MBID", xbmc.LOGDEBUG)
             if artist in dict6:
                 log("Using cached MBID")
-                return dict6[artist] 
+                return dict6[artist]
             log("using %s as emergency MBID" % em_mbid)
             return em_mbid
         index1 = response.find("artist id")
@@ -399,11 +410,13 @@ def get_mbid(artist):
             mbid = mbid[0:36]
         log('Got an MBID of : %s' % mbid, xbmc.LOGDEBUG)
         if mbid == '':
-            log("Didn't get an MBID for artist : %s", xbmc.LOGDEBUG)
+            log("Didn't get an MBID for artist : %s" % artist, xbmc.LOGDEBUG)
             log("using %s as emergency MBID" % em_mbid)
             return em_mbid
         if artist not in dict6:
+            log("Caching mbid [%s] for artist [%s]" %(mbid, artist), xbmc.LOGDEBUG)
             dict6[artist] = mbid
+            log("Dict6 - %s" % dict6[artist])
         return mbid
     except Exception as e:
         log ("There was an error getting the Musicbrainz ID [ %s ]" % str(e), xbmc.LOGERROR)
@@ -732,6 +745,7 @@ def parse_data(artist, searching, searchartist, dict4, dict5, mbid, logoflag="tr
 
     try:
         checkartist = searching['artists'][0]['strArtist']
+        log("checkartist is [%s], searchartist is [%s]" %(checkartist, searchartist))
         if (checkartist.replace(' ','+') != searchartist) and (artist !="P!nk"):
             artist = checkartist
             log("Updated artist name (%s) with data from tadb [%s]" % (searchartist.replace('+',' '), artist))
