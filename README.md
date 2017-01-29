@@ -74,25 +74,27 @@ trailing spaces.
 Window properties set by the script
 ---
 
+srh.Stationname - String.  Name of the radio station (optionally 'prettied up' in the addon settings)
+
 srh.Artist - string. Contains name of artist.
 
 srh.Track - string. Contains track name.
 
 srh.Haslogo - boolean. true if the script found or downloaded a logo, false otherwise.
 
-srh.Logopath - fully qualified path to any logo found.
+srh.Logopath - String. Fully qualified path to any logo found.
 
-srh.Album - title of an album the track is on, if found
+srh.Album - String. Title of an album the track is on, if found
 
-srh.Year - year of the album, if found
+srh.Year - String. Year of the album, if found
 
-srh.Artist.Thumb - URL to an artist thumbnail on theaudiodb
+srh.Artist.Thumb - String. Fully qualified URL to an artist thumbnail on theaudiodb
 
-srh.Artist.Banner - URL to an artist banner on theaudiodb
+srh.Artist.Banner - String. Fully qualified URL to an artist banner on theaudiodb
 
-srh.MBIDS - property containing comma separated MBID's for either display or for modded script.artistslideshow to use.
+srh.MBIDS - String. Contains comma separated MBID's for either display or for modded script.artistslideshow to use.
 
-srh.TrackInfo - contains any track information found on TADB or last.fm for the current track
+srh.TrackInfo - String. Contains any track information found on TADB or last.fm for the current track
 
 Window properties can be used as follows -
 
