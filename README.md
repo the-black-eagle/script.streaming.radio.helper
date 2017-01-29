@@ -90,6 +90,10 @@ srh.Artist.Thumb - URL to an artist thumbnail on theaudiodb
 
 srh.Artist.Banner - URL to an artist banner on theaudiodb
 
+srh.MBIDS - property containing comma separated MBID's for either display or for modded script.artistslideshow to use.
+
+srh.TrackInfo - contains any track information found on TADB or last.fm for the current track
+
 Window properties can be used as follows -
 
 #####To display the artist name as parsed by the script when streaming
