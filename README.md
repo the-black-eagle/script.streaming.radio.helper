@@ -58,6 +58,10 @@ You can use replace 'station-related-name' with 'Proper Station Name'
 
 This can be done for five radio stations.
 
+[NEW]
+
+Some radio stations transmit the artist - track information the opposite way around to how the helper expects it (Note that this seems to be a recent change in January 2017).  There is a toggle for each radio station you define to switch the order for that particular radio station.  (Note that you must have defined a 'pretty name' for the station for this to work.
+
 ###Strings to remove
 ***
 
@@ -70,17 +74,17 @@ trailing spaces.
 Window properties set by the script
 ---
 
-artiststring - string. Contains name of artist.
+srh.Artist - string. Contains name of artist.
 
-trackstring - string. Contains track name.
+srh.Track - string. Contains track name.
 
-haslogo - boolean. true if the script found or downloaded a logo, false otherwise.
+srh.Haslogo - boolean. true if the script found or downloaded a logo, false otherwise.
 
-logopath - fully qualified path to any logo found.
+srh.Logopath - fully qualified path to any logo found.
 
-albumtitle - title of an album the track is on, if found
+srh.Album - title of an album the track is on, if found
 
-year - year of the album, if found
+srh.Year - year of the album, if found
 
 srh.Artist.Thumb - URL to an artist thumbnail on theaudiodb
 
@@ -92,7 +96,7 @@ Window properties can be used as follows -
 
 ```
 <control type="label">
-    <label>$INFO[Window(12006).Property(artiststring)]</label>
+    <label>$INFO[Window(12006).Property(srh.Artist)]</label>
     <scroll>true</scroll>
     <visible>Player.IsInternetStream</visible>
 </control>
@@ -102,7 +106,7 @@ Window properties can be used as follows -
 
 ```
 <control type="label">
-    <label>$INFO[Window(12006).Property(trackstring)]</label>
+    <label>$INFO[Window(12006).Property(srh.Track)]</label>
     <scroll>true</scroll>
     <scrollout>false</scrollout>
     <visible>Player.IsInternetStream</visible>
@@ -117,11 +121,11 @@ Window properties can be used as follows -
     <top>-90</top>
     <width>400</width>
     <height>155</height>
-    <texture>$INFO[Window.(12006).Property(logopath)]</texture>
+    <texture>$INFO[Window.(12006).Property(srh.Logopath)]</texture>
     <fadetime>300</fadetime>
     <aspectratio align="left">keep</aspectratio>
     <animation effect="fade" end="100" condition="true">Conditional</animation>
-    <visible>Player.IsInternetStream+StringCompare(Window.(12006).Property(haslogo),Control.GetLabel(9998))</visible>
+    <visible>Player.IsInternetStream+StringCompare(Window.(12006).Property(srh.Haslogo),Control.GetLabel(9998))</visible>
 </control>
 ```
 
