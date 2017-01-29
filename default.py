@@ -29,6 +29,20 @@
 #  srh.Album - track the album is off if the addon can find a match (note that this may not be accurate as we just match the first album we find with that track on)
 #  srh.Year the album 'srh.Album' is from if the addon can find a match
 #  radio-streaming-helper-running - true when script running
+REMOTE_DBG = True
+
+# append pydev remote debugger
+#if REMOTE_DBG:
+    ## Make pydev debugger works for auto reload.
+    ## Note pydevd module need to be copied in XBMC\system\python\Lib\pysrc
+    #try:
+        #import pydevd # with the addon script.module.pydevd, only use `import pydevd`
+    ## stdoutToServer and stderrToServer redirect stdout and stderr to eclipse console
+        #pydevd.settrace('localhost', stdoutToServer=True, stderrToServer=True)
+    #except ImportError:
+        #sys.stderr.write("Error: " +
+            #"You must add org.python.pydev.debug.pysrc to your PYTHONPATH.")
+        #sys.exit(1)
 
 import xbmc ,xbmcvfs, xbmcaddon
 import xbmcgui
@@ -75,9 +89,9 @@ def get_info(testpath, searchartist, artist, multi_artist, already_checked, chec
         WINDOW.setProperty("srh.Haslogo", "true")
         WINDOW.setProperty("srh.Logopath", testpath)
         log("Logo in Music Directory : Path is %s" % testpath, xbmc.LOGDEBUG)
-        
+
         if onlinelookup == "true":
-            mbid = get_mbid(searchartist, dict6)   
+            mbid = get_mbid(searchartist, dict6)
         else:
             mbid = None
         if tadb == "true":
@@ -117,13 +131,13 @@ def get_info(testpath, searchartist, artist, multi_artist, already_checked, chec
     if not already_checked:
         log("Not checked the album and year data yet for this artist")
         already_checked, albumtitle, theyear, trackinfo = get_year(artist,track,dict1,dict2,dict3,dict7, already_checked)
-        
+
         if albumtitle and not multi_artist:
             WINDOW.setProperty("srh.Album",albumtitle.encode('utf-8')) # set if single artist and got album
             log("Single artist - Window property srh.Album set")
         elif albumtitle and multi_artist and (WINDOW.getProperty("srh.Album") == ""):
             WINDOW.setProperty("srh.Album",albumtitle.encode('utf-8'))
-            
+
             log("Multi artist - srh.Album was empty - now set to %s" %albumtitle)
         elif not albumtitle and (not multi_artist):
             WINDOW.setProperty("srh.Album","") # clear if no title and not multi artist
@@ -163,7 +177,7 @@ def check_station(file_playing):
             station_list = file_playing[x+1:]
             if ('.' in station_list) and ("http" not in station_list):
                 station,ending = station_list.split('.')
-    
+
         elif '|' in file_playing:
             y = file_playing.rfind('|')
             station_list = file_playing[:y]
@@ -198,7 +212,7 @@ def slice_string(string1, string2, n):
         start = string1.find(string2, start+len(string2))
         n -= 1
     return start
-    
+
 def no_track():
     """Sets the appropriate window properties when we have no track to display"""
 
@@ -219,7 +233,7 @@ try:
        exit(0)
     if BaseString == "":
         addon.openSettings(addonname)
-    
+
     WINDOW.setProperty("radio-streaming-helper-running","true")
     log("Version %s started" % addonversion, xbmc.LOGNOTICE)
     log("----------Settings-------------------------", xbmc.LOGNOTICE)
@@ -234,7 +248,7 @@ try:
         log("Lookup details for featured artists", xbmc.LOGNOTICE)
     else:
         log("Not looking up details for featured artists", xbmc.LOGNOTICE)
-    
+
     log("----------Settings-------------------------", xbmc.LOGNOTICE)
     log("Setting up addon", xbmc.LOGNOTICE)
     already_checked = False
@@ -246,7 +260,7 @@ try:
     cut_off_date = todays_date - time_diff
     log("Cached data obtained before before %s will be refreshed if details are missing" % (cut_off_date.strftime("%d-%m-%Y")), xbmc.LOGDEBUG)
     rt = RepeatedTimer(900, save_pickle, dict1,dict2,dict3, dict4, dict5, dict6,dict7)
-    
+
     # Main Loop
     while (not xbmc.abortRequested):
         if xbmc.getCondVisibility("Player.IsInternetStream"):
@@ -262,18 +276,21 @@ try:
             if firstpass == 0:
                 firstpass = 1
                 log("File playing is %s" % file_playing, xbmc.LOGDEBUG)
+                log("Track playing is [%s]" % current_track, xbmc.LOGDEBUG)
                 station, station_list = check_station(file_playing)
                 log("Station name was : %s - changed to %s" % ( station_list, station), xbmc.LOGDEBUG)
                 WINDOW.setProperty("srh.Stationname",station)
+            log("Track playing is [%s]" % current_track, xbmc.LOGDEBUG)
             if "T - Rex" in current_track:
                 current_track = current_track.replace("T - Rex","T. Rex")
             if " - " in current_track:
                 try:
                     x = slice_string(current_track, ' - ',1)
-                    artist = current_track[:x]
-                    track = current_track[x+3:]
+                    artist = current_track[x+3:]
+                    track = current_track[:x]
                     artist = artist.strip()
                     artist = " ".join(artist.split())  # Make sure there are no extra spaces in the artist name as this causes issues
+
                     pos = slice_string(track,replace1,1)
                     if pos != -1:
                         track = track[:pos]
@@ -286,6 +303,11 @@ try:
                             if pos != -1:
                                 track = track[:pos]
                     track = track.strip()
+                    if "Absolute" in station:
+                        temp1 = track
+                        track = artist
+                        artist = temp1
+                        log("Swapped track and artist info for Absolute Classic Rock")
                 except Exception as e:
                     log("[Exception %s] while trying to slice current_track %s" %(str(e), current_track))
                 if artist == "Pink":
@@ -302,6 +324,7 @@ try:
                     log("Checking station is the same" , xbmc.LOGDEBUG)
                     station, station_list = check_station(file_playing)
                     WINDOW.setProperty("srh.Stationname",station)
+
                     log("Track changed to %s by %s" % (track, artist), xbmc.LOGDEBUG)
                     log("Playing station : %s" % station, xbmc.LOGDEBUG)
                     logopath =''
@@ -324,7 +347,7 @@ try:
                         multi_artist = False
                     mbids = ""
                     first_time = True
-                    
+
                     artist_index = 0
                     already_checked = get_info(testpath,searchartists[artist_index].strip(), artist, multi_artist, already_checked,checked_all_artists)
                     for z in range(0, len(searchartists)):
