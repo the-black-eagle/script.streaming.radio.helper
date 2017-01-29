@@ -17,6 +17,20 @@
 #
 # (C) Black_eagle 2016
 #
+REMOTE_DBG = True
+
+# append pydev remote debugger
+#if REMOTE_DBG:
+    ## Make pydev debugger works for auto reload.
+    ## Note pydevd module need to be copied in XBMC\system\python\Lib\pysrc
+    #try:
+        #import pydevd # with the addon script.module.pydevd, only use `import pydevd`
+    ## stdoutToServer and stderrToServer redirect stdout and stderr to eclipse console
+        #pydevd.settrace('localhost', stdoutToServer=True, stderrToServer=True)
+    #except ImportError:
+        #sys.stderr.write("Error: " +
+            #"You must add org.python.pydev.debug.pysrc to your PYTHONPATH.")
+        #sys.exit(1)
 
 import xbmc ,xbmcvfs, xbmcaddon
 import xbmcgui
@@ -92,7 +106,7 @@ def log(txt, mylevel=xbmc.LOGDEBUG):
     """
     Logs to Kodi's standard logfile
     """
-    
+
     if debugging :
         mylevel=xbmc.LOGNOTICE
 
@@ -154,7 +168,7 @@ def save_pickle(d1,d2,d3,d4,d5,d6,d7):
     log("----------------------------------------------------", xbmc.LOGDEBUG)
 
     log("Saving data to pickle file")
-    
+
     pfile = open(logostring + 'data.pickle',"wb")
     pickle.dump(d1,pfile)
     pickle.dump(d2,pfile)
@@ -214,7 +228,7 @@ def get_year(artist,track,dict1,dict2,dict3,dict7, already_checked):
                 dict1[keydata], dict2[keydata], dict7[keydata] = tadb_trackdata(artist,track,dict1,dict2,dict3, dict7)
                 dict3[keydata] = datetime.datetime.combine(datetime.date.today(),datetime.datetime.min.time())
             elif lun == True:
-                log("Track data just looked up. No need to refresh other data right now!")              
+                log("Track data just looked up. No need to refresh other data right now!")
             else:
                 log( "All data present - No need to refresh", xbmc.LOGDEBUG)
             return True, dict1[keydata], dict2[keydata], dict7[keydata]
@@ -244,6 +258,8 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
     searchtrack = searchtrack.rstrip("+")
     if "(Radio Edit)" in searchtrack:
         searchtrack = searchtrack.replace("(Radio Edit)","").strip()  # remove 'radio edit' from track name
+    if "(Live)" in searchtrack:
+        searchtrack = searchtrack.replace("(Live)","").strip()
     url = 'http://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
     searchurl = url + '/searchtrack.php?s=' + searchartist + '&t=' + searchtrack
     log("Search artist, track with strings : %s,%s" %(searchartist,searchtrack), xbmc.LOGDEBUG)
@@ -281,14 +297,20 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
                         return dict1[keydata], dict2[keydata], dict7[keydata]
                     else:
                         log("No track info to return")
-                        return dict1[keydata], dict2[keydata], None 
+                        return dict1[keydata], dict2[keydata], None
             else:
                 return None,None, None # unless we don't have any
-        searching = _json.loads(response)
+        try:
+
+            searching = _json.loads(response)
+        except ValueError:
+            log("No json data to parse !!",xbmc.LOGDEBUG)
+            searching = []
+
         log("JSON data = %s" % searching, xbmc.LOGDEBUG)
         try:
             album_title = searching['track'][0]['strAlbum']
-            
+
         except:
             album_title = None
             pass
@@ -325,15 +347,19 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
             log("No trackinfo")
             log("ERROR [%s]" % str(e))
             pass
-        
-            
+
+
         if album_title is not None:
             album_title_search = album_title.replace(" ","+").encode('utf-8')
             searchurl = url + '/searchalbum.php?s=' + searchartist + '&a=' + album_title_search
             log("Search artist,album with strings : %s,%s" %(searchartist,album_title_search), xbmc.LOGDEBUG)
             response = urllib.urlopen(searchurl).read()
-            searching = _json.loads(response)
-            the_year = "null"
+            try:
+                searching = _json.loads(response)
+                the_year = "null"
+            except ValueError:
+                log("No JSON from TADB - Site down ??", xbmc.LOGINFO)
+                searching = []
             try:
                 the_year = searching['album'][0]['intYearReleased']
             except:
@@ -344,7 +370,7 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
             log("Got '%s' as the year for '%s'" % ( the_year, album_title), xbmc.LOGDEBUG)
             if keydata in dict7:
                 return album_title, the_year, dict7[keydata]
-            
+
         else:
             log("No album title to use as lookup - returning Null values")
             if keydata in dict7:
@@ -396,9 +422,6 @@ def get_mbid(artist, dict6):
         response = urllib.urlopen(url).read()
         if (response == '') or ("MusicBrainz web server" in response):
             log("Unable to contact Musicbrainz to get an MBID", xbmc.LOGDEBUG)
-            if artist in dict6:
-                log("Using cached MBID")
-                return dict6[artist]
             log("using %s as emergency MBID" % em_mbid)
             return em_mbid
         index1 = response.find("artist id")
@@ -416,7 +439,6 @@ def get_mbid(artist, dict6):
         if artist not in dict6:
             log("Caching mbid [%s] for artist [%s]" %(mbid, artist), xbmc.LOGDEBUG)
             dict6[artist] = mbid
-            log("Dict6 - %s" % dict6[artist])
         return mbid
     except Exception as e:
         log ("There was an error getting the Musicbrainz ID [ %s ]" % str(e), xbmc.LOGERROR)
@@ -491,13 +513,13 @@ def search_tadb(mbid, artist, dict4, dict5,checked_all_artists):
     drop 'The' from band names (eg 'Who' for 'The Who', 'Kinks' for 'The Kinks') if we fail to find a match
     for the artist we try again with 'The ' in front of the artist name
     Finally we do a search with the MBID we previously obtained
-    
+
     Args:
          mbid   - the mbid from musicbrainz
          artist - name of the artist to search for
          dict4  - dictionary of banner URL's
          dict5  - dictionary of thumbnail URL's
-         
+
     returns:
          artist   - artist name
          logopath - full path to downloaded logo
@@ -593,7 +615,7 @@ def search_tadb(mbid, artist, dict4, dict5,checked_all_artists):
     else:
         #  at this point, we have a logo cached to disk previously so we have already looked up this artist at least once
         #  we need to check if we have thumb or banner data and only look up if not
-        
+
         searchartist = artist.replace(" ","+")
         log("searchartist is [%s] - checked_all_artists is [%s]" % (searchartist, checked_all_artists))
         if searchartist in dict4:
@@ -616,7 +638,7 @@ def search_tadb(mbid, artist, dict4, dict5,checked_all_artists):
                     log("Thumb and banner both cached already ")
                     return artist, None, dict4[searchartist], dict5[searchartist] # Don't need the path as using local logo already
                 else:
-                    log("Thumb or banner data missing - TADB will be re-checked")  
+                    log("Thumb or banner data missing - TADB will be re-checked")
         url = 'http://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
         searchurl = url + '/artist-mb.php?i=' + mbid
         log("MBID lookup to check artist name is correct")
@@ -631,7 +653,7 @@ def search_tadb(mbid, artist, dict4, dict5,checked_all_artists):
                         log ("JSON error in function [search_tadb]. It appears we have no data to return !!", xbmc.LOGERROR)
                         if searchartist in dict4:
                             log("Using cached URL data")
-                            return artist, logopath, dict4[searchartist], dict5[searchartist]  # Kodi's thumbnail cache will return images 
+                            return artist, logopath, dict4[searchartist], dict5[searchartist]  # Kodi's thumbnail cache will return images
                         else:
                             return artist, logopath, None, None
             except IOError:
@@ -653,7 +675,7 @@ def search_tadb(mbid, artist, dict4, dict5,checked_all_artists):
                     log("Thumb and banner both cached already ")
                     return artist, None, dict4[searchartist], dict5[searchartist] # Don't need the path as using local logo already
                 else:
-                    log("Thumb or banner data missing - TADB will be re-checked")        
+                    log("Thumb or banner data missing - TADB will be re-checked")
         # We haven't got any thumb or banner data before up OR thumb or banner data is missing so look up on tadb
         log("Looking up thumb and banner data for artist %s" % artist)
         if (not checked_all_artists) and searchartist not in dict4:
@@ -669,11 +691,11 @@ def search_tadb(mbid, artist, dict4, dict5,checked_all_artists):
                 if response != '{"artists":null}':
                     searching = _json.loads(response)
                     artist, url, dict4, dict5, mbid = parse_data(artist, searching, searchartist, dict4, dict5, mbid, False)
-    
+
                 else:
                     searchartist = 'The+' + searchartist
                     url = 'http://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
-    
+
                     searchurl = url + '/search.php?s=' + searchartist
                     log("Looking up %s on tadb.com with URL %s" % (searchartist, searchurl), xbmc.LOGDEBUG)
                     response = urllib.urlopen(searchurl).read()
@@ -692,11 +714,11 @@ def search_tadb(mbid, artist, dict4, dict5,checked_all_artists):
                         else:
                             log("Failed to find any artist info on theaudiodb")
                             return artist, None, None, None
-                        
+
                     else:
                         searching = _json.loads(response)
                         artist, url, dict4, dict5, mbid = parse_data(artist, searching, searchartist, dict4, dict5, mbid, False)
-    
+
                 logopath = logostring + mbid + '/logo.png'
                 logopath = xbmc.validatePath(logopath)
                 if xbmcvfs.exists(logopath):
