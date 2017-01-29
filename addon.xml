@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addon id="script.radio.streaming.helper"
       name="Streaming Radio Helper"
-      version="0.7.0"
+      version="0.6.8"
       provider-name="black_eagle">
   <requires>
     <import addon="xbmc.python" version="2.1.0"/>
@@ -14,6 +14,6 @@
     <description lang="en">Parses ICY and Shoutcast radio streams into window properties for a skin to display.  Also provides local or online logos, current artist thumb and banner</description>
     <summary lang="pl">Skrypt pomaga skórce poprawnie wyświetlać nazwę artysty i tytuł piosenki dla surowych strumieni radiowych (wymagane wsparcie króry).</summary>
     <description lang="pl">Analizuje surowy strumień radiowy, zapisuje nazwę artysty, tytuł piosenki do wlaściwości okna i udostępnia je skórce. Udostępnia też lokalne lub online grafiki (logo, baner i miniaturę artysty).</description>
-	
+
   </extension>
 </addon>
