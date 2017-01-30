@@ -29,20 +29,6 @@
 #  srh.Album - track the album is off if the addon can find a match (note that this may not be accurate as we just match the first album we find with that track on)
 #  srh.Year the album 'srh.Album' is from if the addon can find a match
 #  radio-streaming-helper-running - true when script running
-REMOTE_DBG = True
-
-# append pydev remote debugger
-#if REMOTE_DBG:
-    ## Make pydev debugger works for auto reload.
-    ## Note pydevd module need to be copied in XBMC\system\python\Lib\pysrc
-    #try:
-        #import pydevd # with the addon script.module.pydevd, only use `import pydevd`
-    ## stdoutToServer and stderrToServer redirect stdout and stderr to eclipse console
-        #pydevd.settrace('localhost', stdoutToServer=True, stderrToServer=True)
-    #except ImportError:
-        #sys.stderr.write("Error: " +
-            #"You must add org.python.pydev.debug.pysrc to your PYTHONPATH.")
-        #sys.exit(1)
 
 import xbmc ,xbmcvfs, xbmcaddon
 import xbmcgui
@@ -71,6 +57,7 @@ def script_exit():
     WINDOW.clearProperty("srh.Year")
     WINDOW.clearProperty("srh.Artist.Thumb")
     WINDOW.clearProperty("srh.Artist.Banner")
+    WINDOW.clearProperty("srh.MBIDS")
     log("Script Stopped")
     rt.stop()
     exit()
@@ -190,16 +177,8 @@ def check_station(file_playing):
                 station = station_list[:x]
             else:
                 station = station_list
-        if st5find in station_list:
-            station = st5rep
-        if st4find in station_list:
-            station = st4rep
-        if st3find in station_list:
-            station = st3rep
-        if st2find in station_list:
-            station = st2rep
-        if st1find in station_list:
-            station = st1rep
+        log(station, station_list)
+        station =  next(v for k,v in replacelist.items() if k in (station_list))
         return station, station_list
     except Exception as e:
         log("Error trying to parse station name [ %s ]" %str(e))
@@ -225,6 +204,7 @@ def no_track():
     WINDOW.setProperty("srh.Year","")
     WINDOW.setProperty("srh.Artist.Thumb","")
     WINDOW.setProperty("srh.Artist.Banner","")
+    WINDOW.setProperty("srh.MBIDS","")
     return False, False
 try:
     WINDOW = xbmcgui.Window(12006)
@@ -239,16 +219,14 @@ try:
     log("----------Settings-------------------------", xbmc.LOGNOTICE)
     log("Use fanart.tv : %s" % fanart, xbmc.LOGNOTICE)
     log("use tadb : %s" % tadb, xbmc.LOGNOTICE)
-    log("changing %s to %s" % (st1find, st1rep), xbmc.LOGNOTICE)
-    log("changing %s to %s" % (st2find, st2rep), xbmc.LOGNOTICE)
-    log("changing %s to %s" % (st3find, st3rep), xbmc.LOGNOTICE)
-    log("changing %s to %s" % (st4find, st4rep), xbmc.LOGNOTICE)
-    log("changing %s to %s" % (st5find, st5rep), xbmc.LOGNOTICE)
+    for key in replacelist:
+        log("Changing %s to %s" % (key, replacelist[key]))
     if luma:
         log("Lookup details for featured artists", xbmc.LOGNOTICE)
     else:
         log("Not looking up details for featured artists", xbmc.LOGNOTICE)
 
+    log(replacelist)
     log("----------Settings-------------------------", xbmc.LOGNOTICE)
     log("Setting up addon", xbmc.LOGNOTICE)
     already_checked = False
@@ -280,7 +258,6 @@ try:
                 station, station_list = check_station(file_playing)
                 log("Station name was : %s - changed to %s" % ( station_list, station), xbmc.LOGDEBUG)
                 WINDOW.setProperty("srh.Stationname",station)
-            log("Track playing is [%s]" % current_track, xbmc.LOGDEBUG)
             if "T - Rex" in current_track:
                 current_track = current_track.replace("T - Rex","T. Rex")
             if " - " in current_track:
@@ -303,16 +280,15 @@ try:
                             if pos != -1:
                                 track = track[:pos]
                     track = track.strip()
-                    if "Absolute" in station:
+                    if swaplist.get(station) == "true":
                         temp1 = track
                         track = artist
                         artist = temp1
-                        log("Swapped track and artist info for Absolute Classic Rock")
                 except Exception as e:
                     log("[Exception %s] while trying to slice current_track %s" %(str(e), current_track))
                 if artist == "Pink":
                     artist = "P!nk"
-                if (artist == "ELO") or (artist == "E.L.O"):
+                if (artist == "ELO") or (artist == "E.L.O") or (artist == "E.L.O."):
                     artist = "Electric Light Orchestra"
                 if artist == "Florence & The Machine":
                     artist = "Florence + The Machine"
@@ -321,7 +297,6 @@ try:
                 if was_playing != track:
                     checked_all_artists, already_checked = no_track()          # clear all window properties on track change
                     searchartists = []
-                    log("Checking station is the same" , xbmc.LOGDEBUG)
                     station, station_list = check_station(file_playing)
                     WINDOW.setProperty("srh.Stationname",station)
 

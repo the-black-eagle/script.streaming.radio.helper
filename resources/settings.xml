@@ -31,16 +31,19 @@
         <setting type="lsep" label="32009"/>
         <setting type="text" label="32007" id="st2find" default=" "/>
         <setting type="text" label="32008" id="st2rep" default=" "/>
+        <setting type="bool" label="32031" id="rev2" default="false"/>
         <setting type="lsep" label="32010"/>
         <setting type="text" label="32007" id="st3find" default=" "/>
         <setting type="text" label="32008" id="st3rep" default=" "/>
+        <setting type="bool" label="32031" id="rev3" default="false"/>
         <setting type="lsep" label="32011"/>
         <setting type="text" label="32007" id="st4find" default=" "/>
         <setting type="text" label="32008" id="st4rep" default=" "/>
+        <setting type="bool" label="32031" id="rev4" default="false"/>
         <setting type="lsep" label="32012"/>
         <setting type="text" label="32007" id="st5find" default=" "/>
         <setting type="text" label="32008" id="st5rep" default=" "/>
-
+        <setting type="bool" label="32031" id="rev5" default="false"/>
     </category>
     <category label="32024">
         <setting type="lsep" label="32025"/>

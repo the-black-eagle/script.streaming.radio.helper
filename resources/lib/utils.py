@@ -17,20 +17,6 @@
 #
 # (C) Black_eagle 2016
 #
-REMOTE_DBG = True
-
-# append pydev remote debugger
-#if REMOTE_DBG:
-    ## Make pydev debugger works for auto reload.
-    ## Note pydevd module need to be copied in XBMC\system\python\Lib\pysrc
-    #try:
-        #import pydevd # with the addon script.module.pydevd, only use `import pydevd`
-    ## stdoutToServer and stderrToServer redirect stdout and stderr to eclipse console
-        #pydevd.settrace('localhost', stdoutToServer=True, stderrToServer=True)
-    #except ImportError:
-        #sys.stderr.write("Error: " +
-            #"You must add org.python.pydev.debug.pysrc to your PYTHONPATH.")
-        #sys.exit(1)
 
 import xbmc ,xbmcvfs, xbmcaddon
 import xbmcgui
@@ -72,16 +58,18 @@ BaseString = xbmc.validatePath(BaseString)
 onlinelookup = addon.getSetting('onlinelookup')
 fanart = addon.getSetting('usefanarttv')
 tadb = addon.getSetting('usetadb')
-st1find = addon.getSetting('st1find').strip()
-st1rep = addon.getSetting('st1rep').strip()
-st2find = addon.getSetting('st2find').strip()
-st2rep = addon.getSetting('st2rep').strip()
-st3find = addon.getSetting('st3find').strip()
-st3rep = addon.getSetting('st3rep').strip()
-st4find = addon.getSetting('st4find').strip()
-st4rep = addon.getSetting('st4rep').strip()
-st5find = addon.getSetting('st5find').strip()
-st5rep = addon.getSetting('st5rep').strip()
+replacelist={addon.getSetting('st1find').strip():addon.getSetting('st1rep').strip(), \
+addon.getSetting('st2find').strip():addon.getSetting('st2rep').strip(), \
+addon.getSetting('st3find').strip():addon.getSetting('st3rep').strip(), \
+addon.getSetting('st4find').strip():addon.getSetting('st4rep').strip(), \
+addon.getSetting('st5find').strip():addon.getSetting('st5rep').strip()}
+
+swaplist = {addon.getSetting('st1rep').strip():addon.getSetting('rev1'), \
+addon.getSetting('st2rep').strip():addon.getSetting('rev2'), \
+addon.getSetting('st3rep').strip():addon.getSetting('rev3'), \
+addon.getSetting('st4rep').strip():addon.getSetting('rev4'), \
+addon.getSetting('st5rep').strip():addon.getSetting('rev5')}
+
 replace1 = addon.getSetting('remove1').decode('utf-8')
 replace2 = addon.getSetting('remove2').decode('utf-8')
 replace3 = addon.getSetting('remove3').decode('utf-8')
@@ -360,6 +348,7 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
             except ValueError:
                 log("No JSON from TADB - Site down ??", xbmc.LOGINFO)
                 searching = []
+                the_year = "null"
             try:
                 the_year = searching['album'][0]['intYearReleased']
             except:
@@ -689,9 +678,12 @@ def search_tadb(mbid, artist, dict4, dict5,checked_all_artists):
                     return artist, None, None, None
                 log(response)
                 if response != '{"artists":null}':
-                    searching = _json.loads(response)
-                    artist, url, dict4, dict5, mbid = parse_data(artist, searching, searchartist, dict4, dict5, mbid, False)
-
+                    try:
+                        searching = _json.loads(response)
+                        artist, url, dict4, dict5, mbid = parse_data(artist, searching, searchartist, dict4, dict5, mbid, False)
+                    except ValueError:
+                        log ("No JSON data to parse")
+                    pass
                 else:
                     searchartist = 'The+' + searchartist
                     url = 'http://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
