@@ -58,6 +58,10 @@ You can use replace 'station-related-name' with 'Proper Station Name'
 
 This can be done for five radio stations.
 
+[NEW]
+
+Some radio stations transmit the artist - track information the opposite way around to how the helper expects it (Note that this seems to be a recent change in January 2017).  There is a toggle for each radio station you define to switch the order for that particular radio station.  (Note that you must have defined a 'pretty name' for the station for this to work.
+
 ###Strings to remove
 ***
 
@@ -70,21 +74,27 @@ trailing spaces.
 Window properties set by the script
 ---
 
-artiststring - string. Contains name of artist.
+srh.Stationname - String.  Name of the radio station (optionally 'prettied up' in the addon settings)
 
-trackstring - string. Contains track name.
+srh.Artist - string. Contains name of artist.
 
-haslogo - boolean. true if the script found or downloaded a logo, false otherwise.
+srh.Track - string. Contains track name.
 
-logopath - fully qualified path to any logo found.
+srh.Haslogo - boolean. true if the script found or downloaded a logo, false otherwise.
 
-albumtitle - title of an album the track is on, if found
+srh.Logopath - String. Fully qualified path to any logo found.
 
-year - year of the album, if found
+srh.Album - String. Title of an album the track is on, if found
 
-srh.Artist.Thumb - URL to an artist thumbnail on theaudiodb
+srh.Year - String. Year of the album, if found
 
-srh.Artist.Banner - URL to an artist banner on theaudiodb
+srh.Artist.Thumb - String. Fully qualified URL to an artist thumbnail on theaudiodb
+
+srh.Artist.Banner - String. Fully qualified URL to an artist banner on theaudiodb
+
+srh.MBIDS - String. Contains comma separated MBID's for either display or for modded script.artistslideshow to use.
+
+srh.TrackInfo - String. Contains any track information found on TADB or last.fm for the current track
 
 Window properties can be used as follows -
 
@@ -92,7 +102,7 @@ Window properties can be used as follows -
 
 ```
 <control type="label">
-    <label>$INFO[Window(12006).Property(artiststring)]</label>
+    <label>$INFO[Window(12006).Property(srh.Artist)]</label>
     <scroll>true</scroll>
     <visible>Player.IsInternetStream</visible>
 </control>
@@ -102,7 +112,7 @@ Window properties can be used as follows -
 
 ```
 <control type="label">
-    <label>$INFO[Window(12006).Property(trackstring)]</label>
+    <label>$INFO[Window(12006).Property(srh.Track)]</label>
     <scroll>true</scroll>
     <scrollout>false</scrollout>
     <visible>Player.IsInternetStream</visible>
@@ -117,11 +127,11 @@ Window properties can be used as follows -
     <top>-90</top>
     <width>400</width>
     <height>155</height>
-    <texture>$INFO[Window.(12006).Property(logopath)]</texture>
+    <texture>$INFO[Window.(12006).Property(srh.Logopath)]</texture>
     <fadetime>300</fadetime>
     <aspectratio align="left">keep</aspectratio>
     <animation effect="fade" end="100" condition="true">Conditional</animation>
-    <visible>Player.IsInternetStream+StringCompare(Window.(12006).Property(haslogo),Control.GetLabel(9998))</visible>
+    <visible>Player.IsInternetStream+StringCompare(Window.(12006).Property(srh.Haslogo),Control.GetLabel(9998))</visible>
 </control>
 ```
 
