@@ -248,6 +248,8 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
         searchtrack = searchtrack.replace("(Radio Edit)","").strip()  # remove 'radio edit' from track name
     if "(Live)" in searchtrack:
         searchtrack = searchtrack.replace("(Live)","").strip()
+    if "+&+" in searchtrack:
+        searchtrack=searchtrack.replace("+&+"," and ").strip()
     url = 'http://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
     searchurl = url + '/searchtrack.php?s=' + searchartist + '&t=' + searchtrack
     log("Search artist, track with strings : %s,%s" %(searchartist,searchtrack), xbmc.LOGDEBUG)
@@ -269,7 +271,7 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
                 else:
                     trackinfo = None
                     lastfmurl = "http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=50e52ebb3dc6e421039ec7b1aa7a92d9&artist="
-                    lastfmurl = lastfmurl+artist.encode('utf-8')+'&track='+track.encode('utf-8')+'&format=json'
+                    lastfmurl = lastfmurl+searchartist.encode('utf-8')+'&track='+searchtrack.encode('utf-8')+'&format=json'
                     response = requests.get(lastfmurl)
                     searching = response.json()['track']
                     log("JSON from Last-FM [%s]" % searching)
@@ -310,7 +312,7 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
                 log("Description [%s]" % trackinfo.encode('utf-8'))
             else:
                 lastfmurl = "http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=50e52ebb3dc6e421039ec7b1aa7a92d9&artist="
-                lastfmurl = lastfmurl+artist.encode('utf-8')+'&track='+track.encode('utf-8')+'&format=json'
+                lastfmurl = lastfmurl+searchartist.encode('utf-8')+'&track='+searchtrack.encode('utf-8')+'&format=json'
                 response = requests.get(lastfmurl)
                 searching = response.json()['track']
                 log("JSON from Last-FM [%s]" % searching)
