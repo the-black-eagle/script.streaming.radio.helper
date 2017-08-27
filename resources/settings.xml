@@ -1,26 +1,54 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <settings>
+    <category label="32014">
+        <setting type="lsep" label="32015"/>
+        <setting type="lsep" label="32016"/>
+        <setting type="lsep" label="32017"/>
+        <setting type="sep"/>
+        <setting type="lsep" label="32018"/>
+        <setting type="lsep" label="32019"/>
+        <setting type="lsep" label="32020"/>
+        <setting type="lsep" label="32021"/>
+        <setting type="lsep" label="32022"/>
+    </category>
     <category label="32001">
-		<setting type="lsep"/>
+        <setting type="lsep"/>
         <setting id="musicdirectory" label="32002" type="folder"/>
-        <setting id="usefanarttv" label="32003" type="bool" default="true"/>
-        <setting id="usetadb" label="32004" type="bool" default="true" />
+        <setting id="onlinelookup" label="32013" type="bool" default="true"/>
+        <setting type="sep"/>
+        <setting id="usefanarttv" label="32003" type="bool" default="true" enable="eq(-2,true)"/>
+        <setting id="usetadb" label="32004" type="bool" default="true" enable="eq(-3,true)" />
+        <setting type="sep"/>
+        <setting type="bool" default="true" label="32030" id="luma" />
+        <setting type="labelenum" id="delay" label="32029" values="10|15|20|25|30|35|40|45|50|55|60" default="30"/>
+        <setting id="debug" label="32023" type="bool" default="false"/>
     </category>
     <category label="32005">
         <setting type="lsep" label="32006"/>
         <setting type="text" label="32007" id="st1find" default=" "/>
         <setting type="text" label="32008" id="st1rep" default=" "/>
+        <setting type="bool" label="32031" id="rev1" default="false"/>
         <setting type="lsep" label="32009"/>
         <setting type="text" label="32007" id="st2find" default=" "/>
         <setting type="text" label="32008" id="st2rep" default=" "/>
+        <setting type="bool" label="32031" id="rev2" default="false"/>
         <setting type="lsep" label="32010"/>
         <setting type="text" label="32007" id="st3find" default=" "/>
         <setting type="text" label="32008" id="st3rep" default=" "/>
+        <setting type="bool" label="32031" id="rev3" default="false"/>
         <setting type="lsep" label="32011"/>
         <setting type="text" label="32007" id="st4find" default=" "/>
         <setting type="text" label="32008" id="st4rep" default=" "/>
+        <setting type="bool" label="32031" id="rev4" default="false"/>
         <setting type="lsep" label="32012"/>
         <setting type="text" label="32007" id="st5find" default=" "/>
         <setting type="text" label="32008" id="st5rep" default=" "/>
+        <setting type="bool" label="32031" id="rev5" default="false"/>
     </category>
+    <category label="32024">
+        <setting type="lsep" label="32025"/>
+        <setting type="text" label="32026" id="remove1" default="w Hot 100 - Gorąca Setka Hitów"/>
+        <setting type="text" label="32027" id="remove2" default=""/>
+        <setting type="text" label="32028" id="remove3" default=""/>
+        </category>
 </settings>
