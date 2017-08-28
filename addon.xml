@@ -1,11 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addon id="script.radio.streaming.helper"
       name="Streaming Radio Helper"
-<<<<<<< HEAD
-      version="0.6.8"
-=======
       version="0.6.9"
->>>>>>> 973f1ecb86423c3ebb8c99eaf49da8956137c688
       provider-name="black_eagle">
   <requires>
     <import addon="xbmc.python" version="2.1.0"/>

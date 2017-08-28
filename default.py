@@ -27,7 +27,7 @@
 #  srh.Artist.Thumb - thumb of the current artist
 #  srh.Artist.Banner - banner of the current artist
 #  srh.Album - track the album is off if the addon can find a match (note that this may not be accurate as we just match the first album we find with that track on)
-#  srh.Year the album 'srh.Album' is from if the addon can find a match
+#  srh.Year the year 'srh.Album' is from if the addon can find a match
 #  radio-streaming-helper-running - true when script running
 
 import xbmc ,xbmcvfs, xbmcaddon

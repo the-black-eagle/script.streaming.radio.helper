@@ -9,8 +9,8 @@ had to see if I could do something about it and find a way to make my streaming 
 
 This script is the result of that.
 
-It runs in the background when kodi is streaming audio, split the track info into 
-separate artist and track details and set some window properties so that skins can present the 
+It runs in the background when kodi is streaming audio, splits the track info into
+separate artist and track details and sets some window properties so that skins can present the
 information in the same way as with a track from a local library.
 
 The script also supplies the full path to a logo (if found) as a property.  If there is no logo in
@@ -20,13 +20,16 @@ one it will attempt to download one from fanart.tv or theaudiodb and cache it fo
 The script also looks up artist thumbs and banners on theaudiodb and caches the URL's for future re-use.
 
 Further, the script attempts to match the currently playing track to an album and year.  This is done with
-a search on theaudiodb.  To avoid excessive lookups, track, album and year data is cached by the script and online
+a search on theaudiodb. To avoid excessive lookups, track, album and year data is cached by the script and online
 lookups are performed if the track has not been played before, or the cached data is older than 7 days.
 Cached data is saved either when the script stops or every 15 minutes when its running.
 
-In the event that theaudiodb is unavailable for some reason, the script will use any cached data that is available to it,
+The script now also attempts to display track data as well as artist data if it is available.  Track data for the currently
+playing track is scraped from theaudiodb and lastFM if no details are found on the former.
+
+In the event that theaudiodb and lastFM are unavailable for some reason, the script will use any cached data that is available to it,
 including cached thumbnail and banner URL's.  Because of Kodi's own thumbnail caching, this means that the thumbs/banners can
-still be displayed in spite of theaudiodb being unavailable.
+still be displayed in spite of theaudiodb / lastFM being unavailable.
 
 All window properties are set for the full screen visualisation window (12006).
 
@@ -96,13 +99,6 @@ srh.MBIDS - String. Contains comma separated MBID's for either display or for mo
 
 srh.TrackInfo - String. Contains any track information found on TADB or last.fm for the current track
 
-albumtitle - title of an album the track is on, if found
-
-year - year of the album, if found
-
-srh.Artist.Thumb - URL to an artist thumbnail on theaudiodb
-
-srh.Artist.Banner - URL to an artist banner on theaudiodb
 
 Window properties can be used as follows -
 
@@ -116,7 +112,7 @@ Window properties can be used as follows -
 </control>
 ```
 
-#####Similarly, to display the track name 
+#####Similarly, to display the track name
 
 ```
 <control type="label">
