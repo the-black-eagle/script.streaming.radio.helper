@@ -274,7 +274,7 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
                 else:
                     trackinfo = None
                     lastfmurl = "http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=%s" % happy_hippo.decode( 'base64' )
-                    lastfmurl = lastfmurl+searchartist.encode('utf-8')+'&track='+searchtrack.encode('utf-8')+'&format=json'
+                    lastfmurl = lastfmurl+'&artist='+searchartist.encode('utf-8')+'&track='+searchtrack.encode('utf-8')+'&format=json'
                     response = requests.get(lastfmurl)
                     searching = response.json()['track']
                     log("JSON from Last-FM [%s]" % searching)
