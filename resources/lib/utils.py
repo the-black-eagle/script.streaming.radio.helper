@@ -24,6 +24,7 @@ import urllib, requests, re
 import uuid
 import sys, traceback
 from resources.lib.audiodb import audiodbinfo as settings
+from resources.lib.audiodb import lastfminfo as lfmsettings
 
 import pickle
 import datetime
@@ -34,6 +35,7 @@ else:
 from threading import Timer
 
 rusty_gate = settings.rusty_gate
+happy_hippo = lfmsettings.happy_hippo
 addon = xbmcaddon.Addon()
 addonname = addon.getAddonInfo('name')
 addonversion = addon.getAddonInfo('version')
@@ -243,6 +245,7 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
 
     searchartist = artist.replace(" ","+").encode('utf-8')
     searchtrack = track.replace(" ","+").encode('utf-8')
+    searchtrack = searchtrack.replace("&","and")
     searchtrack = searchtrack.rstrip("+")
     if "(Radio Edit)" in searchtrack:
         searchtrack = searchtrack.replace("(Radio Edit)","").strip()  # remove 'radio edit' from track name
@@ -270,7 +273,7 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
                     return dict1[keydata], dict2[keydata] , dict7[keydata]   # so return the data we already have
                 else:
                     trackinfo = None
-                    lastfmurl = "http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=50e52ebb3dc6e421039ec7b1aa7a92d9&artist="
+                    lastfmurl = "http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=%s" % happy_hippo.decode( 'base64' )
                     lastfmurl = lastfmurl+searchartist.encode('utf-8')+'&track='+searchtrack.encode('utf-8')+'&format=json'
                     response = requests.get(lastfmurl)
                     searching = response.json()['track']
@@ -306,14 +309,21 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
             pass
         try:
             trackinfo = None
-            if 'strDescriptionEN' in searching:
+            try:
                 trackinfo = searching['track'][0]['strDescriptionEN']
-                if trackinfo is not None or trackinfo != "None" or trackinfo != "none":
-                    log("Description [%s]" % trackinfo.encode('utf-8'))
-
-            elif trackinfo is None or searching['track'] == "None" or searching['track'] == None:
-                lastfmurl = "http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=50e52ebb3dc6e421039ec7b1aa7a92d9&artist="
-                lastfmurl = lastfmurl+searchartist.encode('utf-8')+'&track='+searchtrack.encode('utf-8')+'&format=json'
+            except:
+                trackinfo = None
+                log('No track info from TADB')
+                pass
+            if (trackinfo is not None) and (len (trackinfo) > 3) :
+                log("Description [%s]" % trackinfo.encode('utf-8'))
+                dict7[keydata] = trackinfo
+            else:
+                trackinfo = None
+                log("Not found any track data so far, continuing search on lastFM")
+            if trackinfo is None :
+                lastfmurl = "http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=%s" % happy_hippo.decode( 'base64' )
+                lastfmurl = lastfmurl+'&artist='+searchartist.encode('utf-8')+'&track='+searchtrack.encode('utf-8')+'&format=json'
                 response = requests.get(lastfmurl)
                 searching = response.json()['track']
                 log("JSON from Last-FM [%s]" % searching)
@@ -321,10 +331,12 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
                     trackinfo = searching['wiki']['content']
                     trackinfo = clean_string(trackinfo)
                     log("Trackinfo 2 - [%s]" % trackinfo)
-                    dict7[keydata] = trackinfo
+                    if len(trackinfo) < 3:
+                        log ("No track info found")
+                        trackinfo = None
                 else:
-                    log("No track info found")
-                    dict7[keydata] = None
+                    log("No track info found on lastFM")
+            dict7[keydata] = trackinfo
             if (album_title == "") or (album_title == "null") or (album_title == None):
                 log("No album data found on TADB ", xbmc.LOGDEBUG)
                 log("trying to use LastFM data")
@@ -360,8 +372,11 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
                 log("No year found for album", xbmc.LOGDEBUG)
                 return album_title, None, dict7[keydata]
             log("Got '%s' as the year for '%s'" % ( the_year, album_title), xbmc.LOGDEBUG)
+            log("keydata is set to %s " % keydata, xbmc.LOGDEBUG)
             if keydata in dict7:
                 return album_title, the_year, dict7[keydata]
+            else:
+                return album_title, the_year, None
 
         else:
             log("No album title to use as lookup - returning Null values")
