@@ -194,9 +194,9 @@ def get_year(artist,track,dict1,dict2,dict3,dict7, already_checked):
         datechecked = dict3[keydata]
         try:
             trackinfo = dict7[keydata]
-            log("Track info is [%s]" % trackinfo)
+            log("Track info is [%s]" % trackinfo, xbmc.LOGDEBUG)
         except Exception as e:
-            log("Updating info for track [%s]" % track)
+            log("Updating info for track [%s]" % track, xbmc.LOGDEBUG)
             lun = True
             dict1[keydata], dict2[keydata], dict7[keydata] = tadb_trackdata(artist, track, dict1, dict2, dict3, dict7)
             dict3[keydata] = datetime.datetime.combine(datetime.date.today(),datetime.datetime.min.time())
@@ -218,7 +218,7 @@ def get_year(artist,track,dict1,dict2,dict3,dict7, already_checked):
                 dict1[keydata], dict2[keydata], dict7[keydata] = tadb_trackdata(artist,track,dict1,dict2,dict3, dict7)
                 dict3[keydata] = datetime.datetime.combine(datetime.date.today(),datetime.datetime.min.time())
             elif lun == True:
-                log("Track data just looked up. No need to refresh other data right now!")
+                log("Track data just looked up. No need to refresh other data right now!", xbmc.LOGDEBUG)
             else:
                 log( "All data present - No need to refresh", xbmc.LOGDEBUG)
             return True, dict1[keydata], dict2[keydata], dict7[keydata]
@@ -260,7 +260,7 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
     if keydata in dict1: # seen this artist/track before
         if keydata in dict7: # already possibly have some track info
             if dict7[keydata] is not None:
-                log("Using cached data & not looking anything up online")
+                log("Using cached data & not looking anything up online", xbmc.LOGDEBUG)
                 return dict1[keydata], dict2[keydata], dict7[keydata]
     try:
         response = urllib.urlopen(searchurl).read().decode('utf-8')
@@ -269,7 +269,7 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
             if keydata in dict1:
                 log("Using data from cache and not refreshing", xbmc.LOGDEBUG)
                 if keydata in dict7:
-                    log("Using cached track data")
+                    log("Using cached track data", xbmc.LOGDEBUG)
                     return dict1[keydata], dict2[keydata] , dict7[keydata]   # so return the data we already have
                 else:
                     trackinfo = None
@@ -277,19 +277,19 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
                     lastfmurl = lastfmurl+'&artist='+searchartist.encode('utf-8')+'&track='+searchtrack.encode('utf-8')+'&format=json'
                     response = requests.get(lastfmurl)
                     searching = response.json()['track']
-                    log("JSON from Last-FM [%s]" % searching)
+#                    log("JSON from Last-FM [%s]" % searching, xbmc.LOGDEBUG)
                     if 'wiki' in searching:
                         trackinfo = searching['wiki']['content']
                         trackinfo = clean_string(trackinfo)
-                        log("Trackinfo - [%s]" % trackinfo)
+                        log("Trackinfo - [%s]" % trackinfo, xbmc.LOGDEBUG)
                     else:
-                        log("No track info found")
+                        log("No track info found", xbmc.LOGDEBUG)
                     dict7[keydata] = trackinfo
                     log("dict 7 data [%s]" % dict7[keydata])
                     if trackinfo is not None:
                         return dict1[keydata], dict2[keydata], dict7[keydata]
                     else:
-                        log("No track info to return")
+                        log("No track info to return", xbmc.LOGDEBUG)
                         return dict1[keydata], dict2[keydata], None
             else:
                 return None,None, None # unless we don't have any
@@ -300,7 +300,7 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
             log("No json data to parse !!",xbmc.LOGDEBUG)
             searching = []
 
-        log("JSON data = %s" % searching, xbmc.LOGDEBUG)
+#        log("JSON data = %s" % searching, xbmc.LOGDEBUG)
         try:
             album_title = searching['track'][0]['strAlbum']
 
@@ -313,41 +313,41 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
                 trackinfo = searching['track'][0]['strDescriptionEN']
             except:
                 trackinfo = None
-                log('No track info from TADB')
+                log('No track info from TADB', xbmc.LOGDEBUG)
                 pass
             if (trackinfo is not None) and (len (trackinfo) > 3) :
-                log("Description [%s]" % trackinfo.encode('utf-8'))
+                log("Description [%s]" % trackinfo.encode('utf-8'), xbmc.LOGDEBUG)
                 dict7[keydata] = trackinfo
             else:
                 trackinfo = None
-                log("Not found any track data so far, continuing search on lastFM")
+                log("Not found any track data so far, continuing search on lastFM", xbmc.LOGDEBUG)
             if trackinfo is None :
                 lastfmurl = "http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=%s" % happy_hippo.decode( 'base64' )
                 lastfmurl = lastfmurl+'&artist='+searchartist.encode('utf-8')+'&track='+searchtrack.encode('utf-8')+'&format=json'
                 response = requests.get(lastfmurl)
                 searching = response.json()['track']
-                log("JSON from Last-FM [%s]" % searching)
+#                log("JSON from Last-FM [%s]" % searching)
                 if 'wiki' in searching:
                     trackinfo = searching['wiki']['content']
                     trackinfo = clean_string(trackinfo)
-                    log("Trackinfo 2 - [%s]" % trackinfo)
+                    log("Trackinfo 2 - [%s]" % trackinfo, xbmc.LOGDEBUG)
                     if len(trackinfo) < 3:
-                        log ("No track info found")
+                        log ("No track info found", xbmc.LOGDEBUG)
                         trackinfo = None
                 else:
-                    log("No track info found on lastFM")
+                    log("No track info found on lastFM", xbmc.LOGDEBUG)
             dict7[keydata] = trackinfo
             if (album_title == "") or (album_title == "null") or (album_title == None):
                 log("No album data found on TADB ", xbmc.LOGDEBUG)
-                log("trying to use LastFM data")
+                log("trying to use LastFM data", xbmc.LOGDEBUG)
                 try:
                     album_title = searching['album']['title']
-                    log("Album title [%s]" % album_title)
+                    log("Album title [%s]" % album_title, xbmc.LOGDEBUG)
                 except:
                     pass
         except Exception as e:
             trackinfo = None
-            log("No trackinfo")
+            log("No trackinfo", xbmc.LOGDEBUG)
             log("ERROR [%s]" % str(e))
             pass
 
@@ -700,7 +700,7 @@ def search_tadb(mbid, artist, dict4, dict5,checked_all_artists):
                         searching = _json.loads(response)
                         artist, url, dict4, dict5, mbid = parse_data(artist, searching, searchartist, dict4, dict5, mbid, False)
                     except ValueError:
-                        log ("No JSON data to parse")
+                        log ("No JSON data to parse", xbmc.LOGERROR)
                     pass
                 else:
                     searchartist = 'The+' + searchartist
@@ -712,17 +712,17 @@ def search_tadb(mbid, artist, dict4, dict5,checked_all_artists):
                     log(response)
                     if (response == '') or (response == '{"artists":null}') or ("!DOCTYPE" in response):
                         log("No info returned from tadb", xbmc.LOGDEBUG)
-                        log("Looking up with MBID")
+                        log("Looking up with MBID", xbmc.LOGDEBUG)
                         url = 'http://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
                         searchurl = url + '/artist-mb.php?i=' + mbid
                         log("MBID URL is : %s" % searchurl)
                         response = urllib.urlopen(searchurl).read()
-                        log("Response was %s" %str(response))
+                        log("Response was %s" %str(response), xbmc.LOGDEBUG)
                         if (response != '{"artists":null}') and (response != '') and ('!DOCTYPE' not in response):
                             searching = _json.loads(response)
                             artist, url, dict4, dict5, mbid = parse_data (artist, searching, searchartist, dict4, dict5, mbid)
                         else:
-                            log("Failed to find any artist info on theaudiodb")
+                            log("Failed to find any artist info on theaudiodb", xbmc.LOGDEBUG)
                             return artist, None, None, None
 
                     else:
@@ -777,19 +777,20 @@ def parse_data(artist, searching, searchartist, dict4, dict5, mbid, logoflag="tr
 
     try:
         checkartist = searching['artists'][0]['strArtist']
-        log("checkartist is [%s], searchartist is [%s]" %(checkartist, searchartist))
+        log("checkartist is [%s], searchartist is [%s], artist is [%s]" %(checkartist, searchartist, artist), xbmc.LOGDEBUG)
         if (checkartist.replace(' ','+') != searchartist) and (artist !="P!nk"):
             artist = checkartist
-            log("Updated artist name (%s) with data from tadb [%s]" % (searchartist.replace('+',' '), artist))
+            searchartist = checkartist
+            log("Updated artist name (%s) with data from tadb [%s]" % (searchartist.replace('+',' '), checkartist), xbmc.LOGDEBUG)
         _artist_thumb = searching['artists'][0]['strArtistThumb']
         _artist_banner = searching['artists'][0]['strArtistBanner']
-        log("Artist Banner - %s" % _artist_banner)
-        log("Artist Thumb - %s" % _artist_thumb)
+        log("Artist Banner - %s" % _artist_banner, xbmc.LOGDEBUG)
+        log("Artist Thumb - %s" % _artist_thumb, xbmc.LOGDEBUG)
         if (_artist_thumb == "") or (_artist_thumb == "null") or (_artist_thumb == None):
-            log("No artist thumb found for %s" % searchartist)
+            log("No artist thumb found for %s" % searchartist, xbmc.LOGDEBUG)
             _artist_thumb = None
         if (_artist_banner == "") or (_artist_banner == "null") or (_artist_banner == None):
-            log("No artist banner found for %s" % searchartist)
+            log("No artist banner found for %s" % searchartist, xbmc.LOGDEBUG)
             _artist_banner = None
         if searchartist not in dict4:
             dict4[searchartist] = _artist_thumb
@@ -808,10 +809,10 @@ def parse_data(artist, searching, searchartist, dict4, dict5, mbid, logoflag="tr
         else:
             return artist, None, dict4, dict5, mbid
     except Exception as e:
-        log("[Parse_Data] error [%s]" %str(e))
+        log("[Parse_Data] error [%s]" %str(e), xbmc.LOGERROR)
         exc_type, exc_value, exc_traceback = sys.exc_info()
-        log(repr(traceback.format_exception(exc_type, exc_value,exc_traceback)))
-        log(artist, url, searchartist,dict4[searchartist], dict5[searchartist])
+        log(repr(traceback.format_exception(exc_type, exc_value,exc_traceback)),xbmc.LOGERROR)
+        log(artist, url, searchartist,dict4[searchartist], dict5[searchartist],xbmc.LOGERROR)
         return artist, url, dict4, dict5, mbid
 
 class RepeatedTimer(object):

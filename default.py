@@ -177,11 +177,11 @@ def check_station(file_playing):
                 station = station_list[:x]
             else:
                 station = station_list
-        log(station, station_list)
+        log("Station is [%s], station_list is [%s]" %(station, station_list), xbmc.LOGDEBUG)
         station =  next(v for k,v in replacelist.items() if k in (station_list))
         return station, station_list
     except Exception as e:
-        log("Error trying to parse station name [ %s ]" %str(e))
+        log("Error trying to parse station name [ %s ]" %str(e), xbmc.LOGERROR)
         return 'Online Radio', file_playing
 
 def slice_string(string1, string2, n):
@@ -220,7 +220,7 @@ try:
     log("Use fanart.tv : %s" % fanart, xbmc.LOGNOTICE)
     log("use tadb : %s" % tadb, xbmc.LOGNOTICE)
     for key in replacelist:
-        log("Changing %s to %s" % (key, replacelist[key]))
+        log("Changing %s to %s" % (key, replacelist[key]), xbmc.LOGNOTICE)
     if luma:
         log("Lookup details for featured artists", xbmc.LOGNOTICE)
     else:
@@ -233,9 +233,9 @@ try:
     if xbmcvfs.exists(logostring + "data.pickle"):
         dict1,dict2,dict3, dict4, dict5, dict6,dict7 = load_pickle()
     my_size = len(dict1)
-    log("Cache contains %d tracks" % my_size, xbmc.LOGDEBUG)
+    log("Cache contains %d tracks" % my_size, xbmc.LOGNOTICE)
     cut_off_date = todays_date - time_diff
-    log("Cached data obtained before before %s will be refreshed if details are missing" % (cut_off_date.strftime("%d-%m-%Y")), xbmc.LOGDEBUG)
+    log("Cached data obtained before before %s will be refreshed if details are missing" % (cut_off_date.strftime("%d-%m-%Y")), xbmc.LOGNOTICE)
     rt = RepeatedTimer(900, save_pickle, dict1,dict2,dict3, dict4, dict5, dict6,dict7)
 
     # Main Loop
@@ -284,7 +284,7 @@ try:
                         track = artist
                         artist = temp1
                 except Exception as e:
-                    log("[Exception %s] while trying to slice current_track %s" %(str(e), current_track))
+                    log("[Exception %s] while trying to slice current_track %s" %(str(e), current_track),xbmcLOGDEBUG)
                 if artist == "Pink":
                     artist = "P!nk"
                 if (artist.upper() == "ELO") or (artist.upper() == "E.L.O") or (artist.upper() == "E.L.O."):
@@ -360,7 +360,7 @@ try:
             script_exit()
 
 except Exception as e:
-    log("Radio Streaming Helper has encountered an error in the main loop and needs to close - %s" % str(e))
+    log("Radio Streaming Helper has encountered an error in the main loop and needs to close - %s" % str(e), xbmc.LOGERROR)
     exc_type, exc_value, exc_traceback = sys.exc_info()
     log(repr(traceback.format_exception(exc_type, exc_value,exc_traceback)))
     save_pickle(dict1,dict2,dict3,dict4, dict5, dict6, dict7)
