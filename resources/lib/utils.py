@@ -551,7 +551,7 @@ def search_tadb(mbid, artist, dict4, dict5,checked_all_artists):
             if response == '':
                 log("No response from theaudiodb", xbmc.LOGDEBUG)
                 return artist, None ,None, None
-            log(response)
+            log(response, xbmc.LOGDEBUG)
             if response != '{"artists":null}':
                 try:
                     searching = _json.loads(response)
@@ -566,18 +566,18 @@ def search_tadb(mbid, artist, dict4, dict5,checked_all_artists):
                 searchurl = url + '/search.php?s=' + searchartist
                 log("Looking up %s on tadb.com with URL %s" % (searchartist, searchurl), xbmc.LOGDEBUG)
                 response = urllib.urlopen(searchurl).read()
-                log(response)
+                log(response, xbmc.LOGDEBUG)
                 if (response == '') or (response == '{"artists":null}') or ("!DOCTYPE" in response):
                     log("No logo found on tadb", xbmc.LOGDEBUG)
                     # Lookup failed on name - try with MBID
-                    log("Looking up with MBID")
+                    log("Looking up with MBID", xbmc.LOGDEBUG)
                     url = 'http://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
                     searchurl = url + '/artist-mb.php?i=' + mbid
-                    log("MBID URL is : %s" % searchurl)
+                    log("MBID URL is : %s" % searchurl, xbmc.LOGDEBUG)
                     response = urllib.urlopen(searchurl).read()
-                    log("Response : %s " % str(response))
+                    log("Response : %s " % str(response), xbmc.LOGDEBUG)
                     if (response == '{"artists":null}') or (response == '') or ('!DOCTYPE' in response):
-                        log("Failed to find any artist info on theaudiodb")
+                        log("Failed to find any artist info on theaudiodb", xbmc.LOGDEBUG)
                         return artist, None, None, None
                     else:
                         searching = _json.loads(response)
