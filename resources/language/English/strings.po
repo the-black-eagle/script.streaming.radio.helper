@@ -129,3 +129,7 @@ msgstr ""
 msgctxt "#32030"
 msgid "Lookup logo/thumb info for featured artists"
 msgstr ""
+
+msgctxt "#32031"
+msgid "Reverse artist - track order for this station"
+msgstr ""
