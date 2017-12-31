@@ -63,7 +63,8 @@ This can be done for five radio stations.
 
 
 =======
-Some radio stations transmit the artist - track information the opposite way around to how the helper expects it (Note that this seems to be a recent change in January 2017).  There is a toggle for each radio station you define to switch the order for that particular radio station.  (Note that you must have defined a 'pretty name' for the station for this to work.
+
+Some radio stations transmit the artist - track information the opposite way around to how the helper expects it (Note that this seems to be a recent change in January 2017).  There is a toggle for each radio station you define to switch the order for that particular radio station.  (Note that you must have defined a 'pretty name' for the station for this to work).
 
 ### Strings to remove
 ***
