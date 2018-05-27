@@ -50,5 +50,17 @@
         <setting type="text" label="32026" id="remove1" default="w Hot 100 - Gorąca Setka Hitów"/>
         <setting type="text" label="32027" id="remove2" default=""/>
         <setting type="text" label="32028" id="remove3" default=""/>
-        </category>
+    </category>
+    <category label="32032">
+    <setting type="text" label="32033" id="artist1" default="Pink"/>
+    <setting type="text" label="32034" id="artistrep1" default="P!nk"/>
+    <setting type="text" label="32033" id="artist2" default="Florence & The Machine"/>
+    <setting type="text" label="32034" id="artistrep2" default="Florence + The Machine"/>
+    <setting type="text" label="32033" id="artist3" default="Cult"/>
+    <setting type="text" label="32034" id="artistrep3" default="The Cult"/>
+    <setting type="text" label="32033" id="artist4" default="Meatloaf"/>
+    <setting type="text" label="32034" id="artistrep4" default="Meat Loaf"/>
+    <setting type="text" label="32033" id="artist5" default="E.L.O"/>
+    <setting type="text" label="32034" id="artistrep5" default="Electric Light Orchestra"/>
+    </category>
 </settings>

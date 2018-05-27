@@ -41,12 +41,17 @@ addonname = addon.getAddonInfo('name')
 addonversion = addon.getAddonInfo('version')
 addonpath = addon.getAddonInfo('path').decode('utf-8')
 addonid = addon.getAddonInfo('id').decode('utf-8')
+language = addon.getLocalizedString
 
 # variables
 BaseString = addon.getSetting('musicdirectory')     # Base directory for Music albums
 logostring = xbmc.translatePath('special://profile/addon_data/' + addonid +'/').decode('utf-8') # Base directory to store downloaded logos
 logfile = xbmc.translatePath('special://temp/srh.log').decode('utf-8')
 was_playing =""
+got_info = 0
+bbc_first_time = 0
+bbc_delay = 5
+bbc_channel = 2
 dict1 = {} # Key = artistname+trackname, value = Album name
 dict2 = {} # Key = artistname+trackname, value = Album year
 dict3 = {} # Key = artistname+trackname, value = date last looked up
@@ -65,6 +70,12 @@ addon.getSetting('st2find').strip():addon.getSetting('st2rep').strip(), \
 addon.getSetting('st3find').strip():addon.getSetting('st3rep').strip(), \
 addon.getSetting('st4find').strip():addon.getSetting('st4rep').strip(), \
 addon.getSetting('st5find').strip():addon.getSetting('st5rep').strip()}
+
+artistlist={addon.getSetting('artist1').strip():addon.getSetting('artistrep1').strip(), \
+addon.getSetting('artist2').strip():addon.getSetting('artistrep2').strip(), \
+addon.getSetting('artist3').strip():addon.getSetting('artistrep3').strip(), \
+addon.getSetting('artist4').strip():addon.getSetting('artistrep4').strip(), \
+addon.getSetting('artist5').strip():addon.getSetting('artistrep5').strip()}
 
 swaplist = {addon.getSetting('st1rep').strip():addon.getSetting('rev1'), \
 addon.getSetting('st2rep').strip():addon.getSetting('rev2'), \
@@ -91,6 +102,9 @@ if debugging == 'true' :
     debugging = True
 else:
     debugging = False
+exportfile = "/home/xbmc/data_out.txt"
+
+data_out= None
 
 def log(txt, mylevel=xbmc.LOGDEBUG):
     """
@@ -104,6 +118,15 @@ def log(txt, mylevel=xbmc.LOGDEBUG):
         txt = txt.decode('utf-8')
     message = u'%s : %s' % (addonname, txt)
     xbmc.log(msg=message.encode('utf-8'), level=mylevel)
+
+def download_logo(path,url,origin="Fanart.tv"):
+    logopath = path + "logo.png"
+    imagedata = urllib.urlopen(url).read()
+    f = open(logopath,'wb')
+    f.write(imagedata)
+    f.close()
+    log("Downloaded logo from %s" % origin, xbmc.LOGDEBUG)
+    return logopath
 
 def clean_string(text):
     text = re.sub('<a [^>]*>|</a>|<span[^>]*>|</span>','',text)
@@ -174,7 +197,7 @@ def get_year(artist,track,dict1,dict2,dict3,dict7, already_checked):
     Look in local cache for album and year data corresponding to current track and artist.
     Return the local data if present, unless it is older than 7 days in which case re-lookup online.
     If data not present in cache, lookup online and add to cache
-    If all data present in cache, just retur taht and don't lookup anything online.
+    If all data present in cache, just return that and don't lookup anything online.
     """
     log("----------------------------------------------------", xbmc.LOGDEBUG)
     log("            Entered routine 'get_year'           ", xbmc.LOGDEBUG)
@@ -274,7 +297,8 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
                 else:
                     trackinfo = None
                     lastfmurl = "http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=%s" % happy_hippo.decode( 'base64' )
-                    lastfmurl = lastfmurl+'&artist='+searchartist.encode('utf-8')+'&track='+searchtrack.encode('utf-8')+'&format=json'
+                    lastfmurl = lastfmurl+'&artist='+searchartist+'&track='+searchtrack+'&format=json'
+                    log("LastFM url is [%s] " % lastfmurl, xbmc.LOGDEBUG)
                     response = requests.get(lastfmurl)
                     searching = response.json()['track']
 #                    log("JSON from Last-FM [%s]" % searching, xbmc.LOGDEBUG)
@@ -323,9 +347,15 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
                 log("Not found any track data so far, continuing search on lastFM", xbmc.LOGDEBUG)
             if trackinfo is None :
                 lastfmurl = "http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=%s" % happy_hippo.decode( 'base64' )
-                lastfmurl = lastfmurl+'&artist='+searchartist.encode('utf-8')+'&track='+searchtrack.encode('utf-8')+'&format=json'
+                lastfmurl = lastfmurl+'&artist='+searchartist+'&track='+searchtrack+'&format=json'
+                log("LastFM url is [%s] " % lastfmurl, xbmc.LOGDEBUG)
+
                 response = requests.get(lastfmurl)
-                searching = response.json()['track']
+                try:
+                    searching = response.json()['track']
+                except:
+                    searching = []
+                    pass
 #                log("JSON from Last-FM [%s]" % searching)
                 if 'wiki' in searching:
                     trackinfo = searching['wiki']['content']
@@ -469,35 +499,41 @@ def get_hdlogo(mbid, artist):
     log("----------------------------------------------------", xbmc.LOGDEBUG)
 
     try:
-        url = "https://fanart.tv/artist/" + mbid
-        logopath = logostring + mbid + "/logo.png"
-        logopath = xbmc.validatePath(logopath)
-        if not xbmcvfs.exists(logopath):
-            log("Searching for HD logo on fanart.tv", xbmc.LOGDEBUG)
-            response = urllib.urlopen(url).read()
-            if response == '':
-                log("No response from fanart.tv", xbmc.LOGDEBUG)
-                return None
-            index1 = response.find("<h2>HD ClearLOGO<div")
-            if index1 != -1:
-                index2 = response.find('<div class="image_options">',index1)
-                anylogos = response[index1:index2]
-                if "currently no images" in anylogos:
-                    log("No HD logos found for %s" % artist, xbmc.LOGDEBUG)
+        if checked_all_artists == False:
+            url = "https://fanart.tv/artist/" + mbid
+            logopath = logostring + mbid + "/logo.png"
+            logopath = xbmc.validatePath(logopath)
+            if not xbmcvfs.exists(logopath):
+                log("Searching for HD logo on fanart.tv", xbmc.LOGDEBUG)
+                response = urllib.urlopen(url).read()
+                if response == '':
+                    log("No response from fanart.tv", xbmc.LOGDEBUG)
                     return None
-                index3= response.find('<a href="/api/download.php?type=download')
-                index4 = response.find('class="btn btn-inverse download"')
-                chop = response[index3+9:index4-2]
-                url = "https://fanart.tv" + chop
-                logopath = logostring + mbid + '/'
-                xbmcvfs.mkdir(logopath)
-                log("Downloading logo from fanart.tv and cacheing in %s" % logopath, xbmc.LOGDEBUG)
-                logopath = logopath + "logo.png"
-                imagedata = urllib.urlopen(url).read()
-                f = open(logopath,'wb')
-                f.write(imagedata)
-                f.close()
-                return logopath
+                index1 = response.find("<h2>HD ClearLOGO<div")
+                if index1 != -1:
+                    index2 = response.find('<div class="image_options">',index1)
+                    anylogos = response[index1:index2]
+                    if "currently no images" in anylogos:
+                        log("No HD logos found for %s" % artist, xbmc.LOGDEBUG)
+                        return None
+                    index3= response.find('<a href="/api/download.php?type=download')
+                    index4 = response.find('class="btn btn-inverse download"')
+                    chop = response[index3+9:index4-2]
+                    url = "https://fanart.tv" + chop
+                    logopath = logostring + mbid + '/'
+                    logopath = xbmc.ValidatePath(logopath)
+                    xbmcvfs.mkdir(logopath)
+                    logopath = download_logo(logopath,url)
+                    return logopath
+            else:
+                logopath = logostring + mbid + '/logo.png'
+                logopath = xbmc.validatePath(logopath)
+                if xbmcvfs.exists(logopath):
+                    log("Logo downloaded previously", xbmc.LOGDEBUG)
+                    return logopath
+                else:
+                    log("No logo found on fanart.tv", xbmc.LOGDEBUG)
+                    return None
         else:
             logopath = logostring + mbid + '/logo.png'
             logopath = xbmc.validatePath(logopath)
@@ -505,7 +541,7 @@ def get_hdlogo(mbid, artist):
                 log("Logo downloaded previously", xbmc.LOGDEBUG)
                 return logopath
             else:
-                log("No logo found on fanart.tv", xbmc.LOGDEBUG)
+                log("No logo in cache for %s " % artist, xbmc.LOGDEBUG)
                 return None
     except:
         log("Error searching fanart.tv for a logo", xbmc.LOGERROR)
@@ -590,12 +626,13 @@ def search_tadb(mbid, artist, dict4, dict5,checked_all_artists):
             logopath = xbmc.validatePath(logopath)
             if (not xbmcvfs.exists(logopath)) and (url != None):
                 xbmcvfs.mkdir(logopath)
-                log("Downloading logo from tadb and cacheing in %s" % logopath, xbmc.LOGDEBUG)
-                logopath = logopath + "logo.png"
-                imagedata = urllib.urlopen(url).read()
-                f = open(logopath,'wb')
-                f.write(imagedata)
-                f.close()
+                #log("Downloading logo from tadb and cacheing in %s" % logopath, xbmc.LOGDEBUG)
+                #logopath = logopath + "logo.png"
+                #imagedata = urllib.urlopen(url).read()
+                #f = open(logopath,'wb')
+                #f.write(imagedata)
+                #f.close()
+                logopath = download_logo(logopath,url,"tadb")
                 return artist, logopath, dict4[searchartist], dict5[searchartist]
             else:
                 logopath = logostring + mbid + '/logo.png'
@@ -779,9 +816,9 @@ def parse_data(artist, searching, searchartist, dict4, dict5, mbid, logoflag="tr
         checkartist = searching['artists'][0]['strArtist']
         log("checkartist is [%s], searchartist is [%s], artist is [%s]" %(checkartist, searchartist, artist), xbmc.LOGDEBUG)
         if (checkartist.replace(' ','+') != searchartist) and (artist !="P!nk"):
+            log("Updated artist name (%s) with data from tadb [%s]" % (artist, checkartist), xbmc.LOGDEBUG)
             artist = checkartist
-            searchartist = checkartist
-            log("Updated artist name (%s) with data from tadb [%s]" % (searchartist.replace('+',' '), checkartist), xbmc.LOGDEBUG)
+#            searchartist = checkartist
         _artist_thumb = searching['artists'][0]['strArtistThumb']
         _artist_banner = searching['artists'][0]['strArtistBanner']
         log("Artist Banner - %s" % _artist_banner, xbmc.LOGDEBUG)
@@ -815,6 +852,24 @@ def parse_data(artist, searching, searchartist, dict4, dict5, mbid, logoflag="tr
         log(artist, url, searchartist,dict4[searchartist], dict5[searchartist],xbmc.LOGERROR)
         return artist, url, dict4, dict5, mbid
 
+def get_bbc_radio_info(bbc_channel):
+#    log("Get BBC Radio Info",xbmc.LOGINFO)
+    lastfmurl = "http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=bbcradio%s" % bbc_channel
+    lastfmurl = lastfmurl +"&api_key=%s" % happy_hippo.decode( 'base64' )
+    lastfmurl = lastfmurl  + "&format=json&limit=1"
+    try:
+        response = requests.get(lastfmurl, timeout=3.05)
+        if response.status_code == 200:
+            stuff = response.json()
+            track = stuff['recenttracks']['track'][0]['name']
+            artist = stuff['recenttracks']['track'][0]['artist']['#text']
+#            log("BBC RADIO INFO - GOT [%s] - [%s]" %(track, artist), xbmc.LOGINFO)
+            return track + " - " + artist
+        else:
+            return ''
+    except Exception as e:
+        log("[get_bbc_radio_info] error [%s] " %str(e), xbmc.LOGERROR)
+        return '' , 1
 class RepeatedTimer(object):
     """Auto-starting threaded timer.  Used for auto-saving the dictionary data
     to file every 15 minutes while the addon is running.
