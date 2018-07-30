@@ -69,7 +69,12 @@ replacelist={addon.getSetting('st1find').strip():addon.getSetting('st1rep').stri
 addon.getSetting('st2find').strip():addon.getSetting('st2rep').strip(), \
 addon.getSetting('st3find').strip():addon.getSetting('st3rep').strip(), \
 addon.getSetting('st4find').strip():addon.getSetting('st4rep').strip(), \
-addon.getSetting('st5find').strip():addon.getSetting('st5rep').strip()}
+addon.getSetting('st5find').strip():addon.getSetting('st5rep').strip(), \
+addon.getSetting('st6find').strip():addon.getSetting('st6rep').strip(), \
+addon.getSetting('st7find').strip():addon.getSetting('st7rep').strip(), \
+addon.getSetting('st8find').strip():addon.getSetting('st8rep').strip(), \
+addon.getSetting('st9find').strip():addon.getSetting('st9rep').strip(), \
+addon.getSetting('st10find').strip():addon.getSetting('st10rep').strip()}
 
 artistlist={addon.getSetting('artist1').strip():addon.getSetting('artistrep1').strip(), \
 addon.getSetting('artist2').strip():addon.getSetting('artistrep2').strip(), \
@@ -81,7 +86,12 @@ swaplist = {addon.getSetting('st1rep').strip():addon.getSetting('rev1'), \
 addon.getSetting('st2rep').strip():addon.getSetting('rev2'), \
 addon.getSetting('st3rep').strip():addon.getSetting('rev3'), \
 addon.getSetting('st4rep').strip():addon.getSetting('rev4'), \
-addon.getSetting('st5rep').strip():addon.getSetting('rev5')}
+addon.getSetting('st5rep').strip():addon.getSetting('rev5'), \
+addon.getSetting('st6rep').strip():addon.getSetting('rev6'), \
+addon.getSetting('st7rep').strip():addon.getSetting('rev7'), \
+addon.getSetting('st8rep').strip():addon.getSetting('rev8'), \
+addon.getSetting('st9rep').strip():addon.getSetting('rev9'), \
+addon.getSetting('st10rep').strip():addon.getSetting('rev10')}
 
 replace1 = addon.getSetting('remove1').decode('utf-8')
 replace2 = addon.getSetting('remove2').decode('utf-8')
@@ -858,11 +868,29 @@ def get_bbc_radio_info(bbc_channel):
     lastfmurl = lastfmurl +"&api_key=%s" % happy_hippo.decode( 'base64' )
     lastfmurl = lastfmurl  + "&format=json&limit=1"
     try:
+        _featuredartists = []
         response = requests.get(lastfmurl, timeout=3.05)
         if response.status_code == 200:
             stuff = response.json()
+            if stuff.has_key('message'):
+                log("Error getting BBC data from last.fm", xbmc.LOGERROR)
+                log("%s" %str(stuff), xbmc.LOGERROR)
+                return ''
             track = stuff['recenttracks']['track'][0]['name']
             artist = stuff['recenttracks']['track'][0]['artist']['#text']
+            if 'feat. ' in track:           # got at least one featured artist
+                _f=track.find('feat.')          # remove the () around featured artist(s)
+                _s=track.rfind(')')
+                temptrack=track[:_f-2]
+                temptrack2=track[_f:_s]
+                track = temptrack + " " + temptrack2
+                track=track.replace('feat.','~').replace(' & ',' ~ ')
+                _featuredartists=track.split('~')
+                track=_featuredartists[0].strip()
+                del _featuredartists[0]
+            artist=artist.replace(', ',' & ')
+            for _artists in range(0,len(_featuredartists)):
+                artist = artist + " & " + _featuredartists[_artists].strip()
 #            log("BBC RADIO INFO - GOT [%s] - [%s]" %(track, artist), xbmc.LOGINFO)
             return track + " - " + artist
         else:

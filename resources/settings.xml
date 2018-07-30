@@ -44,6 +44,26 @@
         <setting type="text" label="32007" id="st5find" default=" "/>
         <setting type="text" label="32008" id="st5rep" default=" "/>
         <setting type="bool" label="32031" id="rev5" default="false"/>
+        <setting type="lsep" label="32035"/>
+        <setting type="text" label="32007" id="st6find" default=" "/>
+        <setting type="text" label="32008" id="st6rep" default=" "/>
+        <setting type="bool" label="32031" id="rev6" default="false"/>
+        <setting type="lsep" label="32036"/>
+        <setting type="text" label="32007" id="st7find" default=" "/>
+        <setting type="text" label="32008" id="st7rep" default=" "/>
+        <setting type="bool" label="32031" id="rev7" default="false"/>
+        <setting type="lsep" label="32037"/>
+        <setting type="text" label="32007" id="st8find" default=" "/>
+        <setting type="text" label="32008" id="st8rep" default=" "/>
+        <setting type="bool" label="32031" id="rev8" default="false"/>
+        <setting type="lsep" label="32038"/>
+        <setting type="text" label="32007" id="st9find" default=" "/>
+        <setting type="text" label="32008" id="st9rep" default=" "/>
+        <setting type="bool" label="32031" id="rev9" default="false"/>
+        <setting type="lsep" label="32039"/>
+        <setting type="text" label="32007" id="st10find" default=" "/>
+        <setting type="text" label="32008" id="st10rep" default=" "/>
+        <setting type="bool" label="32031" id="rev10" default="false"/>
     </category>
     <category label="32024">
         <setting type="lsep" label="32025"/>

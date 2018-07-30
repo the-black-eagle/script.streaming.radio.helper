@@ -125,11 +125,11 @@ def get_info(testpath, searchartist, artist, multi_artist, already_checked, chec
         already_checked, albumtitle, theyear, trackinfo = get_year(artist,track,dict1,dict2,dict3,dict7, already_checked)
 
         if albumtitle and not multi_artist:
-            WINDOW.setProperty("srh.Album",albumtitle.encode('utf-8')) # set if single artist and got album
+            WINDOW.setProperty("srh.Album",albumtitle) # set if single artist and got album
             log("Single artist - Window property srh.Album set")
 #            data_out_albumtitle =  albumtitle.encode('utf-8')
         elif albumtitle and multi_artist and (WINDOW.getProperty("srh.Album") == ""):
-            WINDOW.setProperty("srh.Album",albumtitle.encode('utf-8'))
+            WINDOW.setProperty("srh.Album",albumtitle)
 
             log("Multi artist - srh.Album was empty - now set to %s" %albumtitle)
         elif not albumtitle and (not multi_artist):
@@ -292,7 +292,10 @@ try:
                 player_id = player_id_temp['result'][0]['playerid']
                 json_query = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "Player.GetItem", "params": { "properties": [ "file"], "playerid":%d  }, "id": "AudioGetItem"}' % player_id)
                 file_playing = _json.loads(json_query).get('result',{}).get('item',{}).get('file',[])
-            current_track = current_track.decode('utf-8')
+            try:
+                current_track = current_track.decode('utf-8')
+            except: # can't decode track
+                pass # continue with track as is
             if firstpass == 0:
                 firstpass = 1
                 log("File playing is %s" % file_playing, xbmc.LOGDEBUG)
@@ -349,7 +352,7 @@ try:
                     #artist = "Meat Loaf"
                 try:
 
-                    artist =  next(v for k,v in artistlist.items() if k in (artist))
+                    artist =  next(v for k,v in artistlist.items() if k == (artist))
                 except StopIteration:
                     pass
                 if was_playing != track:
@@ -422,6 +425,7 @@ try:
 
 except Exception as e:
     log("Radio Streaming Helper has encountered an error in the main loop and needs to close - %s" % str(e), xbmc.LOGERROR)
+    xbmcgui.Dialog().notification("Radio Streaming Helper", 'A fatal error has occured. Please check the Kodi Log', xbmcgui.NOTIFICATION_INFO, 5000)
     exc_type, exc_value, exc_traceback = sys.exc_info()
     log(repr(traceback.format_exception(exc_type, exc_value,exc_traceback)))
     save_pickle(dict1,dict2,dict3,dict4, dict5, dict6, dict7)

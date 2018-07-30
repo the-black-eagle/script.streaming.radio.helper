@@ -145,3 +145,23 @@ msgstr ""
 msgctxt "#32034"
 msgid "With - "
 msgstr ""
+
+msgctxt "#32035"
+msgid "Station 6"
+msgstr ""
+
+msgctxt "#32036"
+msgid "Station 7"
+msgstr ""
+
+msgctxt "#32037"
+msgid "Station 8"
+msgstr ""
+
+msgctxt "#32038"
+msgid "Station 9"
+msgstr ""
+
+msgctxt "#32039"
+msgid "Station 10"
+msgstr ""
