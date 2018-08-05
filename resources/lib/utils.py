@@ -18,9 +18,9 @@
 # (C) Black_eagle 2016
 #
 
-import xbmc ,xbmcvfs, xbmcaddon
+import xbmc, xbmcvfs, xbmcaddon
 import xbmcgui
-import urllib, requests, re
+import urllib, re
 import uuid
 import sys, traceback
 from resources.lib.audiodb import audiodbinfo as settings
@@ -45,53 +45,53 @@ language = addon.getLocalizedString
 
 # variables
 BaseString = addon.getSetting('musicdirectory')     # Base directory for Music albums
-logostring = xbmc.translatePath('special://profile/addon_data/' + addonid +'/').decode('utf-8') # Base directory to store downloaded logos
+logostring = xbmc.translatePath('special://profile/addon_data/' + addonid + '/').decode('utf-8')  # Base directory to store downloaded logos
 logfile = xbmc.translatePath('special://temp/srh.log').decode('utf-8')
-was_playing =""
+was_playing = ""
 got_info = 0
 bbc_first_time = 0
 bbc_delay = 5
 bbc_channel = 2
-dict1 = {} # Key = artistname+trackname, value = Album name
-dict2 = {} # Key = artistname+trackname, value = Album year
-dict3 = {} # Key = artistname+trackname, value = date last looked up
-dict4 = {} # Key = Artist Name, Value = URL to artist thumb
-dict5 = {} # Key = Artist Name, Value = URL to artist banner
-dict6 = {} # Key = artist Name, value = MBID
-dict7 = {} # Key = Artistname+trackname, value = Track details
-time_diff = datetime.timedelta(days = 7) # date to next check
-todays_date = datetime.datetime.combine(datetime.date.today(),datetime.datetime.min.time())
+dict1 = {}  # Key = artistname+trackname, value = Album name
+dict2 = {}  # Key = artistname+trackname, value = Album year
+dict3 = {}  # Key = artistname+trackname, value = date last looked up
+dict4 = {}  # Key = Artist Name, Value = URL to artist thumb
+dict5 = {}  # Key = Artist Name, Value = URL to artist banner
+dict6 = {}  # Key = artist Name, value = MBID
+dict7 = {}  # Key = Artistname+trackname, value = Track details
+time_diff = datetime.timedelta(days=7)  # date to next check
+todays_date = datetime.datetime.combine(datetime.date.today(), datetime.datetime.min.time())
 BaseString = xbmc.validatePath(BaseString)
 onlinelookup = addon.getSetting('onlinelookup')
 fanart = addon.getSetting('usefanarttv')
 tadb = addon.getSetting('usetadb')
-replacelist={addon.getSetting('st1find').strip():addon.getSetting('st1rep').strip(), \
-addon.getSetting('st2find').strip():addon.getSetting('st2rep').strip(), \
-addon.getSetting('st3find').strip():addon.getSetting('st3rep').strip(), \
-addon.getSetting('st4find').strip():addon.getSetting('st4rep').strip(), \
-addon.getSetting('st5find').strip():addon.getSetting('st5rep').strip(), \
-addon.getSetting('st6find').strip():addon.getSetting('st6rep').strip(), \
-addon.getSetting('st7find').strip():addon.getSetting('st7rep').strip(), \
-addon.getSetting('st8find').strip():addon.getSetting('st8rep').strip(), \
-addon.getSetting('st9find').strip():addon.getSetting('st9rep').strip(), \
-addon.getSetting('st10find').strip():addon.getSetting('st10rep').strip()}
+replacelist={addon.getSetting('st1find').strip(): addon.getSetting('st1rep').strip(), \
+addon.getSetting('st2find').strip(): addon.getSetting('st2rep').strip(), \
+addon.getSetting('st3find').strip(): addon.getSetting('st3rep').strip(), \
+addon.getSetting('st4find').strip(): addon.getSetting('st4rep').strip(), \
+addon.getSetting('st5find').strip(): addon.getSetting('st5rep').strip(), \
+addon.getSetting('st6find').strip(): addon.getSetting('st6rep').strip(), \
+addon.getSetting('st7find').strip(): addon.getSetting('st7rep').strip(), \
+addon.getSetting('st8find').strip(): addon.getSetting('st8rep').strip(), \
+addon.getSetting('st9find').strip(): addon.getSetting('st9rep').strip(), \
+addon.getSetting('st10find').strip(): addon.getSetting('st10rep').strip()}
 
-artistlist={addon.getSetting('artist1').strip():addon.getSetting('artistrep1').strip(), \
-addon.getSetting('artist2').strip():addon.getSetting('artistrep2').strip(), \
-addon.getSetting('artist3').strip():addon.getSetting('artistrep3').strip(), \
-addon.getSetting('artist4').strip():addon.getSetting('artistrep4').strip(), \
-addon.getSetting('artist5').strip():addon.getSetting('artistrep5').strip()}
+artistlist={addon.getSetting('artist1').strip(): addon.getSetting('artistrep1').strip(), \
+addon.getSetting('artist2').strip(): addon.getSetting('artistrep2').strip(), \
+addon.getSetting('artist3').strip(): addon.getSetting('artistrep3').strip(), \
+addon.getSetting('artist4').strip(): addon.getSetting('artistrep4').strip(), \
+addon.getSetting('artist5').strip(): addon.getSetting('artistrep5').strip()}
 
-swaplist = {addon.getSetting('st1rep').strip():addon.getSetting('rev1'), \
-addon.getSetting('st2rep').strip():addon.getSetting('rev2'), \
-addon.getSetting('st3rep').strip():addon.getSetting('rev3'), \
-addon.getSetting('st4rep').strip():addon.getSetting('rev4'), \
-addon.getSetting('st5rep').strip():addon.getSetting('rev5'), \
-addon.getSetting('st6rep').strip():addon.getSetting('rev6'), \
-addon.getSetting('st7rep').strip():addon.getSetting('rev7'), \
-addon.getSetting('st8rep').strip():addon.getSetting('rev8'), \
-addon.getSetting('st9rep').strip():addon.getSetting('rev9'), \
-addon.getSetting('st10rep').strip():addon.getSetting('rev10')}
+swaplist = {addon.getSetting('st1rep').strip(): addon.getSetting('rev1'), \
+addon.getSetting('st2rep').strip(): addon.getSetting('rev2'), \
+addon.getSetting('st3rep').strip(): addon.getSetting('rev3'), \
+addon.getSetting('st4rep').strip(): addon.getSetting('rev4'), \
+addon.getSetting('st5rep').strip(): addon.getSetting('rev5'), \
+addon.getSetting('st6rep').strip(): addon.getSetting('rev6'), \
+addon.getSetting('st7rep').strip(): addon.getSetting('rev7'), \
+addon.getSetting('st8rep').strip(): addon.getSetting('rev8'), \
+addon.getSetting('st9rep').strip(): addon.getSetting('rev9'), \
+addon.getSetting('st10rep').strip(): addon.getSetting('rev10')}
 
 replace1 = addon.getSetting('remove1').decode('utf-8')
 replace2 = addon.getSetting('remove2').decode('utf-8')
@@ -116,38 +116,42 @@ exportfile = "/home/xbmc/data_out.txt"
 
 data_out= None
 
+
 def log(txt, mylevel=xbmc.LOGDEBUG):
     """
     Logs to Kodi's standard logfile
     """
 
-    if debugging :
-        mylevel=xbmc.LOGNOTICE
+    if debugging:
+        mylevel = xbmc.LOGNOTICE
 
     if isinstance(txt, str):
         txt = txt.decode('utf-8')
     message = u'%s : %s' % (addonname, txt)
     xbmc.log(msg=message.encode('utf-8'), level=mylevel)
 
+
 def download_logo(path,url,origin="Fanart.tv"):
     logopath = path + "logo.png"
     imagedata = urllib.urlopen(url).read()
-    f = open(logopath,'wb')
+    f = open(logopath, 'wb')
     f.write(imagedata)
     f.close()
     log("Downloaded logo from %s" % origin, xbmc.LOGDEBUG)
     return logopath
 
+
 def clean_string(text):
-    text = re.sub('<a [^>]*>|</a>|<span[^>]*>|</span>','',text)
-    text = re.sub('&quot;','"',text)
-    text = re.sub('&amp;','&',text)
-    text = re.sub('&gt;','>',text)
-    text = re.sub('&lt;','<',text)
-    text = re.sub('User-contributed text is available under the Creative Commons By-SA License; additional terms may apply.','',text)
-    text = re.sub('Read more about .* on Last.fm.','',text)
-    text = re.sub('Read more on Last.fm.','',text)
+    text = re.sub('<a [^>]*>|</a>|<span[^>]*>|</span>', '', text)
+    text = re.sub('&quot;', '"', text)
+    text = re.sub('&amp;', '&', text)
+    text = re.sub('&gt;', '>', text)
+    text = re.sub('&lt;', '<', text)
+    text = re.sub('User-contributed text is available under the Creative Commons By-SA License; additional terms may apply.', '', text)
+    text = re.sub('Read more about .* on Last.fm.', '', text)
+    text = re.sub('Read more on Last.fm.', '', text)
     return text
+
 
 def load_pickle():
     """
@@ -172,7 +176,7 @@ def load_pickle():
     try:
         d6 = pickle.load(pfile)
     except:
-        d6={}
+        d6 = {}
         log("created new pickle data for MBID storage")
     try:
         d7 = pickle.load(pfile)
@@ -180,9 +184,10 @@ def load_pickle():
         d7 = {}
         log("Created new pickle data for track information")
     pfile.close()
-    return d1,d2,d3,d4,d5,d6,d7
+    return d1, d2, d3, d4, d5, d6, d7
 
-def save_pickle(d1,d2,d3,d4,d5,d6,d7):
+
+def save_pickle(d1, d2, d3, d4, d5, d6, d7):
     """
     Saves local cache data to file in the addon_data directory of the script
     """
@@ -193,16 +198,17 @@ def save_pickle(d1,d2,d3,d4,d5,d6,d7):
     log("Saving data to pickle file")
 
     pfile = open(logostring + 'data.pickle',"wb")
-    pickle.dump(d1,pfile)
-    pickle.dump(d2,pfile)
-    pickle.dump(d3,pfile)
-    pickle.dump(d4,pfile)
-    pickle.dump(d5,pfile)
-    pickle.dump(d6,pfile)
-    pickle.dump(d7,pfile)
+    pickle.dump(d1, pfile)
+    pickle.dump(d2, pfile)
+    pickle.dump(d3, pfile)
+    pickle.dump(d4, pfile)
+    pickle.dump(d5, pfile)
+    pickle.dump(d6, pfile)
+    pickle.dump(d7, pfile)
     pfile.close()
 
-def get_year(artist,track,dict1,dict2,dict3,dict7, already_checked):
+
+def get_year(artist, track, dict1, dict2, dict3, dict7, already_checked):
     """
     Look in local cache for album and year data corresponding to current track and artist.
     Return the local data if present, unless it is older than 7 days in which case re-lookup online.
@@ -232,18 +238,18 @@ def get_year(artist,track,dict1,dict2,dict3,dict7, already_checked):
             log("Updating info for track [%s]" % track, xbmc.LOGDEBUG)
             lun = True
             dict1[keydata], dict2[keydata], dict7[keydata] = tadb_trackdata(artist, track, dict1, dict2, dict3, dict7)
-            dict3[keydata] = datetime.datetime.combine(datetime.date.today(),datetime.datetime.min.time())
+            dict3[keydata] = datetime.datetime.combine(datetime.date.today(), datetime.datetime.min.time())
         log("Data for track '%s' on album '%s' last checked %s" % (track, dict1[keydata], str(datechecked.strftime("%d-%m-%Y"))), xbmc.LOGDEBUG)
         if (datechecked < (todays_date - time_diff)) or (xbmcvfs.exists(logostring + "refreshdata")):
             log( "Data might need refreshing", xbmc.LOGDEBUG)
             if (dict1[keydata] == '') or (dict1[keydata] == None) or (dict1[keydata] == 'None') or (dict1[keydata] == 'null') or (xbmcvfs.exists(logostring + "refreshdata")):
                 log("No album data - checking TADB again", xbmc.LOGDEBUG)
-                dict1[keydata], dict2[keydata], dict7[keydata] = tadb_trackdata(artist,track,dict1,dict2,dict3, dict7)
+                dict1[keydata], dict2[keydata], dict7[keydata] = tadb_trackdata(artist, track, dict1, dict2, dict3, dict7)
                 dict3[keydata] = datetime.datetime.combine(datetime.date.today(),datetime.datetime.min.time())
                 log("Data refreshed")
             elif (dict2[keydata] == None) or (dict2[keydata] == '0') or (dict2[keydata] == ''):
                 log("No year data for album %s - checking TADB again" % dict1[keydata], xbmc.LOGDEBUG)
-                dict1[keydata], dict2[keydata], dict7[keydata] = tadb_trackdata(artist,track,dict1,dict2,dict3, dict7)
+                dict1[keydata], dict2[keydata], dict7[keydata] = tadb_trackdata(artist, track, dict1, dict2, dict3, dict7)
                 dict3[keydata] = datetime.datetime.combine(datetime.date.today(),datetime.datetime.min.time())
                 log("Data refreshed", xbmc.LOGDEBUG)
             elif (dict7[keydata] == None) or (dict7[keydata] == "None") or (dict7[keydata] == "") and (lun == False): # don't lookup again if we have just done it (Line 196)
@@ -309,8 +315,22 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
                     lastfmurl = "http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=%s" % happy_hippo.decode( 'base64' )
                     lastfmurl = lastfmurl+'&artist='+searchartist+'&track='+searchtrack+'&format=json'
                     log("LastFM url is [%s] " % lastfmurl, xbmc.LOGDEBUG)
-                    response = requests.get(lastfmurl)
-                    searching = response.json()['track']
+                    try:
+                        response = urllib.urlopen(lastfmurl).read()
+                    except URLError as e:
+                        if hasattr(e,'reason'):
+                            log("Failed to reach server at last.fm", xbmc.LOGERROR)
+                            log("Error returned was [%s]" %e.reason, xbmc.LOGERROR)
+
+                        elif hasattr(e,'code'):
+                            log("Error getting last.fm data.  Error code was [%s]" %e.code , xbmc.LOGERROR)
+                    try:
+                        stuff = json.loads(response)
+#                    searching = response.json()['track']
+                        searching = stuff['track']
+                    except:
+                        searching = []
+                        pass
 #                    log("JSON from Last-FM [%s]" % searching, xbmc.LOGDEBUG)
                     if 'wiki' in searching:
                         trackinfo = searching['wiki']['content']
@@ -359,10 +379,19 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
                 lastfmurl = "http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=%s" % happy_hippo.decode( 'base64' )
                 lastfmurl = lastfmurl+'&artist='+searchartist+'&track='+searchtrack+'&format=json'
                 log("LastFM url is [%s] " % lastfmurl, xbmc.LOGDEBUG)
-
-                response = requests.get(lastfmurl)
                 try:
-                    searching = response.json()['track']
+                    response = urllib.urlopen(lastfmurl).read()
+                except URLError as e:
+                    if hasattr(e,'reason'):
+                        log("Failed to reach server when fetching track data from last.fm", xbmc.LOGERROR)
+                        log("Error returned was [%s]" %e.reason, xbmc.LOGERROR)
+                    elif hasattr(e,'code'):
+                        log("Error getting last.fm data.  Error code was [%s]" %e.code , xbmc.LOGERROR)
+
+#                response = requests.get(lastfmurl)
+                try:
+                    stuff = json.loads(response)
+                    searching = stuff['track']
                 except:
                     searching = []
                     pass
@@ -869,32 +898,39 @@ def get_bbc_radio_info(bbc_channel):
     lastfmurl = lastfmurl  + "&format=json&limit=1"
     try:
         _featuredartists = []
-        response = requests.get(lastfmurl, timeout=3.05)
-        if response.status_code == 200:
-            stuff = response.json()
-            if stuff.has_key('message'):
-                log("Error getting BBC data from last.fm", xbmc.LOGERROR)
-                log("%s" %str(stuff), xbmc.LOGERROR)
+        try:
+            response = urllib.urlopen(lastfmurl).read()
+        except URLError as e:
+            if hasattr(e,'reason'):
+                log("Failed to reach server when fetching BBC radio data from last.fm", xbmc.LOGERROR)
+                log("Error returned was [%s]" %e.reason, xbmc.LOGERROR)
                 return ''
-            track = stuff['recenttracks']['track'][0]['name']
-            artist = stuff['recenttracks']['track'][0]['artist']['#text']
-            if 'feat. ' in track:           # got at least one featured artist
-                _f=track.find('feat.')          # remove the () around featured artist(s)
-                _s=track.rfind(')')
-                temptrack=track[:_f-2]
-                temptrack2=track[_f:_s]
-                track = temptrack + " " + temptrack2
-                track=track.replace('feat.','~').replace(' & ',' ~ ')
-                _featuredartists=track.split('~')
-                track=_featuredartists[0].strip()
-                del _featuredartists[0]
-            artist=artist.replace(', ',' & ')
-            for _artists in range(0,len(_featuredartists)):
-                artist = artist + " & " + _featuredartists[_artists].strip()
-#            log("BBC RADIO INFO - GOT [%s] - [%s]" %(track, artist), xbmc.LOGINFO)
-            return track + " - " + artist
-        else:
+            elif hasattr(e,'code'):
+                log("Error getting BBC radio data.  Error code was [%s]" %e.code , xbmc.LOGERROR)
+                return ''
+        stuff = json.loads(response)
+        if stuff.has_key('message'):
+            log("Error getting BBC data from last.fm", xbmc.LOGERROR)
+            log("%s" %str(stuff), xbmc.LOGERROR)
             return ''
+        track = stuff['recenttracks']['track'][0]['name']
+        artist = stuff['recenttracks']['track'][0]['artist']['#text']
+        if 'feat. ' in track:           # got at least one featured artist
+            _f=track.find('feat.')          # remove the () around featured artist(s)
+            _s=track.rfind(')')
+            temptrack=track[:_f-2]
+            temptrack2=track[_f:_s]
+            track = temptrack + " " + temptrack2
+            track=track.replace('feat.','~').replace(' & ',' ~ ')
+            _featuredartists=track.split('~')
+            track=_featuredartists[0].strip()
+            del _featuredartists[0]
+        artist=artist.replace(', ',' & ')
+        for _artists in range(0,len(_featuredartists)):
+            artist = artist + " & " + _featuredartists[_artists].strip()
+#            log("BBC RADIO INFO - GOT [%s] - [%s]" %(track, artist), xbmc.LOGINFO)
+        return track + " - " + artist
+
     except Exception as e:
         log("[get_bbc_radio_info] error [%s] " %str(e), xbmc.LOGERROR)
         return '' , 1
