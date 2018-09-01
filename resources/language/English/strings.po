@@ -133,3 +133,35 @@ msgstr ""
 msgctxt "#32031"
 msgid "Reverse artist - track order for this station"
 msgstr ""
+
+msgctxt "#32032"
+msgid "Fix Artist Names"
+msgstr ""
+
+msgctxt "#32033"
+msgid "Replace artist - "
+msgstr ""
+
+msgctxt "#32034"
+msgid "With - "
+msgstr ""
+
+msgctxt "#32035"
+msgid "Station 6"
+msgstr ""
+
+msgctxt "#32036"
+msgid "Station 7"
+msgstr ""
+
+msgctxt "#32037"
+msgid "Station 8"
+msgstr ""
+
+msgctxt "#32038"
+msgid "Station 9"
+msgstr ""
+
+msgctxt "#32039"
+msgid "Station 10"
+msgstr ""

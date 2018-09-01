@@ -25,30 +25,62 @@
     </category>
     <category label="32005">
         <setting type="lsep" label="32006"/>
-        <setting type="text" label="32007" id="st1find" default=" "/>
-        <setting type="text" label="32008" id="st1rep" default=" "/>
+        <setting type="text" label="32007" id="st1find" default="Not Set"/>
+        <setting type="text" label="32008" id="st1rep" default=""/>
         <setting type="bool" label="32031" id="rev1" default="false"/>
         <setting type="lsep" label="32009"/>
-        <setting type="text" label="32007" id="st2find" default=" "/>
-        <setting type="text" label="32008" id="st2rep" default=" "/>
+        <setting type="text" label="32007" id="st2find" default="Not Set"/>
+        <setting type="text" label="32008" id="st2rep" default=""/>
         <setting type="bool" label="32031" id="rev2" default="false"/>
         <setting type="lsep" label="32010"/>
-        <setting type="text" label="32007" id="st3find" default=" "/>
-        <setting type="text" label="32008" id="st3rep" default=" "/>
+        <setting type="text" label="32007" id="st3find" default="Not Set"/>
+        <setting type="text" label="32008" id="st3rep" default=""/>
         <setting type="bool" label="32031" id="rev3" default="false"/>
         <setting type="lsep" label="32011"/>
-        <setting type="text" label="32007" id="st4find" default=" "/>
-        <setting type="text" label="32008" id="st4rep" default=" "/>
+        <setting type="text" label="32007" id="st4find" default="Not Set"/>
+        <setting type="text" label="32008" id="st4rep" default=""/>
         <setting type="bool" label="32031" id="rev4" default="false"/>
         <setting type="lsep" label="32012"/>
-        <setting type="text" label="32007" id="st5find" default=" "/>
-        <setting type="text" label="32008" id="st5rep" default=" "/>
+        <setting type="text" label="32007" id="st5find" default="Not Set"/>
+        <setting type="text" label="32008" id="st5rep" default=""/>
         <setting type="bool" label="32031" id="rev5" default="false"/>
+        <setting type="lsep" label="32035"/>
+        <setting type="text" label="32007" id="st6find" default="Not Set"/>
+        <setting type="text" label="32008" id="st6rep" default=""/>
+        <setting type="bool" label="32031" id="rev6" default="false"/>
+        <setting type="lsep" label="32036"/>
+        <setting type="text" label="32007" id="st7find" default="Not Set"/>
+        <setting type="text" label="32008" id="st7rep" default=""/>
+        <setting type="bool" label="32031" id="rev7" default="false"/>
+        <setting type="lsep" label="32037"/>
+        <setting type="text" label="32007" id="st8find" default="Not Set"/>
+        <setting type="text" label="32008" id="st8rep" default=""/>
+        <setting type="bool" label="32031" id="rev8" default="false"/>
+        <setting type="lsep" label="32038"/>
+        <setting type="text" label="32007" id="st9find" default="Not Set"/>
+        <setting type="text" label="32008" id="st9rep" default=""/>
+        <setting type="bool" label="32031" id="rev9" default="false"/>
+        <setting type="lsep" label="32039"/>
+        <setting type="text" label="32007" id="st10find" default="Not Set"/>
+        <setting type="text" label="32008" id="st10rep" default=""/>
+        <setting type="bool" label="32031" id="rev10" default="false"/>
     </category>
     <category label="32024">
         <setting type="lsep" label="32025"/>
         <setting type="text" label="32026" id="remove1" default="w Hot 100 - Gorąca Setka Hitów"/>
         <setting type="text" label="32027" id="remove2" default=""/>
         <setting type="text" label="32028" id="remove3" default=""/>
-        </category>
+    </category>
+    <category label="32032">
+    <setting type="text" label="32033" id="artist1" default="Pink"/>
+    <setting type="text" label="32034" id="artistrep1" default="P!nk"/>
+    <setting type="text" label="32033" id="artist2" default="Florence & The Machine"/>
+    <setting type="text" label="32034" id="artistrep2" default="Florence + The Machine"/>
+    <setting type="text" label="32033" id="artist3" default="Cult"/>
+    <setting type="text" label="32034" id="artistrep3" default="The Cult"/>
+    <setting type="text" label="32033" id="artist4" default="Meatloaf"/>
+    <setting type="text" label="32034" id="artistrep4" default="Meat Loaf"/>
+    <setting type="text" label="32033" id="artist5" default="E.L.O"/>
+    <setting type="text" label="32034" id="artistrep5" default="Electric Light Orchestra"/>
+    </category>
 </settings>

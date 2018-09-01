@@ -18,9 +18,9 @@
 # (C) Black_eagle 2016
 #
 
-import xbmc ,xbmcvfs, xbmcaddon
+import xbmc, xbmcvfs, xbmcaddon
 import xbmcgui
-import urllib, requests, re
+import urllib, re
 import uuid
 import sys, traceback
 from resources.lib.audiodb import audiodbinfo as settings
@@ -41,36 +41,57 @@ addonname = addon.getAddonInfo('name')
 addonversion = addon.getAddonInfo('version')
 addonpath = addon.getAddonInfo('path').decode('utf-8')
 addonid = addon.getAddonInfo('id').decode('utf-8')
+language = addon.getLocalizedString
 
 # variables
 BaseString = addon.getSetting('musicdirectory')     # Base directory for Music albums
-logostring = xbmc.translatePath('special://profile/addon_data/' + addonid +'/').decode('utf-8') # Base directory to store downloaded logos
+logostring = xbmc.translatePath('special://profile/addon_data/' + addonid + '/').decode('utf-8')  # Base directory to store downloaded logos
 logfile = xbmc.translatePath('special://temp/srh.log').decode('utf-8')
-was_playing =""
-dict1 = {} # Key = artistname+trackname, value = Album name
-dict2 = {} # Key = artistname+trackname, value = Album year
-dict3 = {} # Key = artistname+trackname, value = date last looked up
-dict4 = {} # Key = Artist Name, Value = URL to artist thumb
-dict5 = {} # Key = Artist Name, Value = URL to artist banner
-dict6 = {} # Key = artist Name, value = MBID
-dict7 = {} # Key = Artistname+trackname, value = Track details
-time_diff = datetime.timedelta(days = 7) # date to next check
-todays_date = datetime.datetime.combine(datetime.date.today(),datetime.datetime.min.time())
+was_playing = ""
+got_info = 0
+bbc_first_time = 0
+bbc_delay = 5
+bbc_channel = 2
+dict1 = {}  # Key = artistname+trackname, value = Album name
+dict2 = {}  # Key = artistname+trackname, value = Album year
+dict3 = {}  # Key = artistname+trackname, value = date last looked up
+dict4 = {}  # Key = Artist Name, Value = URL to artist thumb
+dict5 = {}  # Key = Artist Name, Value = URL to artist banner
+dict6 = {}  # Key = artist Name, value = MBID
+dict7 = {}  # Key = Artistname+trackname, value = Track details
+time_diff = datetime.timedelta(days=7)  # date to next check
+todays_date = datetime.datetime.combine(datetime.date.today(), datetime.datetime.min.time())
 BaseString = xbmc.validatePath(BaseString)
 onlinelookup = addon.getSetting('onlinelookup')
 fanart = addon.getSetting('usefanarttv')
 tadb = addon.getSetting('usetadb')
-replacelist={addon.getSetting('st1find').strip():addon.getSetting('st1rep').strip(), \
-addon.getSetting('st2find').strip():addon.getSetting('st2rep').strip(), \
-addon.getSetting('st3find').strip():addon.getSetting('st3rep').strip(), \
-addon.getSetting('st4find').strip():addon.getSetting('st4rep').strip(), \
-addon.getSetting('st5find').strip():addon.getSetting('st5rep').strip()}
+replacelist={addon.getSetting('st1find').strip(): addon.getSetting('st1rep').strip(), \
+addon.getSetting('st2find').strip(): addon.getSetting('st2rep').strip(), \
+addon.getSetting('st3find').strip(): addon.getSetting('st3rep').strip(), \
+addon.getSetting('st4find').strip(): addon.getSetting('st4rep').strip(), \
+addon.getSetting('st5find').strip(): addon.getSetting('st5rep').strip(), \
+addon.getSetting('st6find').strip(): addon.getSetting('st6rep').strip(), \
+addon.getSetting('st7find').strip(): addon.getSetting('st7rep').strip(), \
+addon.getSetting('st8find').strip(): addon.getSetting('st8rep').strip(), \
+addon.getSetting('st9find').strip(): addon.getSetting('st9rep').strip(), \
+addon.getSetting('st10find').strip(): addon.getSetting('st10rep').strip()}
 
-swaplist = {addon.getSetting('st1rep').strip():addon.getSetting('rev1'), \
-addon.getSetting('st2rep').strip():addon.getSetting('rev2'), \
-addon.getSetting('st3rep').strip():addon.getSetting('rev3'), \
-addon.getSetting('st4rep').strip():addon.getSetting('rev4'), \
-addon.getSetting('st5rep').strip():addon.getSetting('rev5')}
+artistlist={addon.getSetting('artist1').strip(): addon.getSetting('artistrep1').strip(), \
+addon.getSetting('artist2').strip(): addon.getSetting('artistrep2').strip(), \
+addon.getSetting('artist3').strip(): addon.getSetting('artistrep3').strip(), \
+addon.getSetting('artist4').strip(): addon.getSetting('artistrep4').strip(), \
+addon.getSetting('artist5').strip(): addon.getSetting('artistrep5').strip()}
+
+swaplist = {addon.getSetting('st1rep').strip(): addon.getSetting('rev1'), \
+addon.getSetting('st2rep').strip(): addon.getSetting('rev2'), \
+addon.getSetting('st3rep').strip(): addon.getSetting('rev3'), \
+addon.getSetting('st4rep').strip(): addon.getSetting('rev4'), \
+addon.getSetting('st5rep').strip(): addon.getSetting('rev5'), \
+addon.getSetting('st6rep').strip(): addon.getSetting('rev6'), \
+addon.getSetting('st7rep').strip(): addon.getSetting('rev7'), \
+addon.getSetting('st8rep').strip(): addon.getSetting('rev8'), \
+addon.getSetting('st9rep').strip(): addon.getSetting('rev9'), \
+addon.getSetting('st10rep').strip(): addon.getSetting('rev10')}
 
 replace1 = addon.getSetting('remove1').decode('utf-8')
 replace2 = addon.getSetting('remove2').decode('utf-8')
@@ -91,30 +112,46 @@ if debugging == 'true' :
     debugging = True
 else:
     debugging = False
+exportfile = "/home/xbmc/data_out.txt"
+
+data_out= None
+
 
 def log(txt, mylevel=xbmc.LOGDEBUG):
     """
     Logs to Kodi's standard logfile
     """
 
-    if debugging :
-        mylevel=xbmc.LOGNOTICE
+    if debugging:
+        mylevel = xbmc.LOGNOTICE
 
     if isinstance(txt, str):
         txt = txt.decode('utf-8')
     message = u'%s : %s' % (addonname, txt)
     xbmc.log(msg=message.encode('utf-8'), level=mylevel)
 
+
+def download_logo(path,url,origin="Fanart.tv"):
+    logopath = path + "logo.png"
+    imagedata = urllib.urlopen(url).read()
+    f = open(logopath, 'wb')
+    f.write(imagedata)
+    f.close()
+    log("Downloaded logo from %s" % origin, xbmc.LOGDEBUG)
+    return logopath
+
+
 def clean_string(text):
-    text = re.sub('<a [^>]*>|</a>|<span[^>]*>|</span>','',text)
-    text = re.sub('&quot;','"',text)
-    text = re.sub('&amp;','&',text)
-    text = re.sub('&gt;','>',text)
-    text = re.sub('&lt;','<',text)
-    text = re.sub('User-contributed text is available under the Creative Commons By-SA License; additional terms may apply.','',text)
-    text = re.sub('Read more about .* on Last.fm.','',text)
-    text = re.sub('Read more on Last.fm.','',text)
+    text = re.sub('<a [^>]*>|</a>|<span[^>]*>|</span>', '', text)
+    text = re.sub('&quot;', '"', text)
+    text = re.sub('&amp;', '&', text)
+    text = re.sub('&gt;', '>', text)
+    text = re.sub('&lt;', '<', text)
+    text = re.sub('User-contributed text is available under the Creative Commons By-SA License; additional terms may apply.', '', text)
+    text = re.sub('Read more about .* on Last.fm.', '', text)
+    text = re.sub('Read more on Last.fm.', '', text)
     return text
+
 
 def load_pickle():
     """
@@ -139,7 +176,7 @@ def load_pickle():
     try:
         d6 = pickle.load(pfile)
     except:
-        d6={}
+        d6 = {}
         log("created new pickle data for MBID storage")
     try:
         d7 = pickle.load(pfile)
@@ -147,9 +184,10 @@ def load_pickle():
         d7 = {}
         log("Created new pickle data for track information")
     pfile.close()
-    return d1,d2,d3,d4,d5,d6,d7
+    return d1, d2, d3, d4, d5, d6, d7
 
-def save_pickle(d1,d2,d3,d4,d5,d6,d7):
+
+def save_pickle(d1, d2, d3, d4, d5, d6, d7):
     """
     Saves local cache data to file in the addon_data directory of the script
     """
@@ -160,21 +198,22 @@ def save_pickle(d1,d2,d3,d4,d5,d6,d7):
     log("Saving data to pickle file")
 
     pfile = open(logostring + 'data.pickle',"wb")
-    pickle.dump(d1,pfile)
-    pickle.dump(d2,pfile)
-    pickle.dump(d3,pfile)
-    pickle.dump(d4,pfile)
-    pickle.dump(d5,pfile)
-    pickle.dump(d6,pfile)
-    pickle.dump(d7,pfile)
+    pickle.dump(d1, pfile)
+    pickle.dump(d2, pfile)
+    pickle.dump(d3, pfile)
+    pickle.dump(d4, pfile)
+    pickle.dump(d5, pfile)
+    pickle.dump(d6, pfile)
+    pickle.dump(d7, pfile)
     pfile.close()
 
-def get_year(artist,track,dict1,dict2,dict3,dict7, already_checked):
+
+def get_year(artist, track, dict1, dict2, dict3, dict7, already_checked):
     """
     Look in local cache for album and year data corresponding to current track and artist.
     Return the local data if present, unless it is older than 7 days in which case re-lookup online.
     If data not present in cache, lookup online and add to cache
-    If all data present in cache, just retur taht and don't lookup anything online.
+    If all data present in cache, just return that and don't lookup anything online.
     """
     log("----------------------------------------------------", xbmc.LOGDEBUG)
     log("            Entered routine 'get_year'           ", xbmc.LOGDEBUG)
@@ -199,18 +238,18 @@ def get_year(artist,track,dict1,dict2,dict3,dict7, already_checked):
             log("Updating info for track [%s]" % track, xbmc.LOGDEBUG)
             lun = True
             dict1[keydata], dict2[keydata], dict7[keydata] = tadb_trackdata(artist, track, dict1, dict2, dict3, dict7)
-            dict3[keydata] = datetime.datetime.combine(datetime.date.today(),datetime.datetime.min.time())
+            dict3[keydata] = datetime.datetime.combine(datetime.date.today(), datetime.datetime.min.time())
         log("Data for track '%s' on album '%s' last checked %s" % (track, dict1[keydata], str(datechecked.strftime("%d-%m-%Y"))), xbmc.LOGDEBUG)
         if (datechecked < (todays_date - time_diff)) or (xbmcvfs.exists(logostring + "refreshdata")):
             log( "Data might need refreshing", xbmc.LOGDEBUG)
             if (dict1[keydata] == '') or (dict1[keydata] == None) or (dict1[keydata] == 'None') or (dict1[keydata] == 'null') or (xbmcvfs.exists(logostring + "refreshdata")):
                 log("No album data - checking TADB again", xbmc.LOGDEBUG)
-                dict1[keydata], dict2[keydata], dict7[keydata] = tadb_trackdata(artist,track,dict1,dict2,dict3, dict7)
+                dict1[keydata], dict2[keydata], dict7[keydata] = tadb_trackdata(artist, track, dict1, dict2, dict3, dict7)
                 dict3[keydata] = datetime.datetime.combine(datetime.date.today(),datetime.datetime.min.time())
                 log("Data refreshed")
             elif (dict2[keydata] == None) or (dict2[keydata] == '0') or (dict2[keydata] == ''):
                 log("No year data for album %s - checking TADB again" % dict1[keydata], xbmc.LOGDEBUG)
-                dict1[keydata], dict2[keydata], dict7[keydata] = tadb_trackdata(artist,track,dict1,dict2,dict3, dict7)
+                dict1[keydata], dict2[keydata], dict7[keydata] = tadb_trackdata(artist, track, dict1, dict2, dict3, dict7)
                 dict3[keydata] = datetime.datetime.combine(datetime.date.today(),datetime.datetime.min.time())
                 log("Data refreshed", xbmc.LOGDEBUG)
             elif (dict7[keydata] == None) or (dict7[keydata] == "None") or (dict7[keydata] == "") and (lun == False): # don't lookup again if we have just done it (Line 196)
@@ -274,9 +313,24 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
                 else:
                     trackinfo = None
                     lastfmurl = "http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=%s" % happy_hippo.decode( 'base64' )
-                    lastfmurl = lastfmurl+'&artist='+searchartist.encode('utf-8')+'&track='+searchtrack.encode('utf-8')+'&format=json'
-                    response = requests.get(lastfmurl)
-                    searching = response.json()['track']
+                    lastfmurl = lastfmurl+'&artist='+searchartist+'&track='+searchtrack+'&format=json'
+                    log("LastFM url is [%s] " % lastfmurl, xbmc.LOGDEBUG)
+                    try:
+                        response = urllib.urlopen(lastfmurl).read()
+                    except URLError as e:
+                        if hasattr(e,'reason'):
+                            log("Failed to reach server at last.fm", xbmc.LOGERROR)
+                            log("Error returned was [%s]" %e.reason, xbmc.LOGERROR)
+
+                        elif hasattr(e,'code'):
+                            log("Error getting last.fm data.  Error code was [%s]" %e.code , xbmc.LOGERROR)
+                    try:
+                        stuff = json.loads(response)
+#                    searching = response.json()['track']
+                        searching = stuff['track']
+                    except:
+                        searching = []
+                        pass
 #                    log("JSON from Last-FM [%s]" % searching, xbmc.LOGDEBUG)
                     if 'wiki' in searching:
                         trackinfo = searching['wiki']['content']
@@ -323,9 +377,24 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
                 log("Not found any track data so far, continuing search on lastFM", xbmc.LOGDEBUG)
             if trackinfo is None :
                 lastfmurl = "http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=%s" % happy_hippo.decode( 'base64' )
-                lastfmurl = lastfmurl+'&artist='+searchartist.encode('utf-8')+'&track='+searchtrack.encode('utf-8')+'&format=json'
-                response = requests.get(lastfmurl)
-                searching = response.json()['track']
+                lastfmurl = lastfmurl+'&artist='+searchartist+'&track='+searchtrack+'&format=json'
+                log("LastFM url is [%s] " % lastfmurl, xbmc.LOGDEBUG)
+                try:
+                    response = urllib.urlopen(lastfmurl).read()
+                except URLError as e:
+                    if hasattr(e,'reason'):
+                        log("Failed to reach server when fetching track data from last.fm", xbmc.LOGERROR)
+                        log("Error returned was [%s]" %e.reason, xbmc.LOGERROR)
+                    elif hasattr(e,'code'):
+                        log("Error getting last.fm data.  Error code was [%s]" %e.code , xbmc.LOGERROR)
+
+#                response = requests.get(lastfmurl)
+                try:
+                    stuff = json.loads(response)
+                    searching = stuff['track']
+                except:
+                    searching = []
+                    pass
 #                log("JSON from Last-FM [%s]" % searching)
                 if 'wiki' in searching:
                     trackinfo = searching['wiki']['content']
@@ -469,35 +538,41 @@ def get_hdlogo(mbid, artist):
     log("----------------------------------------------------", xbmc.LOGDEBUG)
 
     try:
-        url = "https://fanart.tv/artist/" + mbid
-        logopath = logostring + mbid + "/logo.png"
-        logopath = xbmc.validatePath(logopath)
-        if not xbmcvfs.exists(logopath):
-            log("Searching for HD logo on fanart.tv", xbmc.LOGDEBUG)
-            response = urllib.urlopen(url).read()
-            if response == '':
-                log("No response from fanart.tv", xbmc.LOGDEBUG)
-                return None
-            index1 = response.find("<h2>HD ClearLOGO<div")
-            if index1 != -1:
-                index2 = response.find('<div class="image_options">',index1)
-                anylogos = response[index1:index2]
-                if "currently no images" in anylogos:
-                    log("No HD logos found for %s" % artist, xbmc.LOGDEBUG)
+        if checked_all_artists == False:
+            url = "https://fanart.tv/artist/" + mbid
+            logopath = logostring + mbid + "/logo.png"
+            logopath = xbmc.validatePath(logopath)
+            if not xbmcvfs.exists(logopath):
+                log("Searching for HD logo on fanart.tv", xbmc.LOGDEBUG)
+                response = urllib.urlopen(url).read()
+                if response == '':
+                    log("No response from fanart.tv", xbmc.LOGDEBUG)
                     return None
-                index3= response.find('<a href="/api/download.php?type=download')
-                index4 = response.find('class="btn btn-inverse download"')
-                chop = response[index3+9:index4-2]
-                url = "https://fanart.tv" + chop
-                logopath = logostring + mbid + '/'
-                xbmcvfs.mkdir(logopath)
-                log("Downloading logo from fanart.tv and cacheing in %s" % logopath, xbmc.LOGDEBUG)
-                logopath = logopath + "logo.png"
-                imagedata = urllib.urlopen(url).read()
-                f = open(logopath,'wb')
-                f.write(imagedata)
-                f.close()
-                return logopath
+                index1 = response.find("<h2>HD ClearLOGO<div")
+                if index1 != -1:
+                    index2 = response.find('<div class="image_options">',index1)
+                    anylogos = response[index1:index2]
+                    if "currently no images" in anylogos:
+                        log("No HD logos found for %s" % artist, xbmc.LOGDEBUG)
+                        return None
+                    index3= response.find('<a href="/api/download.php?type=download')
+                    index4 = response.find('class="btn btn-inverse download"')
+                    chop = response[index3+9:index4-2]
+                    url = "https://fanart.tv" + chop
+                    logopath = logostring + mbid + '/'
+                    logopath = xbmc.ValidatePath(logopath)
+                    xbmcvfs.mkdir(logopath)
+                    logopath = download_logo(logopath,url)
+                    return logopath
+            else:
+                logopath = logostring + mbid + '/logo.png'
+                logopath = xbmc.validatePath(logopath)
+                if xbmcvfs.exists(logopath):
+                    log("Logo downloaded previously", xbmc.LOGDEBUG)
+                    return logopath
+                else:
+                    log("No logo found on fanart.tv", xbmc.LOGDEBUG)
+                    return None
         else:
             logopath = logostring + mbid + '/logo.png'
             logopath = xbmc.validatePath(logopath)
@@ -505,7 +580,7 @@ def get_hdlogo(mbid, artist):
                 log("Logo downloaded previously", xbmc.LOGDEBUG)
                 return logopath
             else:
-                log("No logo found on fanart.tv", xbmc.LOGDEBUG)
+                log("No logo in cache for %s " % artist, xbmc.LOGDEBUG)
                 return None
     except:
         log("Error searching fanart.tv for a logo", xbmc.LOGERROR)
@@ -590,12 +665,13 @@ def search_tadb(mbid, artist, dict4, dict5,checked_all_artists):
             logopath = xbmc.validatePath(logopath)
             if (not xbmcvfs.exists(logopath)) and (url != None):
                 xbmcvfs.mkdir(logopath)
-                log("Downloading logo from tadb and cacheing in %s" % logopath, xbmc.LOGDEBUG)
-                logopath = logopath + "logo.png"
-                imagedata = urllib.urlopen(url).read()
-                f = open(logopath,'wb')
-                f.write(imagedata)
-                f.close()
+                #log("Downloading logo from tadb and cacheing in %s" % logopath, xbmc.LOGDEBUG)
+                #logopath = logopath + "logo.png"
+                #imagedata = urllib.urlopen(url).read()
+                #f = open(logopath,'wb')
+                #f.write(imagedata)
+                #f.close()
+                logopath = download_logo(logopath,url,"tadb")
                 return artist, logopath, dict4[searchartist], dict5[searchartist]
             else:
                 logopath = logostring + mbid + '/logo.png'
@@ -779,9 +855,9 @@ def parse_data(artist, searching, searchartist, dict4, dict5, mbid, logoflag="tr
         checkartist = searching['artists'][0]['strArtist']
         log("checkartist is [%s], searchartist is [%s], artist is [%s]" %(checkartist, searchartist, artist), xbmc.LOGDEBUG)
         if (checkartist.replace(' ','+') != searchartist) and (artist !="P!nk"):
+            log("Updated artist name (%s) with data from tadb [%s]" % (artist, checkartist), xbmc.LOGDEBUG)
             artist = checkartist
-            searchartist = checkartist
-            log("Updated artist name (%s) with data from tadb [%s]" % (searchartist.replace('+',' '), checkartist), xbmc.LOGDEBUG)
+#            searchartist = checkartist
         _artist_thumb = searching['artists'][0]['strArtistThumb']
         _artist_banner = searching['artists'][0]['strArtistBanner']
         log("Artist Banner - %s" % _artist_banner, xbmc.LOGDEBUG)
@@ -815,6 +891,49 @@ def parse_data(artist, searching, searchartist, dict4, dict5, mbid, logoflag="tr
         log(artist, url, searchartist,dict4[searchartist], dict5[searchartist],xbmc.LOGERROR)
         return artist, url, dict4, dict5, mbid
 
+def get_bbc_radio_info(bbc_channel):
+#    log("Get BBC Radio Info",xbmc.LOGINFO)
+    lastfmurl = "http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=bbcradio%s" % bbc_channel
+    lastfmurl = lastfmurl +"&api_key=%s" % happy_hippo.decode( 'base64' )
+    lastfmurl = lastfmurl  + "&format=json&limit=1"
+    try:
+        _featuredartists = []
+        try:
+            response = urllib.urlopen(lastfmurl).read()
+        except URLError as e:
+            if hasattr(e,'reason'):
+                log("Failed to reach server when fetching BBC radio data from last.fm", xbmc.LOGERROR)
+                log("Error returned was [%s]" %e.reason, xbmc.LOGERROR)
+                return ''
+            elif hasattr(e,'code'):
+                log("Error getting BBC radio data.  Error code was [%s]" %e.code , xbmc.LOGERROR)
+                return ''
+        stuff = json.loads(response)
+        if stuff.has_key('message'):
+            log("Error getting BBC data from last.fm", xbmc.LOGERROR)
+            log("%s" %str(stuff), xbmc.LOGERROR)
+            return ''
+        track = stuff['recenttracks']['track'][0]['name']
+        artist = stuff['recenttracks']['track'][0]['artist']['#text']
+        if 'feat. ' in track:           # got at least one featured artist
+            _f=track.find('feat.')          # remove the () around featured artist(s)
+            _s=track.rfind(')')
+            temptrack=track[:_f-2]
+            temptrack2=track[_f:_s]
+            track = temptrack + " " + temptrack2
+            track=track.replace('feat.','~').replace(' & ',' ~ ')
+            _featuredartists=track.split('~')
+            track=_featuredartists[0].strip()
+            del _featuredartists[0]
+        artist=artist.replace(', ',' & ')
+        for _artists in range(0,len(_featuredartists)):
+            artist = artist + " & " + _featuredartists[_artists].strip()
+#            log("BBC RADIO INFO - GOT [%s] - [%s]" %(track, artist), xbmc.LOGINFO)
+        return track + " - " + artist
+
+    except Exception as e:
+        log("[get_bbc_radio_info] error [%s] " %str(e), xbmc.LOGERROR)
+        return '' , 1
 class RepeatedTimer(object):
     """Auto-starting threaded timer.  Used for auto-saving the dictionary data
     to file every 15 minutes while the addon is running.
