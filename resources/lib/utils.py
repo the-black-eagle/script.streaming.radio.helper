@@ -47,6 +47,7 @@ language = addon.getLocalizedString
 BaseString = addon.getSetting('musicdirectory')     # Base directory for Music albums
 logostring = xbmc.translatePath('special://profile/addon_data/' + addonid + '/').decode('utf-8')  # Base directory to store downloaded logos
 logfile = xbmc.translatePath('special://temp/srh.log').decode('utf-8')
+pathToAlbumCover = None
 was_playing = ""
 got_info = 0
 bbc_first_time = 0
@@ -208,6 +209,89 @@ def save_pickle(d1, d2, d3, d4, d5, d6, d7):
     pfile.close()
 
 
+def get_local_cover(BaseString, artist, track, albumtitle):
+
+    try:
+
+        pathToAlbumCover = xbmc.validatePath(BaseString + artist + "/" + albumtitle + "/cover.png")
+        log("Looking for an album cover in %s" % pathToAlbumCover, xbmc.LOGDEBUG)
+        if xbmcvfs.exists(pathToAlbumCover):
+            log("Found a local 'cover.png' and set AlbumCover to [%s]" % pathToAlbumCover, xbmc.LOGDEBUG)
+            return pathToAlbumCover
+        pathToAlbumCover = xbmc.validatePath(BaseString + artist + "/" + albumtitle + "/folder.jpg")
+        log("Looking for an album cover in %s" % pathToAlbumCover, xbmc.LOGDEBUG)
+        if xbmcvfs.exists(pathToAlbumCover):
+            log("Found a local 'folder.jpg' and set AlbumCover to [%s]" % pathToAlbumCover, xbmc.LOGDEBUG)
+            return pathToAlbumCover
+        pathToAlbumCover = xbmc.validatePath(BaseString + artist + "/" + track + "/folder.jpg")
+        if xbmcvfs.exists(pathToAlbumCover):
+            log("Found a local 'folder.jpg' and set AlbumCover to [%s]" % pathToAlbumCover, xbmc.LOGDEBUG)
+            return pathToAlbumCover
+        pathToAlbumCover = xbmc.validatePath(BaseString + artist + "/" + track + "/cover.png")
+        log("Looking for an album cover in %s (last attempt before using thumbnail)" % pathToAlbumCover, xbmc.LOGDEBUG)
+        if xbmcvfs.exists(pathToAlbumCover):
+            log("Found a local 'cover.png' and set AlbumCover to [%s]" % pathToAlbumCover, xbmc.LOGDEBUG)
+            return pathToAlbumCover
+        return None
+
+    except Exception as e:
+        log("Got an error trying to look for a cover!! [%s]" % str(e), xbmc.LOGDEBUG)
+        pass
+        return None
+
+def check_station(file_playing):
+    """Attempts to parse a URL to find the name of the station being played
+    and performs substitutions to 'pretty up' the name if those options
+    are set in the settings"""
+    station_list = ''
+    if 'BBC Radio 2' in file_playing:
+        return "BBC Radio Two", file_playing
+    if '1Xtra' in file_playing:
+        return 'BBC Radio 1xtra', file_playing
+    if 'BBC Radio 1' in file_playing:
+        return "BBC Radio One", file_playing
+
+    try:
+        if 'icy-' in file_playing:  # looking at an ICY stream
+            x = file_playing.rfind('/')
+            station_list = file_playing[x + 1:]
+            if ('.' in station_list) and ("http" not in station_list):
+                station, ending = station_list.split('.')
+
+        elif '|' in file_playing:
+            y = file_playing.rfind('|')
+            station_list = file_playing[:y]
+            x = station_list.rfind('/')
+            station = station_list[x + 1:]
+        else:
+            if 'http://' in file_playing:
+                station_list = file_playing.strip('http://')
+            if 'https://' in file_playing:
+                station_list = file_playing.strip('https://')
+            if 'smb://' in file_playing:
+                station_list = file_playing.strip('smb://')
+            x = station_list.rfind(':')
+            if x != -1:
+                station = station_list[:x]
+            else:
+                station = station_list
+        if not station_list:                    # If this is empty we haven't found anything to use as a station name yet
+            if 'm3u' in file_playing:           # Sometimes kodi makes a playlist of one streaming channel so check for this
+                station_list = file_playing.replace( '.m3u', '')
+            else:
+                station_list = file_playing     # just use whatever we have (rad.io addon filename will be the ID of the station (11524 for planet rock)
+        try:
+            station = next(v for k, v in replacelist.items()
+                           if k in (station_list))
+            log("Station is [%s], station_list is [%s]" %(station, station_list), xbmc.LOGDEBUG)
+            return station, station_list
+        except StopIteration:
+            return station, station_list
+    except Exception as e:
+        log("Error trying to parse station name [ %s ]" % str(
+            e), xbmc.LOGERROR)
+        return 'Online Radio', file_playing
+
 def get_year(artist, track, dict1, dict2, dict3, dict7, already_checked):
     """
     Look in local cache for album and year data corresponding to current track and artist.
@@ -292,7 +376,7 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
         searchtrack = searchtrack.replace("(Live)","").strip()
     if "+&+" in searchtrack:
         searchtrack = searchtrack.replace("+&+"," and ").strip()
-    url = 'http://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
+    url = 'https://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
     searchurl = url + '/searchtrack.php?s=' + searchartist + '&t=' + searchtrack
     log("Search artist, track with strings : %s,%s" %(searchartist,searchtrack), xbmc.LOGDEBUG)
     keydata = artist.replace(" ","").lower() + track.replace(" ","").lower()
@@ -333,7 +417,14 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
                         pass
 #                    log("JSON from Last-FM [%s]" % searching, xbmc.LOGDEBUG)
                     if 'wiki' in searching:
-                        trackinfo = searching['wiki']['content']
+                        try:
+                            trackinfo = searching['wiki']['content']
+                        except:
+                            pass
+                        try:
+                            trackinfo = searching['wiki']['summary']
+                        except:
+                            pass
                         trackinfo = clean_string(trackinfo)
                         log("Trackinfo - [%s]" % trackinfo, xbmc.LOGDEBUG)
                     else:
@@ -397,12 +488,21 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
                     pass
 #                log("JSON from Last-FM [%s]" % searching)
                 if 'wiki' in searching:
-                    trackinfo = searching['wiki']['content']
-                    trackinfo = clean_string(trackinfo)
-                    log("Trackinfo 2 - [%s]" % trackinfo, xbmc.LOGDEBUG)
-                    if len(trackinfo) < 3:
-                        log ("No track info found", xbmc.LOGDEBUG)
-                        trackinfo = None
+                        try:
+                            trackinfo = searching['wiki']['content']
+                        except:
+                            pass
+                        try:
+                            trackinfo = searching['wiki']['summary']
+                        except:
+                            pass
+                        trackinfo = clean_string(trackinfo)
+                        log("Trackinfo - [%s]" % trackinfo, xbmc.LOGDEBUG)
+                else:
+                    log("No track info found", xbmc.LOGDEBUG)
+                if trackinfo is not None and len(trackinfo) < 3:
+                    log ("No track info found", xbmc.LOGDEBUG)
+                    trackinfo = None
                 else:
                     log("No track info found on lastFM", xbmc.LOGDEBUG)
             dict7[keydata] = trackinfo
@@ -618,8 +718,9 @@ def search_tadb(mbid, artist, dict4, dict5,checked_all_artists):
         log("Looking up %s on tadb.com" % artist, xbmc.LOGDEBUG)
         searchartist = artist.replace(" ","+")
         log ("[search_tadb] : searchartist = %s" % searchartist)
-        url = 'http://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
-        searchurl = url + '/search.php?s=' + searchartist.encode('utf-8')
+        url = 'https://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
+        searchurl = url + '/search.php?s=' + urllib.quote(searchartist.encode('utf-8'))
+
         log("URL for TADB is : %s" % searchurl, xbmc.LOGDEBUG)
         try:
             response = urllib.urlopen(searchurl).read()
@@ -636,9 +737,9 @@ def search_tadb(mbid, artist, dict4, dict5,checked_all_artists):
                     return artist, None, None, None
             else:
                 searchartist = 'The+' + searchartist
-                url = 'http://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
+                url = 'https://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
 
-                searchurl = url + '/search.php?s=' + searchartist
+                searchurl = url + '/search.php?s=' + urllib.quote(searchartist.encode('utf-8'))
                 log("Looking up %s on tadb.com with URL %s" % (searchartist, searchurl), xbmc.LOGDEBUG)
                 response = urllib.urlopen(searchurl).read()
                 log(response, xbmc.LOGDEBUG)
@@ -646,7 +747,7 @@ def search_tadb(mbid, artist, dict4, dict5,checked_all_artists):
                     log("No logo found on tadb", xbmc.LOGDEBUG)
                     # Lookup failed on name - try with MBID
                     log("Looking up with MBID", xbmc.LOGDEBUG)
-                    url = 'http://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
+                    url = 'https://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
                     searchurl = url + '/artist-mb.php?i=' + mbid
                     log("MBID URL is : %s" % searchurl, xbmc.LOGDEBUG)
                     response = urllib.urlopen(searchurl).read()
@@ -722,7 +823,7 @@ def search_tadb(mbid, artist, dict4, dict5,checked_all_artists):
                     return artist, None, dict4[searchartist], dict5[searchartist] # Don't need the path as using local logo already
                 else:
                     log("Thumb or banner data missing - TADB will be re-checked")
-        url = 'http://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
+        url = 'https://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
         searchurl = url + '/artist-mb.php?i=' + mbid
         log("MBID lookup to check artist name is correct")
         if searchartist != "P!nk" or searchartist != "p!nk" or searchartist !="Pink" or searchartist != "pink":
@@ -762,8 +863,8 @@ def search_tadb(mbid, artist, dict4, dict5,checked_all_artists):
         # We haven't got any thumb or banner data before up OR thumb or banner data is missing so look up on tadb
         log("Looking up thumb and banner data for artist %s" % artist)
         if (not checked_all_artists) and searchartist not in dict4:
-            url = 'http://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
-            searchurl = url + '/search.php?s=' + searchartist.encode('utf-8')
+            url = 'https://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
+            searchurl = url + '/search.php?s=' + urllib.quote(searchartist.encode('utf-8'))
             log("URL for TADB is : %s" % searchurl, xbmc.LOGDEBUG)
             try:
                 response = urllib.urlopen(searchurl).read()
@@ -780,16 +881,16 @@ def search_tadb(mbid, artist, dict4, dict5,checked_all_artists):
                     pass
                 else:
                     searchartist = 'The+' + searchartist
-                    url = 'http://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
+                    url = 'https://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
 
-                    searchurl = url + '/search.php?s=' + searchartist
+                    searchurl = url + '/search.php?s=' + urllib.quote(searchartist.encode('utf-8'))
                     log("Looking up %s on tadb.com with URL %s" % (searchartist, searchurl), xbmc.LOGDEBUG)
                     response = urllib.urlopen(searchurl).read()
                     log(response)
                     if (response == '') or (response == '{"artists":null}') or ("!DOCTYPE" in response):
                         log("No info returned from tadb", xbmc.LOGDEBUG)
                         log("Looking up with MBID", xbmc.LOGDEBUG)
-                        url = 'http://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
+                        url = 'https://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
                         searchurl = url + '/artist-mb.php?i=' + mbid
                         log("MBID URL is : %s" % searchurl)
                         response = urllib.urlopen(searchurl).read()
@@ -908,7 +1009,7 @@ def get_bbc_radio_info(bbc_channel):
             elif hasattr(e,'code'):
                 log("Error getting BBC radio data.  Error code was [%s]" %e.code , xbmc.LOGERROR)
                 return ''
-        stuff = json.loads(response)
+        stuff = _json.loads(response)
         if stuff.has_key('message'):
             log("Error getting BBC data from last.fm", xbmc.LOGERROR)
             log("%s" %str(stuff), xbmc.LOGERROR)
@@ -934,6 +1035,26 @@ def get_bbc_radio_info(bbc_channel):
     except Exception as e:
         log("[get_bbc_radio_info] error [%s] " %str(e), xbmc.LOGERROR)
         return '' , 1
+
+
+
+def slice_string(string1, string2, n):
+    if string2 == "" or string2 is None:
+        return -1
+    start = string1.find(string2)
+    while start >= 0 and n > 1:
+        start = string1.find(string2, start + len(string2))
+        n -= 1
+    return start
+
+def set_timer(delay):
+    cs = datetime.datetime.now().time().second
+    et = cs + delay
+    if (et) >= 60:
+        et = et - 60
+    return et
+
+
 class RepeatedTimer(object):
     """Auto-starting threaded timer.  Used for auto-saving the dictionary data
     to file every 15 minutes while the addon is running.
