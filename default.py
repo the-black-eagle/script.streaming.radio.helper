@@ -31,32 +31,45 @@
 #  srh.MBIDS -              Mbid(s) of the current artist(s)
 #  srh.AlbumCover -         Path to local album cover if found, else empty string
 #
-#  radio-streaming-helper-running - true when script running
+#  streaming-radio-helper-running - true when script running
 #
 # ** All window properties are set for the MusicVisualisation window (12006) **
 
 import xbmc
+
 import xbmcvfs
+
 import xbmcaddon
+
 import xbmcgui
+
 import urllib
+
 import urllib2
+
 import sys
+
 import re
+
 from resources.lib.audiodb import audiodbinfo as settings
+
 from resources.lib.utils import *
+
 import pickle
+
 import datetime
+
 if sys.version_info >= (2, 7):
     import json as _json
 else:
     import simplejson as _json
+
 from threading import Timer
 
 def script_exit():
     """Clears all the window properties and stops the timer used for auto-saving the data"""
 
-    WINDOW.clearProperty("radio-streaming-helper-running")
+    WINDOW.clearProperty("streaming-radio-helper-running")
     WINDOW.clearProperty("srh.Artist")
     WINDOW.clearProperty("srh.Track")
     WINDOW.clearProperty("srh.TrackInfo")
@@ -216,7 +229,7 @@ def get_info(
 
 try:
     WINDOW = xbmcgui.Window(12006)
-    if WINDOW.getProperty("radio-streaming-helper-running") == "true":
+    if WINDOW.getProperty("streaming-radio-helper-running") == "true":
         log("Script already running - Not starting a new instance")
         exit(0)
     if not xbmc.getCondVisibility("Player.IsInternetStream"):
@@ -225,7 +238,7 @@ try:
     if BaseString == "":
         addon.openSettings(addonname)
 #    data_out = None
-    WINDOW.setProperty("radio-streaming-helper-running", "true")
+    WINDOW.setProperty("streaming-radio-helper-running", "true")
     language = xbmc.getLanguage(xbmc.ISO_639_1).upper()
     log("Version %s started" % addonversion, xbmc.LOGNOTICE)
     log("----------Settings-------------------------", xbmc.LOGNOTICE)
