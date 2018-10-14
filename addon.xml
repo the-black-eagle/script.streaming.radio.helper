@@ -15,6 +15,8 @@
     Images are downloaded and cached locally from fanart.tv and TheAudioDB. Artist and track info is collected from TheAudioDB and last.fm</description>
     <summary lang="pl">Skrypt pomaga skórce poprawnie wyświetlać nazwę artysty i tytuł piosenki dla surowych strumieni radiowych (wymagane wsparcie króry).</summary>
     <description lang="pl">Analizuje surowy strumień radiowy, zapisuje nazwę artysty, tytuł piosenki do wlaściwości okna i udostępnia je skórce. Udostępnia też lokalne lub online grafiki (logo, baner i miniaturę artysty).</description>
-
+        <assets>
+            <icon>resources/srh-logo.png</icon>
+        </assets>
   </extension>
 </addon>
