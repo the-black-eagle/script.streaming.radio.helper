@@ -1,4 +1,4 @@
-#script.radio.streaming.helper
+# script.radio.streaming.helper
 -----------------------------
 
 Because of the way most ICY radio streams are formatted, kodi doesn't display the artist
@@ -33,8 +33,8 @@ still be displayed in spite of theaudiodb / lastFM being unavailable.
 
 All window properties are set for the full screen visualisation window (12006).
 
-##Settings
-###General Settings
+## Settings
+### General Settings
 
 The path to the top level of the users music directory.
 
@@ -48,7 +48,7 @@ delay for thumb/logo/banner rotation - how many seconds to wait before changing 
 
 
 
-###Station Names
+### Station Names
 ***
 
 As streaming radio stations don't name their streams exactly the same as the station name
@@ -59,13 +59,13 @@ The actual stream will be something like 'http://some-streaming-radio-server/sta
 Without setting any replacement strings, the addon will display 'station-related-name'
 You can use replace 'station-related-name' with 'Proper Station Name'
 
-This can be done for five radio stations.
+This can be done for ten radio stations.
 
 
 =======
 Some radio stations transmit the artist - track information the opposite way around to how the helper expects it (Note that this seems to be a recent change in January 2017).  There is a toggle for each radio station you define to switch the order for that particular radio station.  (Note that you must have defined a 'pretty name' for the station for this to work.
 
-###Strings to remove
+### Strings to remove
 ***
 
 The script can (optionally) remove any extra info that may be added to the stream information by a radio station.
@@ -82,8 +82,6 @@ srh.Stationname - String.  Name of the radio station (optionally 'prettied up' i
 srh.Artist - string. Contains name of artist.
 
 srh.Track - string. Contains track name.
-
-srh.Haslogo - boolean. true if the script found or downloaded a logo, false otherwise.
 
 srh.Logopath - String. Fully qualified path to any logo found.
 
@@ -102,7 +100,7 @@ srh.TrackInfo - String. Contains any track information found on TADB or last.fm 
 
 Window properties can be used as follows -
 
-#####To display the artist name as parsed by the script when streaming
+##### To display the artist name as parsed by the script when streaming
 
 ```
 <control type="label">
@@ -112,7 +110,7 @@ Window properties can be used as follows -
 </control>
 ```
 
-#####Similarly, to display the track name
+##### Similarly, to display the track name
 
 ```
 <control type="label">
@@ -123,7 +121,7 @@ Window properties can be used as follows -
 </control>
 ```
 
-#####Displaying a logo
+##### Displaying a logo
 
 ```
 <control type="image">
