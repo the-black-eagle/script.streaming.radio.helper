@@ -23,7 +23,6 @@
 #  srh.Track -              contains the track name
 #  srh.TrackInfo -          track information as scraped from either TADB or last.fm (if any found)
 #  srh.Stationname -        name of radio station playing
-#  srh.Haslogo -            true if script found a logo to display, else false
 #  srh.Logopath -           path to logo if found, else empty string
 #  srh.Artist.Thumb -       thumb of the current artist
 #  srh.Artist.Banner -      banner of the current artist
@@ -80,7 +79,6 @@ def no_track():
     WINDOW.setProperty("srh.Artist", "")
     WINDOW.setProperty("srh.Track", "")
     WINDOW.setProperty("srh.TrackInfo", "")
-    WINDOW.setProperty("srh.Haslogo", "false")
     WINDOW.setProperty("srh.Logopath", "")
     WINDOW.setProperty("srh.Album", "")
     WINDOW.setProperty("srh.Year", "")
@@ -106,7 +104,6 @@ def get_info(
         orig_artist = artist
     if xbmcvfs.exists(
             testpath):     # See if there is a logo in the music directory
-        WINDOW.setProperty("srh.Haslogo", "true")
         WINDOW.setProperty("srh.Logopath", testpath)
         log("Logo in Music Directory : Path is %s" %
             testpath, xbmc.LOGDEBUG)
@@ -123,7 +120,6 @@ def get_info(
             ArtistThumb = ""
             ArtistBanner = ""
     else:
-        WINDOW.setProperty("srh.Haslogo", "false")
         log("No logo in music directory", xbmc.LOGDEBUG)
         if onlinelookup == "true":
             # No logo in music directory - get artist MBID
@@ -144,11 +140,9 @@ def get_info(
         if logopath:  # We have a logo to display
             log("Logo found in path %s " % logopath)
             WINDOW.setProperty("srh.Logopath", logopath)
-            WINDOW.setProperty("srh.Haslogo", "true")
         elif not logopath and not multi_artist:  # No logos to display
             WINDOW.setProperty("srh.Logopath", "")
             log("No logo in cache directory", xbmc.LOGDEBUG)
-            WINDOW.setProperty("srh.Haslogo", "false")
     if ArtistThumb:
         WINDOW.setProperty("srh.Artist.Thumb", ArtistThumb)
     if ArtistBanner:
