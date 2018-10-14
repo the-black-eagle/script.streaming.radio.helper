@@ -62,8 +62,9 @@ You can use replace 'station-related-name' with 'Proper Station Name'
 This can be done for ten radio stations.
 
 
-=======
-Some radio stations transmit the artist - track information the opposite way around to how the helper expects it (Note that this seems to be a recent change in January 2017).  There is a toggle for each radio station you define to switch the order for that particular radio station.  (Note that you must have defined a 'pretty name' for the station for this to work.
+---
+
+Some radio stations transmit the artist - track information the opposite way around to how the helper expects it (Note that this seems to be a recent change in January 2017).  There is a toggle for each radio station you define to switch the order for that particular radio station.  (Note that you must have defined a 'pretty name' for the station for this to work).
 
 ### Strings to remove
 ***
@@ -102,7 +103,7 @@ Window properties can be used as follows -
 
 ##### To display the artist name as parsed by the script when streaming
 
-```
+```xml
 <control type="label">
     <label>$INFO[Window(12006).Property(srh.Artist)]</label>
     <scroll>true</scroll>
@@ -112,7 +113,7 @@ Window properties can be used as follows -
 
 ##### Similarly, to display the track name
 
-```
+```xml
 <control type="label">
     <label>$INFO[Window(12006).Property(srh.Track)]</label>
     <scroll>true</scroll>
@@ -123,7 +124,7 @@ Window properties can be used as follows -
 
 ##### Displaying a logo
 
-```
+```xml
 <control type="image">
     <left>0</left>
     <top>-90</top>
@@ -141,7 +142,7 @@ In the above, label id 9998 is an invisible label with the text set to 'true'
 
 
 The script is started by adding the following line to MusicVisualisation.xml
-```
+```xml
 <onload>RunScript(script.radio.streaming.helper)</onload>
 ```
 This means the script is started when entering the full screen music visualisation window.  It will
