@@ -31,6 +31,10 @@ In the event that theaudiodb and lastFM are unavailable for some reason, the scr
 including cached thumbnail and banner URL's.  Because of Kodi's own thumbnail caching, this means that the thumbs/banners can
 still be displayed in spite of theaudiodb / lastFM being unavailable.
 
+The script has been updated to work with BBC iPlayer (currently only Radio 1 & 2 are supported).  iPlayer does not transmit artist or
+track info, however the information *is* scrobbled to last.fm so we get the artist/track info from there. As there is no 'callback'
+from last.fm as to when the data changes, the script checks every 5 seconds if the stream is from the BBC.
+
 All window properties are set for the full screen visualisation window (12006).
 
 ## Settings
