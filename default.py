@@ -206,7 +206,8 @@ def get_info(
                 albumtitle, xbmc.LOGDEBUG)
         else:
             log("No album or year details found", xbmc.LOGDEBUG)
-    WINDOW.setProperty("srh.AlbumCover", get_local_cover(BaseString, artist, track, albumtitle))
+
+        WINDOW.setProperty("srh.AlbumCover", get_local_cover(BaseString, artist, track, albumtitle))
 
 
     if multi_artist:
