@@ -13,7 +13,7 @@ It runs in the background when kodi is streaming audio, splits the track info in
 separate artist and track details and sets some window properties so that skins can present the
 information in the same way as with a track from a local library.
 
-The script also supplies the full path to a logo (if found) as a property.  If there is no logo in
+The script supplies the full path to a logo (if found) as a property.  If there is no logo in
 the local music library the script will look in it's own cached logos.  If it still does not find
 one it will attempt to download one from fanart.tv or theaudiodb and cache it for future re-use.
 
@@ -24,7 +24,7 @@ a search on theaudiodb. To avoid excessive lookups, track, album and year data i
 lookups are performed if the track has not been played before, or the cached data is older than 7 days.
 Cached data is saved either when the script stops or every 15 minutes when its running.
 
-The script now also attempts to display track data as well as artist data if it is available.  Track data for the currently
+The script now also attempts to fetch track data as well as artist data if it is available.  Track data for the currently
 playing track is scraped from theaudiodb and lastFM if no details are found on the former.
 
 In the event that theaudiodb and lastFM are unavailable for some reason, the script will use any cached data that is available to it,
@@ -63,12 +63,11 @@ The actual stream will be something like 'http://some-streaming-radio-server/sta
 Without setting any replacement strings, the addon will display 'station-related-name'
 You can use replace 'station-related-name' with 'Proper Station Name'
 
-This can be done for ten radio stations.
+This can be done for five radio stations.
 
 
----
-
-Some radio stations transmit the artist - track information the opposite way around to how the helper expects it (Note that this seems to be a recent change in January 2017).  There is a toggle for each radio station you define to switch the order for that particular radio station.  (Note that you must have defined a 'pretty name' for the station for this to work).
+***
+Some radio stations transmit the artist - track information the opposite way around to how the helper expects it (Note that this seems to be a recent change in January 2017).  There is a toggle for each radio station you define to switch the order for that particular radio station.  (Note that you must have defined a 'pretty name' for the station for this to work.
 
 ### Strings to remove
 ***
