@@ -48,6 +48,7 @@ BaseString = addon.getSetting('musicdirectory')     # Base directory for Music a
 logostring = xbmc.translatePath('special://profile/addon_data/' + addonid + '/').decode('utf-8')  # Base directory to store downloaded logos
 logfile = xbmc.translatePath('special://temp/srh.log').decode('utf-8')
 pathToAlbumCover = None
+albumtitle = ""
 was_playing = ""
 got_info = 0
 bbc_first_time = 0
@@ -400,7 +401,7 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
                     lastfmurl = lastfmurl+'&artist='+searchartist+'&track='+searchtrack+'&format=json'
                     log("LastFM url is [%s] " % lastfmurl, xbmc.LOGDEBUG)
                     try:
-                        response = urllib.urlopen(lastfmurl).read()
+                        response = urllib2.urlopen(lastfmurl).read()
                     except URLError as e:
                         if hasattr(e,'reason'):
                             log("Failed to reach server at last.fm", xbmc.LOGERROR)
@@ -471,7 +472,7 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
                 lastfmurl = lastfmurl+'&artist='+searchartist+'&track='+searchtrack+'&format=json'
                 log("LastFM url is [%s] " % lastfmurl, xbmc.LOGDEBUG)
                 try:
-                    response = urllib.urlopen(lastfmurl).read()
+                    response = urllib2.urlopen(lastfmurl).read()
                 except URLError as e:
                     if hasattr(e,'reason'):
                         log("Failed to reach server when fetching track data from last.fm", xbmc.LOGERROR)
@@ -1000,7 +1001,7 @@ def get_bbc_radio_info(bbc_channel):
     try:
         _featuredartists = []
         try:
-            response = urllib.urlopen(lastfmurl).read()
+            response = urllib2.urlopen(lastfmurl).read()
         except URLError as e:
             if hasattr(e,'reason'):
                 log("Failed to reach server when fetching BBC radio data from last.fm", xbmc.LOGERROR)
