@@ -73,7 +73,6 @@ def script_exit():
     WINDOW.clearProperty("srh.Artist")
     WINDOW.clearProperty("srh.Track")
     WINDOW.clearProperty("srh.TrackInfo")
-    WINDOW.clearProperty("srh.Haslogo")
     WINDOW.clearProperty("srh.Logopath")
     WINDOW.clearProperty("srh.Album")
     WINDOW.clearProperty("srh.Year")

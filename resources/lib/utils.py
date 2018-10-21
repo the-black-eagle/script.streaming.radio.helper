@@ -20,7 +20,7 @@
 
 import xbmc, xbmcvfs, xbmcaddon
 import xbmcgui
-import urllib, re
+import urllib, urllib2, re
 import uuid
 import sys, traceback
 from resources.lib.audiodb import audiodbinfo as settings
@@ -213,17 +213,17 @@ def save_pickle(d1, d2, d3, d4, d5, d6, d7):
 def get_local_cover(BaseString, artist, track, albumtitle):
 
     try:
-
-        pathToAlbumCover = xbmc.validatePath(BaseString + artist + "/" + albumtitle + "/cover.png")
-        log("Looking for an album cover in %s" % pathToAlbumCover, xbmc.LOGDEBUG)
-        if xbmcvfs.exists(pathToAlbumCover):
-            log("Found a local 'cover.png' and set AlbumCover to [%s]" % pathToAlbumCover, xbmc.LOGDEBUG)
-            return pathToAlbumCover
-        pathToAlbumCover = xbmc.validatePath(BaseString + artist + "/" + albumtitle + "/folder.jpg")
-        log("Looking for an album cover in %s" % pathToAlbumCover, xbmc.LOGDEBUG)
-        if xbmcvfs.exists(pathToAlbumCover):
-            log("Found a local 'folder.jpg' and set AlbumCover to [%s]" % pathToAlbumCover, xbmc.LOGDEBUG)
-            return pathToAlbumCover
+        if albumtitle:
+            pathToAlbumCover = xbmc.validatePath(BaseString + artist + "/" + albumtitle + "/cover.png")
+            log("Looking for an album cover in %s" % pathToAlbumCover, xbmc.LOGDEBUG)
+            if xbmcvfs.exists(pathToAlbumCover):
+                log("Found a local 'cover.png' and set AlbumCover to [%s]" % pathToAlbumCover, xbmc.LOGDEBUG)
+                return pathToAlbumCover
+            pathToAlbumCover = xbmc.validatePath(BaseString + artist + "/" + albumtitle + "/folder.jpg")
+            log("Looking for an album cover in %s" % pathToAlbumCover, xbmc.LOGDEBUG)
+            if xbmcvfs.exists(pathToAlbumCover):
+                log("Found a local 'folder.jpg' and set AlbumCover to [%s]" % pathToAlbumCover, xbmc.LOGDEBUG)
+                return pathToAlbumCover
         pathToAlbumCover = xbmc.validatePath(BaseString + artist + "/" + track + "/folder.jpg")
         if xbmcvfs.exists(pathToAlbumCover):
             log("Found a local 'folder.jpg' and set AlbumCover to [%s]" % pathToAlbumCover, xbmc.LOGDEBUG)
@@ -402,7 +402,7 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
                     log("LastFM url is [%s] " % lastfmurl, xbmc.LOGDEBUG)
                     try:
                         response = urllib2.urlopen(lastfmurl).read()
-                    except URLError as e:
+                    except IOError as e:
                         if hasattr(e,'reason'):
                             log("Failed to reach server at last.fm", xbmc.LOGERROR)
                             log("Error returned was [%s]" %e.reason, xbmc.LOGERROR)
@@ -473,7 +473,7 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
                 log("LastFM url is [%s] " % lastfmurl, xbmc.LOGDEBUG)
                 try:
                     response = urllib2.urlopen(lastfmurl).read()
-                except URLError as e:
+                except IOError as e:
                     if hasattr(e,'reason'):
                         log("Failed to reach server when fetching track data from last.fm", xbmc.LOGERROR)
                         log("Error returned was [%s]" %e.reason, xbmc.LOGERROR)
@@ -715,7 +715,7 @@ def search_tadb(mbid, artist, dict4, dict5,checked_all_artists):
 
     logopath = logostring + mbid + "/logo.png"
     logopath = xbmc.validatePath(logopath)
-    if (not xbmcvfs.exists(logopath)) and (WINDOW.getProperty("srh.Haslogo") == "false") and not checked_all_artists: # Don't need to look up a logo as we found one in the local directory
+    if (not xbmcvfs.exists(logopath)) and (WINDOW.getProperty("srh.Logopath") != "") and not checked_all_artists: # Don't need to look up a logo as we found one in the local directory
         log("Looking up %s on tadb.com" % artist, xbmc.LOGDEBUG)
         searchartist = artist.replace(" ","+")
         log ("[search_tadb] : searchartist = %s" % searchartist)
@@ -1002,7 +1002,7 @@ def get_bbc_radio_info(bbc_channel):
         _featuredartists = []
         try:
             response = urllib2.urlopen(lastfmurl).read()
-        except URLError as e:
+        except IOError as e:
             if hasattr(e,'reason'):
                 log("Failed to reach server when fetching BBC radio data from last.fm", xbmc.LOGERROR)
                 log("Error returned was [%s]" %e.reason, xbmc.LOGERROR)
