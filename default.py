@@ -217,13 +217,6 @@ def get_info(
         WINDOW.setProperty("srh.Track", track.encode('utf-8'))
     else:
         WINDOW.setProperty("srh.Track", "No track info available")
-#    if checked_all_artists is not True:
-#        outstring= artist.encode('utf-8') + "|" + track.encode('utf-8') + "|"
-#        data_out_trackinfo = data_out_trackinfo.replace('"','""')
-#        data_out_trackinfo = '\n'.join(line.strip() for line in re.findall(r'.{1,174}(?:\s+|$)', data_out_trackinfo))
-#        outstring = outstring + data_out_albumtitle+'|' + data_out_year.encode('utf-8')+ '|' + '"' + data_out_trackinfo + '"' + "|" + "\n"
-#        data_out.write(outstring)
-#        data_out.flush()
     return already_checked
 
 
@@ -237,7 +230,6 @@ try:
         exit(0)
     if BaseString == "":
         addon.openSettings(addonname)
-#    data_out = None
     WINDOW.setProperty("streaming-radio-helper-running", "true")
     language = xbmc.getLanguage(xbmc.ISO_639_1).upper()
     log("Version %s started" % addonversion, xbmc.LOGNOTICE)
@@ -341,12 +333,7 @@ try:
                 if (artist.upper() == "ELO") or (artist.upper() ==
                                                  "E.L.O") or (artist.upper() == "E.L.O."):
                     artist = "Electric Light Orchestra"
-                # if artist == "Florence & The Machine":
-                    #artist = "Florence + The Machine"
-                # if artist == "Cult":
-                    #artist = "The Cult"
-                # if artist == "Meatloaf":
-                    #artist = "Meat Loaf"
+
                 try:
 
                     artist = next(v for k, v in artistlist.items()
@@ -366,28 +353,21 @@ try:
                     logopath = ''
                     testpath = BaseString + artist + "/logo.png"
                     testpath = xbmc.validatePath(testpath)
-                    searchartist = artist.replace(
-                        ' feat. ',
-                        ' ~ ').replace(
-                        ' ft. ',
-                        ' ~ ').replace(
-                        ' feat ',
-                        ' ~ ').replace(
-                        ' ft ',
-                        ' ~ ')
-                    searchartist = searchartist.replace(
-                        ' & ',
-                        ' ~ ').replace(
-                        ' and ',
-                        ' ~ ').replace(
-                        ' And ',
-                        ' ~ ').replace(
-                        ' ~ the ',
-                        ' and the ').replace(
-                        ' ~ The ',
-                        ' and The ')
-                    searchartist = searchartist.replace(
-                        ' vs ', ' ~ ').replace(', ', ' ~ ')
+                    try:
+                        url = 'https://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
+                        url = url + '/search.php?s=' + urllib.quote (searchartist)
+                        response = load_url(url)  # see if this is a valid artist before we try splitting the string
+                        checkit = _json.loads(response)
+                        if checkit['artists'] is None:
+                            searchartist = artist.replace(' feat. ', ' ~ ').replace(' ft. ', ' ~ ').replace(' feat ', ' ~ ').replace(' ft ', ' ~ ')
+                            searchartist = searchartist.replace(' & ', ' ~ ').replace(' and ', ' ~ ').replace(' And ', ' ~ ').replace(' ~ the ', ' and the ').replace(' ~ The ',
+                                ' and The ')
+                            searchartist = searchartist.replace(' vs ', ' ~ ').replace(', ', ' ~ ')
+                    except:
+                        searchartist = artist.replace(' feat. ', ' ~ ').replace(' ft. ', ' ~ ').replace(' feat ', ' ~ ').replace(' ft ', ' ~ ')
+                        searchartist = searchartist.replace(' & ', ' ~ ').replace(' and ', ' ~ ').replace(' And ', ' ~ ').replace(' ~ the ', ' and the ').replace(' ~ The ',
+                                ' and The ')
+                        searchartist = searchartist.replace(' vs ', ' ~ ').replace(', ', ' ~ ')
                     log("Searchartist is %s" % searchartist)
                     x = searchartist.find('~')
                     log("searchartist.find('~') result was %s" % str(x))
