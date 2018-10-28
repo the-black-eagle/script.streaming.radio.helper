@@ -209,6 +209,19 @@ def save_pickle(d1, d2, d3, d4, d5, d6, d7):
     pickle.dump(d7, pfile)
     pfile.close()
 
+def load_url(url):
+
+    try:
+        response = urllib2.urlopen(url).read().decode('utf-8')
+        if 'service' in response:
+            return None
+        else : return response
+    except IOError as e:
+        if hasattr(e,'reason'):
+            log("Failed to reach server with url [%s]" % url, xbmc.LOGERROR)
+            log("Error returned was [%s]" %e.reason, xbmc.LOGERROR)
+        elif hasattr(e,'code'):
+           log("Error getting url [%s]  Error code was [%s]" % ( url, e.code ) , xbmc.LOGERROR)
 
 def get_local_cover(BaseString, artist, track, albumtitle):
 
@@ -386,147 +399,94 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
             if dict7[keydata] is not None:
                 log("Using cached data & not looking anything up online", xbmc.LOGDEBUG)
                 return dict1[keydata], dict2[keydata], dict7[keydata]
+
     try:
-        response = urllib.urlopen(searchurl).read().decode('utf-8')
-        if "service" in response:                # theaudiodb not available
-            log("No response from theaudiodb", xbmc.LOGDEBUG)
-            if keydata in dict1:
-                log("Using data from cache and not refreshing", xbmc.LOGDEBUG)
-                if keydata in dict7:
-                    log("Using cached track data", xbmc.LOGDEBUG)
-                    return dict1[keydata], dict2[keydata] , dict7[keydata]   # so return the data we already have
-                else:
-                    trackinfo = None
-                    lastfmurl = "http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=%s" % happy_hippo.decode( 'base64' )
-                    lastfmurl = lastfmurl+'&artist='+searchartist+'&track='+searchtrack+'&format=json'
-                    log("LastFM url is [%s] " % lastfmurl, xbmc.LOGDEBUG)
-                    try:
-                        response = urllib2.urlopen(lastfmurl).read()
-                    except IOError as e:
-                        if hasattr(e,'reason'):
-                            log("Failed to reach server at last.fm", xbmc.LOGERROR)
-                            log("Error returned was [%s]" %e.reason, xbmc.LOGERROR)
-
-                        elif hasattr(e,'code'):
-                            log("Error getting last.fm data.  Error code was [%s]" %e.code , xbmc.LOGERROR)
-                    try:
-                        stuff = json.loads(response)
-#                    searching = response.json()['track']
-                        searching = stuff['track']
-                    except:
-                        searching = []
-                        pass
-#                    log("JSON from Last-FM [%s]" % searching, xbmc.LOGDEBUG)
-                    if 'wiki' in searching:
-                        try:
-                            trackinfo = searching['wiki']['content']
-                        except:
-                            pass
-                        try:
-                            trackinfo = searching['wiki']['summary']
-                        except:
-                            pass
-                        trackinfo = clean_string(trackinfo)
-                        log("Trackinfo - [%s]" % trackinfo, xbmc.LOGDEBUG)
-                    else:
-                        log("No track info found", xbmc.LOGDEBUG)
-                    dict7[keydata] = trackinfo
-                    log("dict 7 data [%s]" % dict7[keydata])
-                    if trackinfo is not None:
-                        return dict1[keydata], dict2[keydata], dict7[keydata]
-                    else:
-                        log("No track info to return", xbmc.LOGDEBUG)
-                        return dict1[keydata], dict2[keydata], None
-            else:
-                return None,None, None # unless we don't have any
         try:
-
+            response = load_url(searchurl)
             searching = _json.loads(response)
         except ValueError:
             log("No json data to parse !!",xbmc.LOGDEBUG)
             searching = []
 
-#        log("JSON data = %s" % searching, xbmc.LOGDEBUG)
+    #        log("JSON data = %s" % searching, xbmc.LOGDEBUG)
         try:
             album_title = searching['track'][0]['strAlbum']
 
         except:
             album_title = None
             pass
+        trackinfo = None
         try:
+            trackinfo = searching['track'][0]['strDescriptionEN']
+        except:
             trackinfo = None
-            try:
-                trackinfo = searching['track'][0]['strDescriptionEN']
-            except:
-                trackinfo = None
-                log('No track info from TADB', xbmc.LOGDEBUG)
-                pass
-            if (trackinfo is not None) and (len (trackinfo) > 3) :
-                log("Description [%s]" % trackinfo.encode('utf-8'), xbmc.LOGDEBUG)
-                dict7[keydata] = trackinfo
-            else:
-                trackinfo = None
-                log("Not found any track data so far, continuing search on lastFM", xbmc.LOGDEBUG)
-            if trackinfo is None :
-                lastfmurl = "http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=%s" % happy_hippo.decode( 'base64' )
-                lastfmurl = lastfmurl+'&artist='+searchartist+'&track='+searchtrack+'&format=json'
-                log("LastFM url is [%s] " % lastfmurl, xbmc.LOGDEBUG)
-                try:
-                    response = urllib2.urlopen(lastfmurl).read()
-                except IOError as e:
-                    if hasattr(e,'reason'):
-                        log("Failed to reach server when fetching track data from last.fm", xbmc.LOGERROR)
-                        log("Error returned was [%s]" %e.reason, xbmc.LOGERROR)
-                    elif hasattr(e,'code'):
-                        log("Error getting last.fm data.  Error code was [%s]" %e.code , xbmc.LOGERROR)
-
-#                response = requests.get(lastfmurl)
-                try:
-                    stuff = json.loads(response)
-                    searching = stuff['track']
-                except:
-                    searching = []
-                    pass
-#                log("JSON from Last-FM [%s]" % searching)
-                if 'wiki' in searching:
-                        try:
-                            trackinfo = searching['wiki']['content']
-                        except:
-                            pass
-                        try:
-                            trackinfo = searching['wiki']['summary']
-                        except:
-                            pass
-                        trackinfo = clean_string(trackinfo)
-                        log("Trackinfo - [%s]" % trackinfo, xbmc.LOGDEBUG)
-                else:
-                    log("No track info found", xbmc.LOGDEBUG)
-                if trackinfo is not None and len(trackinfo) < 3:
-                    log ("No track info found", xbmc.LOGDEBUG)
-                    trackinfo = None
-                else:
-                    log("No track info found on lastFM", xbmc.LOGDEBUG)
-            dict7[keydata] = trackinfo
-            if (album_title == "") or (album_title == "null") or (album_title == None):
-                log("No album data found on TADB ", xbmc.LOGDEBUG)
-                log("trying to use LastFM data", xbmc.LOGDEBUG)
-                try:
-                    album_title = searching['album']['title']
-                    log("Album title [%s]" % album_title, xbmc.LOGDEBUG)
-                except:
-                    pass
-        except Exception as e:
-            trackinfo = None
-            log("No trackinfo", xbmc.LOGDEBUG)
-            log("ERROR [%s]" % str(e))
+            log('No track info from TADB', xbmc.LOGDEBUG)
             pass
+        if (trackinfo is not None) and (len (trackinfo) > 3) :
+            log("Description [%s]" % trackinfo.encode('utf-8'), xbmc.LOGDEBUG)
+            dict7[keydata] = trackinfo
+        else:
+            trackinfo = None
+            log("Not found any track data so far, continuing search on lastFM", xbmc.LOGDEBUG)
+        if trackinfo is None :
+            lastfmurl = "http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=%s" % happy_hippo.decode( 'base64' )
+            lastfmurl = lastfmurl+'&artist='+searchartist+'&track='+searchtrack+'&format=json'
+            log("LastFM url is [%s] " % lastfmurl, xbmc.LOGDEBUG)
+            try:
+                response = load_url(lastfmurl)
+                stuff = json.loads(response)
+                searching = stuff['track']
+            except:
+                searching = []
+                pass
+    #                log("JSON from Last-FM [%s]" % searching)
+            if 'wiki' in searching:
+                    try:
+                        trackinfo = searching['wiki']['content']
+                    except:
+                        pass
+                    try:
+                        trackinfo = searching['wiki']['summary']
+                    except:
+                        passstuff = json.loads(response)
+                searching = stuff['track']
+            except:
+                searching = []
+                pass
+
+            trackinfo = clean_string(trackinfo)
+            log("Trackinfo - [%s]" % trackinfo, xbmc.LOGDEBUG)
+            if trackinfo is not None and len(trackinfo) < 3:
+                log ("No track info found", xbmc.LOGDEBUG)
+                trackinfo = None
+            else:
+                log("No track info found on lastFM", xbmc.LOGDEBUG)
+                trackinfo = clean_string(trackinfo)
+                log("Trackinfo - [%s]" % trackinfo, xbmc.LOGDEBUG)
+        dict7[keydata] = trackinfo
+        log("dict 7 data [%s]" % dict7[keydata])
+
+
+
+        if (album_title == "") or (album_title == "null") or (album_title == None):
+            log("No album data found on TADB ", xbmc.LOGDEBUG)
+            log("trying to use LastFM data", xbmc.LOGDEBUG)
+            try:
+                album_title = searching['album']['title']
+                log("Album title [%s]" % album_title, xbmc.LOGDEBUG)
+
+            except Exception as e:
+                trackinfo = None
+                log("No trackinfo", xbmc.LOGDEBUG)
+                log("ERROR [%s]" % str(e))
+                pass
 
 
         if album_title is not None:
             album_title_search = album_title.replace(" ","+").encode('utf-8')
             searchurl = url + '/searchalbum.php?s=' + searchartist + '&a=' + album_title_search
             log("Search artist,album with strings : %s,%s" %(searchartist,album_title_search), xbmc.LOGDEBUG)
-            response = urllib.urlopen(searchurl).read()
+            response = load_url(searchurl)
             try:
                 searching = _json.loads(response)
                 the_year = "null"
@@ -724,7 +684,7 @@ def search_tadb(mbid, artist, dict4, dict5,checked_all_artists):
 
         log("URL for TADB is : %s" % searchurl, xbmc.LOGDEBUG)
         try:
-            response = urllib.urlopen(searchurl).read()
+            response = load_url(searchurl)
             if response == '':
                 log("No response from theaudiodb", xbmc.LOGDEBUG)
                 return artist, None ,None, None
@@ -742,7 +702,7 @@ def search_tadb(mbid, artist, dict4, dict5,checked_all_artists):
 
                 searchurl = url + '/search.php?s=' + urllib.quote(searchartist.encode('utf-8'))
                 log("Looking up %s on tadb.com with URL %s" % (searchartist, searchurl), xbmc.LOGDEBUG)
-                response = urllib.urlopen(searchurl).read()
+                response = load_url(searchurl)
                 log(response, xbmc.LOGDEBUG)
                 if (response == '') or (response == '{"artists":null}') or ("!DOCTYPE" in response):
                     log("No logo found on tadb", xbmc.LOGDEBUG)
@@ -751,7 +711,7 @@ def search_tadb(mbid, artist, dict4, dict5,checked_all_artists):
                     url = 'https://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
                     searchurl = url + '/artist-mb.php?i=' + mbid
                     log("MBID URL is : %s" % searchurl, xbmc.LOGDEBUG)
-                    response = urllib.urlopen(searchurl).read()
+                    response = load_url(searchurl)
                     log("Response : %s " % str(response), xbmc.LOGDEBUG)
                     if (response == '{"artists":null}') or (response == '') or ('!DOCTYPE' in response):
                         log("Failed to find any artist info on theaudiodb", xbmc.LOGDEBUG)
@@ -767,12 +727,6 @@ def search_tadb(mbid, artist, dict4, dict5,checked_all_artists):
             logopath = xbmc.validatePath(logopath)
             if (not xbmcvfs.exists(logopath)) and (url != None):
                 xbmcvfs.mkdir(logopath)
-                #log("Downloading logo from tadb and cacheing in %s" % logopath, xbmc.LOGDEBUG)
-                #logopath = logopath + "logo.png"
-                #imagedata = urllib.urlopen(url).read()
-                #f = open(logopath,'wb')
-                #f.write(imagedata)
-                #f.close()
                 logopath = download_logo(logopath,url,"tadb")
                 return artist, logopath, dict4[searchartist], dict5[searchartist]
             else:
@@ -1000,16 +954,7 @@ def get_bbc_radio_info(bbc_channel):
     lastfmurl = lastfmurl  + "&format=json&limit=1"
     try:
         _featuredartists = []
-        try:
-            response = urllib2.urlopen(lastfmurl).read()
-        except IOError as e:
-            if hasattr(e,'reason'):
-                log("Failed to reach server when fetching BBC radio data from last.fm", xbmc.LOGERROR)
-                log("Error returned was [%s]" %e.reason, xbmc.LOGERROR)
-                return ''
-            elif hasattr(e,'code'):
-                log("Error getting BBC radio data.  Error code was [%s]" %e.code , xbmc.LOGERROR)
-                return ''
+         response = load_url(lastfmurl)
         stuff = _json.loads(response)
         if stuff.has_key('message'):
             log("Error getting BBC data from last.fm", xbmc.LOGERROR)
@@ -1035,7 +980,7 @@ def get_bbc_radio_info(bbc_channel):
 
     except Exception as e:
         log("[get_bbc_radio_info] error [%s] " %str(e), xbmc.LOGERROR)
-        return '' , 1
+        return ''
 
 
 
