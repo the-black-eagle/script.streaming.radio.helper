@@ -355,7 +355,7 @@ try:
                     testpath = xbmc.validatePath(testpath)
                     try:
                         url = 'https://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
-                        url = url + '/search.php?s=' + urllib.quote (searchartist)
+                        url = url + '/search.php?s=' + urllib.quote (artist)
                         response = load_url(url)  # see if this is a valid artist before we try splitting the string
                         checkit = _json.loads(response)
                         if checkit['artists'] is None:
