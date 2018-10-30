@@ -449,10 +449,6 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
                         trackinfo = searching['wiki']['summary']
                     except:
                         passstuff = json.loads(response)
-                searching = stuff['track']
-            except:
-                searching = []
-                pass
 
             trackinfo = clean_string(trackinfo)
             log("Trackinfo - [%s]" % trackinfo, xbmc.LOGDEBUG)
@@ -954,7 +950,7 @@ def get_bbc_radio_info(bbc_channel):
     lastfmurl = lastfmurl  + "&format=json&limit=1"
     try:
         _featuredartists = []
-         response = load_url(lastfmurl)
+        response = load_url(lastfmurl)
         stuff = _json.loads(response)
         if stuff.has_key('message'):
             log("Error getting BBC data from last.fm", xbmc.LOGERROR)
