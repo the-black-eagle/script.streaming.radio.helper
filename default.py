@@ -101,60 +101,37 @@ def no_track():
     WINDOW.setProperty("srh.AlbumCover","")
     return False, False
 
-def get_info(
-        testpath,
-        searchartist,
-        artist,
-        multi_artist,
-        already_checked,
-        checked_all_artists):
+def get_info(local_logo, tadb_json_data, testpath, searchartist, artist, multi_artist, already_checked, checked_all_artists):
     #    outstring = ""
     #    data_out_albumtitle = "null"
     #    data_out_trackinfo = "null"
     #    data_out_year = "null"
+    local_logo = False
     if multi_artist:
         orig_artist = artist
-    if xbmcvfs.exists(
-            testpath):     # See if there is a logo in the music directory
-        WINDOW.setProperty("srh.Logopath", testpath)
+    if xbmcvfs.exists(testpath):     # See if there is a logo in the music directory
+        local_logo = True
         log("Logo in Music Directory : Path is %s" %
             testpath, xbmc.LOGDEBUG)
 
-        if onlinelookup == "true":
-            mbid = get_mbid(searchartist, dict6)
-        else:
-            mbid = None
-        if tadb == "true":
-            artist, logopath, ArtistThumb, ArtistBanner = search_tadb(
-                mbid, searchartist, dict4, dict5, checked_all_artists)
-        else:
-            logopath = ""
-            ArtistThumb = ""
-            ArtistBanner = ""
+    if onlinelookup == "true":
+        mbid = get_mbid(searchartist, dict6)
     else:
-        log("No logo in music directory", xbmc.LOGDEBUG)
-        if onlinelookup == "true":
-            # No logo in music directory - get artist MBID
-            mbid = get_mbid(searchartist, dict6)
-        else:
-            mbid = None
-        if mbid:
-            if fanart == "true":
-                # Try and get a logo from cache directory or fanart.tv
-                logopath = get_hdlogo(mbid, searchartist)
-            if tadb == "true":
-                artist, logopath, ArtistThumb, ArtistBanner = search_tadb(
-                    mbid, searchartist, dict4, dict5, checked_all_artists)
-            else:
-                logopath = ""
-                ArtistThumb = ""
-                ArtistBanner = ""
-        if logopath:  # We have a logo to display
-            log("Logo found in path %s " % logopath)
-            WINDOW.setProperty("srh.Logopath", logopath)
-        elif not logopath and not multi_artist:  # No logos to display
-            WINDOW.setProperty("srh.Logopath", "")
-            log("No logo in cache directory", xbmc.LOGDEBUG)
+        mbid = None
+    if tadb == "true":
+        artist, logopath, ArtistThumb, ArtistBanner = search_tadb(tadb_json_data, local_logo, mbid, searchartist, dict4, dict5, checked_all_artists)
+    else:
+        logopath = ""
+        ArtistThumb = ""
+        ArtistBanner = ""
+    if local_logo:
+        logopath = testpath
+    if logopath:  # We have a logo to display
+        log("Logo found in path %s " % logopath)
+        WINDOW.setProperty("srh.Logopath", logopath)
+    elif not logopath and not multi_artist:  # No logos to display
+        WINDOW.setProperty("srh.Logopath", "")
+        log("No logo in cache directory", xbmc.LOGDEBUG)
     if ArtistThumb:
         WINDOW.setProperty("srh.Artist.Thumb", ArtistThumb)
     if ArtistBanner:
@@ -353,16 +330,19 @@ try:
                     logopath = ''
                     testpath = BaseString + artist + "/logo.png"
                     testpath = xbmc.validatePath(testpath)
+                    tadb_json_data = {}
                     try:
                         url = 'https://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
-                        url = url + '/search.php?s=' + urllib.quote (artist)
+                        url = url + '/search.php?s=' + artist.replace(" ", "+")
                         response = load_url(url)  # see if this is a valid artist before we try splitting the string
-                        checkit = _json.loads(response)
-                        if checkit['artists'] is None:
+                        tadb_json_data = _json.loads(response)
+                        if tadb_json_data['artists'] is None:
                             searchartist = artist.replace(' feat. ', ' ~ ').replace(' ft. ', ' ~ ').replace(' feat ', ' ~ ').replace(' ft ', ' ~ ')
                             searchartist = searchartist.replace(' & ', ' ~ ').replace(' and ', ' ~ ').replace(' And ', ' ~ ').replace(' ~ the ', ' and the ').replace(' ~ The ',
                                 ' and The ')
                             searchartist = searchartist.replace(' vs ', ' ~ ').replace(', ', ' ~ ')
+                        else:
+                            searchartist = artist
                     except:
                         searchartist = artist.replace(' feat. ', ' ~ ').replace(' ft. ', ' ~ ').replace(' feat ', ' ~ ').replace(' ft ', ' ~ ')
                         searchartist = searchartist.replace(' & ', ' ~ ').replace(' and ', ' ~ ').replace(' And ', ' ~ ').replace(' ~ the ', ' and the ').replace(' ~ The ',
@@ -384,7 +364,7 @@ try:
                     first_time = True
 
                     artist_index = 0
-                    already_checked = get_info(
+                    already_checked = get_info(local_logo, tadb_json_data,
                         testpath,
                         searchartists[artist_index].strip(),
                         artist,
@@ -416,7 +396,7 @@ try:
                         if artist_index == num_artists:
                             artist_index = 0
                             checked_all_artists = True
-                        already_checked = get_info(
+                        already_checked = get_info(local_logo, tadb_json_data,
                             testpath,
                             searchartists[artist_index].strip(),
                             artist,
