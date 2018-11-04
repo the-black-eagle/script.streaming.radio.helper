@@ -304,7 +304,7 @@ try:
                         artist = temp1
                 except Exception as e:
                     log("[Exception %s] while trying to slice current_track %s" % (
-                        str(e), current_track), xbmcLOGDEBUG)
+                        str(e), current_track), xbmc.LOGDEBUG)
                 # if artist == "Pink":
                     #artist = "P!nk"
                 if (artist.upper() == "ELO") or (artist.upper() ==
@@ -409,7 +409,7 @@ try:
                 checked_all_artists, already_checked = no_track()
             xbmc.sleep(1000)
         else:
-            checked_all_artists, already_checked = no_track()
+            log("Not an internet stream", xbmc.LOGDEBUG)
         if xbmc.Player().isPlayingAudio() == False:
             log("Not playing audio")
             save_pickle(dict1, dict2, dict3, dict4, dict5, dict6, dict7)
