@@ -275,7 +275,7 @@ try:
                     current_track = get_bbc_radio_info(bbc_channel)
             if "T - Rex" in current_track:
                 current_track = current_track.replace(
-                    "T - Rex", "T. Rex")
+                    "T - Rex", "T. Rex") # fix artist name for tadb (even though 'T - Rex' is technically correct)
             if " - " in current_track:
                 try:
                     x = slice_string(current_track, ' - ', 1)
@@ -305,8 +305,6 @@ try:
                 except Exception as e:
                     log("[Exception %s] while trying to slice current_track %s" % (
                         str(e), current_track), xbmc.LOGDEBUG)
-                # if artist == "Pink":
-                    #artist = "P!nk"
                 if (artist.upper() == "ELO") or (artist.upper() ==
                                                  "E.L.O") or (artist.upper() == "E.L.O."):
                     artist = "Electric Light Orchestra"
@@ -410,10 +408,9 @@ try:
             xbmc.sleep(1000)
         else:
             log("Not an internet stream", xbmc.LOGDEBUG)
-        if xbmc.Player().isPlayingAudio() == False:
-            log("Not playing audio")
+        if (xbmc.Player().isPlayingAudio() == False) or (not xbmc.getCondVisibility("Player.IsInternetStream")):
+            log("Not playing audio or not an internet stream")
             save_pickle(dict1, dict2, dict3, dict4, dict5, dict6, dict7)
-#            data_out.close()
             script_exit()
 
 except Exception as e:
@@ -425,7 +422,7 @@ except Exception as e:
         xbmcgui.NOTIFICATION_INFO,
         5000)
     exc_type, exc_value, exc_traceback = sys.exc_info()
-    log(repr(traceback.format_exception(exc_type, exc_value, exc_traceback)))
+    log(repr(traceback.format_exception(exc_type, exc_value, exc_traceback)), xbmc.LOGERROR)
     save_pickle(dict1, dict2, dict3, dict4, dict5, dict6, dict7)
 
     script_exit()
