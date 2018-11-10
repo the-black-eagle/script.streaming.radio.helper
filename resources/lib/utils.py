@@ -55,6 +55,7 @@ got_info = 0
 bbc_first_time = 0
 bbc_delay = 5
 bbc_channel = 2
+albumtitle = None
 dict1 = {}  # Key = artistname+trackname, value = Album name
 dict2 = {}  # Key = artistname+trackname, value = Album year
 dict3 = {}  # Key = artistname+trackname, value = date last looked up
@@ -65,6 +66,7 @@ dict7 = {}  # Key = Artistname+trackname, value = Track details
 time_diff = datetime.timedelta(days=7)  # date to next check
 todays_date = datetime.datetime.combine(datetime.date.today(), datetime.datetime.min.time())
 BaseString = xbmc.validatePath(BaseString)
+
 onlinelookup = addon.getSetting('onlinelookup')
 fanart = addon.getSetting('usefanarttv')
 tadb = addon.getSetting('usetadb')
@@ -79,11 +81,12 @@ addon.getSetting('st8find').strip(): addon.getSetting('st8rep').strip(), \
 addon.getSetting('st9find').strip(): addon.getSetting('st9rep').strip(), \
 addon.getSetting('st10find').strip(): addon.getSetting('st10rep').strip()}
 
-artistlist={addon.getSetting('artist1').strip(): addon.getSetting('artistrep1').strip(), \
-addon.getSetting('artist2').strip(): addon.getSetting('artistrep2').strip(), \
-addon.getSetting('artist3').strip(): addon.getSetting('artistrep3').strip(), \
-addon.getSetting('artist4').strip(): addon.getSetting('artistrep4').strip(), \
-addon.getSetting('artist5').strip(): addon.getSetting('artistrep5').strip()}
+#artistlist={addon.getSetting('artist1').strip(): addon.getSetting('artistrep1').strip(), \
+#addon.getSetting('artist2').strip(): addon.getSetting('artistrep2').strip(), \
+#addon.getSetting('artist3').strip(): addon.getSetting('artistrep3').strip(), \
+#addon.getSetting('artist4').strip(): addon.getSetting('artistrep4').strip(), \
+#addon.getSetting('artist5').strip(): addon.getSetting('artistrep5').strip()}
+
 
 swaplist = {addon.getSetting('st1rep').strip(): addon.getSetting('rev1'), \
 addon.getSetting('st2rep').strip(): addon.getSetting('rev2'), \
@@ -142,6 +145,11 @@ def download_logo(path,url,origin="Fanart.tv"):
     log("Downloaded logo from %s" % origin, xbmc.LOGDEBUG)
     return logopath
 
+def load_artist_subs():
+    artist_subs_string = addon.getSetting('artistsubs')
+    temp_list = artist_subs_string.split( ',' )
+    artist_sub_dict = dict(s.split('=') for s in temp_list)
+    return artist_sub_dict
 
 def clean_string(text):
     text = re.sub('<a [^>]*>|</a>|<span[^>]*>|</span>', '', text)
@@ -213,10 +221,9 @@ def save_pickle(d1, d2, d3, d4, d5, d6, d7):
 def load_url(url):
 
     try:
-        response = urllib2.urlopen(url).read().decode('utf-8')
-        if 'service' in response:
-            return None
-        else : return response
+        response = urllib.urlopen(url).read().decode('utf-8')
+
+        return response
     except IOError as e:
         if hasattr(e,'reason'):
             log("Failed to reach server with url [%s]" % url, xbmc.LOGERROR)
@@ -248,6 +255,8 @@ def get_local_cover(BaseString, artist, track, albumtitle):
         if xbmcvfs.exists(pathToAlbumCover):
             log("Found a local 'cover.png' and set AlbumCover to [%s]" % pathToAlbumCover, xbmc.LOGDEBUG)
             return pathToAlbumCover
+        if artist in dict4:
+            return dict4[artist]
         return None
 
     except Exception as e:
@@ -347,18 +356,18 @@ def get_year(artist, track, dict1, dict2, dict3, dict7, already_checked):
         log("Data for track '%s' on album '%s' last checked %s" % (track, dict1[keydata], str(datechecked.strftime("%d-%m-%Y"))), xbmc.LOGDEBUG)
         if (datechecked < (todays_date - time_diff)) or (xbmcvfs.exists(logostring + "refreshdata")):
             log( "Data might need refreshing", xbmc.LOGDEBUG)
-            if (dict1[keydata] == '') or (dict1[keydata] == None) or (dict1[keydata] == 'None') or (dict1[keydata] == 'null') or (xbmcvfs.exists(logostring + "refreshdata")) and (lun == False):
-                log("No album data - checking TADB again", xbmc.LOGDEBUG)
+            if ((dict1[keydata] == '') or (dict1[keydata] == None) or (dict1[keydata] == 'None') or (dict1[keydata] == 'null') or (xbmcvfs.exists(logostring + "refreshdata"))) and (lun == False):
+                log("No album data - checking TADB again [%s]" % lun, xbmc.LOGDEBUG)
                 dict1[keydata], dict2[keydata], dict7[keydata] = tadb_trackdata(artist, track, dict1, dict2, dict3, dict7)
                 dict3[keydata] = datetime.datetime.combine(datetime.date.today(),datetime.datetime.min.time())
                 log("Data refreshed")
-            elif (dict2[keydata] == None) or (dict2[keydata] == '0') or (dict2[keydata] == '') and (lun == False):
-                log("No year data for album %s - checking TADB again" % dict1[keydata], xbmc.LOGDEBUG)
+            elif ((dict2[keydata] == None) or (dict2[keydata] == '0') or (dict2[keydata] == '')) and (lun == False):
+                log("No year data for album %s - checking TADB again [%s]" % (dict1[keydata], lun), xbmc.LOGDEBUG)
                 dict1[keydata], dict2[keydata], dict7[keydata] = tadb_trackdata(artist, track, dict1, dict2, dict3, dict7)
                 dict3[keydata] = datetime.datetime.combine(datetime.date.today(),datetime.datetime.min.time())
                 log("Data refreshed", xbmc.LOGDEBUG)
-            elif (dict7[keydata] == None) or (dict7[keydata] == "None") or (dict7[keydata] == "") and (lun == False): # don't lookup again if we have just done it (Line 196)
-                log("No text data for track - re-checking TADB", xbmc.LOGDEBUG)
+            elif ((dict7[keydata] == None) or (dict7[keydata] == "None") or (dict7[keydata] == "")) and (lun == False): # don't lookup again if we have just done it (Line 196)
+                log("No text data for track - re-checking TADB [%s]" % lun, xbmc.LOGDEBUG)
                 dict1[keydata], dict2[keydata], dict7[keydata] = tadb_trackdata(artist,track,dict1,dict2,dict3, dict7)
                 dict3[keydata] = datetime.datetime.combine(datetime.date.today(),datetime.datetime.min.time())
             elif lun == True:
@@ -410,7 +419,8 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
     try:
         try:
             response = load_url(searchurl)
-            searching = _json.loads(response)
+            if response:
+                searching = _json.loads(response)
         except ValueError:
             log("No json data to parse !!",xbmc.LOGERROR)
             searching = []
@@ -542,7 +552,7 @@ def get_mbid(artist, dict6):
         elif artist.lower() == 'acdc':
             artist = "AC DC"
         if artist in dict6:
-            log("Using cached MBID")
+            log("Using cached MBID for artist [%s]" % artist)
             return dict6[artist]
         url = 'http://musicbrainz.org/ws/2/artist/?query=artist:%s' % artist
         url = url.encode('utf-8')
@@ -575,7 +585,7 @@ def get_mbid(artist, dict6):
 
 def check_cached_logo(logopath, url):
 
-    if (not xbmcvfs.exists(logopath)):
+    if (not xbmcvfs.exists(logopath)) and url:
             xbmcvfs.mkdir(logopath)
             log("Created directory [%s] to download logo from [%s]" %( logopath, url), xbmc.LOGDEBUG)
             logopath = download_logo(logopath, url, "tadb")
@@ -587,7 +597,7 @@ def check_cached_logo(logopath, url):
             log("Logo has already been downloaded and is in cache. Path is %s" % logopath, xbmc.LOGDEBUG)
             return logopath
         else:
-            log("Nothing to return - this must be wrong !!", xbmc.LOGERROR)
+            log("No local logo and no cached logo", xbmc.LOGERROR)
             return None
 
 
@@ -683,7 +693,8 @@ def search_tadb(tadb_json_data, local_logo, mbid, artist, dict4, dict5,checked_a
     log("----------------------------------------------------", xbmc.LOGDEBUG)
     logopath = ''
     url = ''
-    if tadb_json_data: # already got some data to work with
+    response = None
+    if (tadb_json_data) and (tadb_json_data['artists'] )is not None: # already got some data to work with
         searchartist = artist.replace(" ", "+")
         searching = tadb_json_data
         artist, url, dict4, dict5, mbid = parse_data(artist, searching, searchartist, dict4, dict5, mbid)
@@ -697,6 +708,8 @@ def search_tadb(tadb_json_data, local_logo, mbid, artist, dict4, dict5,checked_a
         log("URL for TADB is : %s" % searchurl, xbmc.LOGDEBUG)
 
         response = load_url(searchurl)
+        log(str(response))
+
         if (response == '{"artists":null}') or (response == '') or ('!DOCTYPE' in response) or (response == None):
             searchartist = 'The+' + searchartist
             tadburl = 'https://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
@@ -716,11 +729,15 @@ def search_tadb(tadb_json_data, local_logo, mbid, artist, dict4, dict5,checked_a
             log("Failed to find any artist info on theaudiodb", xbmc.LOGDEBUG)
             return artist, None, None, None
 
-
+    if response is not None:
         searching = _json.loads(response)
         artist, url, dict4, dict5, mbid = parse_data(artist, searching, searchartist, dict4, dict5, mbid)
-    if (not local_logo) and url:
+    if url and (not local_logo):
         log("No local logo", xbmc.LOGDEBUG)
+        logopath = logostring + mbid + '/'
+        logopath = xbmc.validatePath(logopath)
+        logopath = check_cached_logo (logopath, url)
+    else:
         logopath = logostring + mbid + '/'
         logopath = xbmc.validatePath(logopath)
         logopath = check_cached_logo (logopath, url)
@@ -728,6 +745,7 @@ def search_tadb(tadb_json_data, local_logo, mbid, artist, dict4, dict5,checked_a
         return artist, logopath, dict4[searchartist], dict5[searchartist]
     else:
         return artist, logopath, None, None
+
 
 
 def parse_data(artist, searching, searchartist, dict4, dict5, mbid):

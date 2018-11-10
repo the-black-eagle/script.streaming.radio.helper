@@ -107,10 +107,16 @@ def get_info(local_logo, tadb_json_data, testpath, searchartist, artist, multi_a
     #    data_out_trackinfo = "null"
     #    data_out_year = "null"
     local_logo = False
+    albumtitle = None
+    trackinfo = None
+    theyear = None
     if multi_artist:
         orig_artist = artist
+    log("Checked all artists is %s" %checked_all_artists)
     if xbmcvfs.exists(testpath):     # See if there is a logo in the music directory
         local_logo = True
+    else:
+        local_logo = False
         log("Logo in Music Directory : Path is %s" %
             testpath, xbmc.LOGDEBUG)
 
@@ -124,10 +130,11 @@ def get_info(local_logo, tadb_json_data, testpath, searchartist, artist, multi_a
         logopath = ""
         ArtistThumb = ""
         ArtistBanner = ""
+    log("artist thumb - %s" % ArtistThumb)
+    log("artist banner - %s" % ArtistBanner)
     if local_logo:
         logopath = testpath
     if logopath:  # We have a logo to display
-        log("Logo found in path %s " % logopath)
         WINDOW.setProperty("srh.Logopath", logopath)
     elif not logopath and not multi_artist:  # No logos to display
         WINDOW.setProperty("srh.Logopath", "")
@@ -144,46 +151,46 @@ def get_info(local_logo, tadb_json_data, testpath, searchartist, artist, multi_a
         already_checked, albumtitle, theyear, trackinfo = get_year(
             artist, track, dict1, dict2, dict3, dict7, already_checked)
 
-        if albumtitle and not multi_artist:
-            # set if single artist and got album
-            WINDOW.setProperty("srh.Album", albumtitle)
-            log("Single artist - Window property srh.Album set")
+    if albumtitle and not multi_artist:
+        # set if single artist and got album
+        WINDOW.setProperty("srh.Album", albumtitle)
+        log("Single artist - Window property srh.Album set")
 #            data_out_albumtitle =  albumtitle.encode('utf-8')
-        elif albumtitle and multi_artist and (WINDOW.getProperty("srh.Album") == ""):
-            WINDOW.setProperty("srh.Album", albumtitle)
+    elif albumtitle and multi_artist and (WINDOW.getProperty("srh.Album") == ""):
+        WINDOW.setProperty("srh.Album", albumtitle)
 
-            log("Multi artist - srh.Album was empty - now set to %s" %
-                albumtitle)
-        elif not albumtitle and (not multi_artist):
-            # clear if no title and not multi artist
-            WINDOW.setProperty("srh.Album", "")
-            log("No album title for single artist")
-        log("Album set to [%s]" % albumtitle)
-        if trackinfo:
-            trackinfo = trackinfo + '\n'
-            WINDOW.setProperty(
-                "srh.TrackInfo",
-                trackinfo.encode('utf-8'))
+        log("Multi artist - srh.Album was empty - now set to %s" %
+            albumtitle)
+    elif not albumtitle and (not multi_artist):
+        # clear if no title and not multi artist
+        WINDOW.setProperty("srh.Album", "")
+        log("No album title for single artist")
+    log("Album set to [%s]" % albumtitle)
+    if trackinfo:
+        trackinfo = trackinfo + '\n'
+        WINDOW.setProperty(
+            "srh.TrackInfo",
+            trackinfo.encode('utf-8'))
 #            data_out_trackinfo = trackinfo.encode('utf-8')
-        else:
-            WINDOW.setProperty("srh.TrackInfo", "")
-        if theyear and theyear != '0' and (not multi_artist):
-            WINDOW.setProperty("srh.Year", theyear)
+    else:
+        WINDOW.setProperty("srh.TrackInfo", "")
+    if theyear and theyear != '0' and (not multi_artist):
+        WINDOW.setProperty("srh.Year", theyear)
 #            data_out_year = theyear
-        elif theyear and multi_artist and(WINDOW.getProperty("srh.Year") == ""):
-            WINDOW.setProperty("srh.Year", theyear)
-        elif (not theyear or (theyear == 0)) and (not multi_artist):
-            WINDOW.setProperty("srh.Year", "")
-        if (albumtitle) and (theyear):
-            log("Album & year details found : %s, %s" %
-                (albumtitle, theyear), xbmc.LOGDEBUG)
-        elif (albumtitle) and not (theyear):
-            log("Found album %s but no year" %
-                albumtitle, xbmc.LOGDEBUG)
-        else:
-            log("No album or year details found", xbmc.LOGDEBUG)
+    elif theyear and multi_artist and(WINDOW.getProperty("srh.Year") == ""):
+        WINDOW.setProperty("srh.Year", theyear)
+    elif (not theyear or (theyear == 0)) and (not multi_artist):
+        WINDOW.setProperty("srh.Year", "")
+    if (albumtitle) and (theyear):
+        log("Album & year details found : %s, %s" %
+            (albumtitle, theyear), xbmc.LOGDEBUG)
+    elif (albumtitle) and not (theyear):
+        log("Found album %s but no year" %
+            albumtitle, xbmc.LOGDEBUG)
+    else:
+        log("No album or year details found", xbmc.LOGDEBUG)
 
-        WINDOW.setProperty("srh.AlbumCover", get_local_cover(BaseString, artist, track, albumtitle))
+    WINDOW.setProperty("srh.AlbumCover", get_local_cover(BaseString, artist, track, albumtitle))
 
 
     if multi_artist:
@@ -223,6 +230,7 @@ try:
     log("Language is set to %s" % language, xbmc.LOGNOTICE)
     log("----------Settings-------------------------", xbmc.LOGNOTICE)
     log("Setting up addon", xbmc.LOGNOTICE)
+    artistlist = load_artist_subs()
     already_checked = False
     log("aready_checked is set to [%s] " % str(already_checked))
     if xbmcvfs.exists(logostring + "data.pickle"):
@@ -308,9 +316,7 @@ try:
                 if (artist.upper() == "ELO") or (artist.upper() ==
                                                  "E.L.O") or (artist.upper() == "E.L.O."):
                     artist = "Electric Light Orchestra"
-
                 try:
-
                     artist = next(v for k, v in artistlist.items()
                                   if k == (artist))
                 except StopIteration:
@@ -321,17 +327,19 @@ try:
                     searchartists = []
                     station, station_list = check_station(file_playing)
                     WINDOW.setProperty("srh.Stationname", station)
-
                     log("Track changed to %s by %s" %
                         (track, artist), xbmc.LOGDEBUG)
                     log("Playing station : %s" % station, xbmc.LOGDEBUG)
                     logopath = ''
                     testpath = BaseString + artist + "/logo.png"
                     testpath = xbmc.validatePath(testpath)
+
                     tadb_json_data = {}
                     try:
-                        url = 'https://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
-                        url = url + '/search.php?s=' + artist.replace(" ", "+")
+
+                        _url = 'https://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
+                        url = _url + '/search.php?s=' + artist.replace( ' ', '+' ).encode('utf-8')
+                        log( "Initial lookup on tadb for artist [%s]" % artist)
                         response = load_url(url)  # see if this is a valid artist before we try splitting the string
                         tadb_json_data = _json.loads(response)
                         if tadb_json_data['artists'] is None:
@@ -346,6 +354,7 @@ try:
                         searchartist = searchartist.replace(' & ', ' ~ ').replace(' and ', ' ~ ').replace(' And ', ' ~ ').replace(' ~ the ', ' and the ').replace(' ~ The ',
                                 ' and The ')
                         searchartist = searchartist.replace(' vs ', ' ~ ').replace(', ', ' ~ ')
+
                     log("Searchartist is %s" % searchartist)
                     x = searchartist.find('~')
                     log("searchartist.find('~') result was %s" % str(x))
@@ -360,7 +369,6 @@ try:
                         multi_artist = False
                     mbids = ""
                     first_time = True
-
                     artist_index = 0
                     already_checked = get_info(local_logo, tadb_json_data,
                         testpath,
