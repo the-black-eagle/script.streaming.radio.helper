@@ -1,4 +1,4 @@
-# script.radio.streaming.helper
+# script.streaming.radio.helper
 -----------------------------
 
 Because of the way most ICY radio streams are formatted, kodi doesn't display the artist
