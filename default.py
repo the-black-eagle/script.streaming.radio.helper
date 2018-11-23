@@ -15,7 +15,7 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 #
-#  (C) Black_eagle 2016
+#  (C) Black_eagle 2016 - 2018
 #
 #  WINDOW PROPERTIES SET BY THIS SCRIPT
 #
@@ -29,7 +29,10 @@
 #  srh.Album -              track the album is off if the addon can find a match (note that this may not be accurate as we just match the first album we find with that track on)
 #  srh.Year -               the year 'srh.Album' is from if the addon can find a match
 #  srh.MBIDS -              Mbid(s) of the current artist(s)
-#  srh.AlbumCover -         Path to local album cover if found, else empty string
+#  srh.AlbumCover -         Path to local album cover if found (takes precedence), url to online cover if one exists, else artist thumb if available, otherwise empty string
+#  srh.RecordLabel -        Name of label the album was released on if available
+#  srh.AlbumDescription -   Description of album from tadb if one exists
+#  srh.AlbumReview -        Album review from tadb if one exists
 #
 #  streaming-radio-helper-running - true when script running
 #
@@ -79,10 +82,15 @@ def script_exit():
     WINDOW.clearProperty("srh.Artist.Thumb")
     WINDOW.clearProperty("srh.Artist.Banner")
     WINDOW.clearProperty("srh.MBIDS")
+    WINDOW.clearProperty("srh.Musicpath")
     WINDOW.clearProperty("srh.AlbumCover")
-    log("Script Stopped")
-    # data_out.close()
+    WINDOW.clearProperty("srh.RecordLabel")
+    WINDOW.clearProperty("srh.RealAlbumThumb")
+    WINDOW.clearProperty("srh.realCDArt")
+    WINDOW.clearProperty("srh.AlbumDescription")
+    WINDOW.clearProperty("srh.AlbumReview")
     rt.stop()
+    log("Script Stopped", xbmc.LOGNOTICE)
     exit()
 
 def no_track():
@@ -99,39 +107,51 @@ def no_track():
     WINDOW.setProperty("srh.MBIDS", "")
     WINDOW.setProperty("srh.Musicpath", "")
     WINDOW.setProperty("srh.AlbumCover","")
+    WINDOW.setProperty("srh.RecordLabel","")
+    WINDOW.setProperty("srh.RealAlbumThumb","")
+    WINDOW.setProperty("srh.realCDArt", "")
+    WINDOW.setProperty("srh.AlbumDescription","")
+    WINDOW.setProperty("srh.AlbumReview","")
     return False, False
 
+
 def get_info(local_logo, tadb_json_data, testpath, searchartist, artist, multi_artist, already_checked, checked_all_artists):
-    #    outstring = ""
-    #    data_out_albumtitle = "null"
-    #    data_out_trackinfo = "null"
-    #    data_out_year = "null"
+
+    RealAlbumThumb = None
+    AlbumDescription = None
+    AlbumReview = None
+    RealCDArt = None
     local_logo = False
     albumtitle = None
     trackinfo = None
     theyear = None
+    cdArt = None
     if multi_artist:
         orig_artist = artist
-    log("Checked all artists is %s" %checked_all_artists)
+    log("Checked all artists is %s" %checked_all_artists, xbmc.LOGDEBUG)
     if xbmcvfs.exists(testpath):     # See if there is a logo in the music directory
         local_logo = True
-    else:
-        local_logo = False
         log("Logo in Music Directory : Path is %s" %
             testpath, xbmc.LOGDEBUG)
+    else:
+        local_logo = False
+
 
     if onlinelookup == "true":
         mbid = get_mbid(searchartist, dict6)
     else:
         mbid = None
-    if tadb == "true":
-        artist, logopath, ArtistThumb, ArtistBanner = search_tadb(tadb_json_data, local_logo, mbid, searchartist, dict4, dict5, checked_all_artists)
+    if checked_all_artists is True:
+        logopath, ArtistThumb, ArtistBanner = get_cached_info(mbid, testpath, local_logo, searchartist, dict4, dict5)
     else:
-        logopath = ""
-        ArtistThumb = ""
-        ArtistBanner = ""
-    log("artist thumb - %s" % ArtistThumb)
-    log("artist banner - %s" % ArtistBanner)
+        if tadb == "true":
+            artist, logopath, ArtistThumb, ArtistBanner = search_tadb(tadb_json_data, local_logo, mbid, searchartist, dict4, dict5, checked_all_artists)
+        else:
+            logopath = ""
+            ArtistThumb = ""
+            ArtistBanner = ""
+    log("artist thumb - %s" % ArtistThumb, xbmc.LOGDEBUG)
+    log("artist banner - %s" % ArtistBanner, xbmc.LOGDEBUG)
     if local_logo:
         logopath = testpath
     if logopath:  # We have a logo to display
@@ -145,35 +165,46 @@ def get_info(local_logo, tadb_json_data, testpath, searchartist, artist, multi_a
         WINDOW.setProperty("srh.Artist.Banner", ArtistBanner)
     WINDOW.setProperty("srh.Musicpath", BaseString)
 
+    if checked_all_artists is True:
+        already_checked, albumtitle, theyear, trackinfo = get_remaining_cache(artist, track, dict1, dict2, dict7)
 
     if not already_checked:
-        log("Not checked the album and year data yet for this artist")
+        log("Not checked the album and year data yet for this artist", xbmc.LOGDEBUG)
         already_checked, albumtitle, theyear, trackinfo = get_year(
             artist, track, dict1, dict2, dict3, dict7, already_checked)
 
     if albumtitle and not multi_artist:
         # set if single artist and got album
         WINDOW.setProperty("srh.Album", albumtitle)
-        log("Single artist - Window property srh.Album set")
-#            data_out_albumtitle =  albumtitle.encode('utf-8')
+        log("Single artist - Window property srh.Album set", xbmc.LOGDEBUG)
     elif albumtitle and multi_artist and (WINDOW.getProperty("srh.Album") == ""):
         WINDOW.setProperty("srh.Album", albumtitle)
 
         log("Multi artist - srh.Album was empty - now set to %s" %
-            albumtitle)
+            albumtitle, xbmc.LOGDEBUG)
     elif not albumtitle and (not multi_artist):
         # clear if no title and not multi artist
         WINDOW.setProperty("srh.Album", "")
-        log("No album title for single artist")
-    log("Album set to [%s]" % albumtitle)
+        log("No album title for single artist", xbmc.LOGDEBUG)
+    elif not albumtitle and multi_artist:
+        log("Not changing album cover for multi-artist", xbmc.LOGDEBUG)
+    log("Album set to [%s]" % albumtitle, xbmc.LOGDEBUG)
+    if albumtitle:
+        RealAlbumThumb, RealCDArt, AlbumDescription, AlbumReview = get_album_data(artist, track, albumtitle, dict8, dict9, dict10, dict11, dict12, RealCDArt, RealAlbumThumb, AlbumDescription, AlbumReview)
+    if RealCDArt:
+        WINDOW.setProperty("srh.RealCDArt", RealCDArt)
+        log("Real CDArt", xbmc.LOGDEBUG)
     if trackinfo:
         trackinfo = trackinfo + '\n'
         WINDOW.setProperty(
             "srh.TrackInfo",
             trackinfo.encode('utf-8'))
-#            data_out_trackinfo = trackinfo.encode('utf-8')
     else:
         WINDOW.setProperty("srh.TrackInfo", "")
+    if AlbumDescription:
+        WINDOW.setProperty("srh.AlbumDescription", AlbumDescription.encode( 'utf-8' ))
+    if AlbumReview:
+        WINDOW.setProperty("srh.AlbumReview", AlbumReview.encode( 'uft-8' ))
     if theyear and theyear != '0' and (not multi_artist):
         WINDOW.setProperty("srh.Year", theyear)
 #            data_out_year = theyear
@@ -189,9 +220,19 @@ def get_info(local_logo, tadb_json_data, testpath, searchartist, artist, multi_a
             albumtitle, xbmc.LOGDEBUG)
     else:
         log("No album or year details found", xbmc.LOGDEBUG)
-
-    WINDOW.setProperty("srh.AlbumCover", get_local_cover(BaseString, artist, track, albumtitle))
-
+    type_of_cover, _pathToAlbumCover, cdArt = get_local_cover(BaseString, artist, track, albumtitle)
+    log("Realalbum thumb is %s" % RealAlbumThumb, xbmc.LOGDEBUG)
+    if type_of_cover == 1:
+        WINDOW.setProperty("srh.AlbumCover", _pathToAlbumCover) # use local cover if available
+        log("Local cover", xbmc.LOGDEBUG)
+    elif (type_of_cover != 1) and RealAlbumThumb is not None:
+        WINDOW.setProperty("srh.AlbumCover", RealAlbumThumb) # use tadb cover if available and no local cover
+        log("tadb cover", xbmc.LOGDEBUG)
+    elif type_of_cover == 2:
+        WINDOW.setProperty("srh.AlbumCover", _pathToAlbumCover) # fallback to artist thumb if available
+        log("Artist thumb", xbmc.LOGDEBUG)
+    if cdArt:
+        WINDOW.setProperty( "srh.RealCDArt", cdArt )  # override online art with local art if available
 
     if multi_artist:
         WINDOW.setProperty("srh.Artist", orig_artist.encode('utf-8'))
@@ -207,10 +248,10 @@ def get_info(local_logo, tadb_json_data, testpath, searchartist, artist, multi_a
 try:
     WINDOW = xbmcgui.Window(12006)
     if WINDOW.getProperty("streaming-radio-helper-running") == "true":
-        log("Script already running - Not starting a new instance")
+        log("Script already running - Not starting a new instance", xbmc.LOGNOTICE)
         exit(0)
     if not xbmc.getCondVisibility("Player.IsInternetStream"):
-        log("Not playing an internet stream - quitting")
+        log("Not playing an internet stream - quitting", xbmc.LOGNOTICE)
         exit(0)
     if BaseString == "":
         addon.openSettings(addonname)
@@ -234,14 +275,14 @@ try:
     already_checked = False
     log("aready_checked is set to [%s] " % str(already_checked))
     if xbmcvfs.exists(logostring + "data.pickle"):
-        dict1, dict2, dict3, dict4, dict5, dict6, dict7 = load_pickle()
+        dict1, dict2, dict3, dict4, dict5, dict6, dict7, dict8, dict9, dict10, dict11, dict12 = load_pickle()
     my_size = len(dict1)
     log("Cache contains %d tracks" % my_size, xbmc.LOGNOTICE)
     cut_off_date = todays_date - time_diff
     log("Cached data obtained before before %s will be refreshed if details are missing" %
         (cut_off_date.strftime("%d-%m-%Y")), xbmc.LOGNOTICE)
     rt = RepeatedTimer(900, save_pickle, dict1, dict2,
-                       dict3, dict4, dict5, dict6, dict7)
+                       dict3, dict4, dict5, dict6, dict7, dict8, dict9, dict10, dict11, dict12)
 
 
     # Main Loop
@@ -343,17 +384,12 @@ try:
                         response = load_url(url)  # see if this is a valid artist before we try splitting the string
                         tadb_json_data = _json.loads(response)
                         if tadb_json_data['artists'] is None:
-                            searchartist = artist.replace(' feat. ', ' ~ ').replace(' ft. ', ' ~ ').replace(' feat ', ' ~ ').replace(' ft ', ' ~ ')
-                            searchartist = searchartist.replace(' & ', ' ~ ').replace(' and ', ' ~ ').replace(' And ', ' ~ ').replace(' ~ the ', ' and the ').replace(' ~ The ',
-                                ' and The ')
-                            searchartist = searchartist.replace(' vs ', ' ~ ').replace(', ', ' ~ ')
+                            searchartist = split_artists(artist)
                         else:
                             searchartist = artist
                     except:
-                        searchartist = artist.replace(' feat. ', ' ~ ').replace(' ft. ', ' ~ ').replace(' feat ', ' ~ ').replace(' ft ', ' ~ ')
-                        searchartist = searchartist.replace(' & ', ' ~ ').replace(' and ', ' ~ ').replace(' And ', ' ~ ').replace(' ~ the ', ' and the ').replace(' ~ The ',
-                                ' and The ')
-                        searchartist = searchartist.replace(' vs ', ' ~ ').replace(', ', ' ~ ')
+                        searchartist = split_artists(artist)
+
 
                     log("Searchartist is %s" % searchartist)
                     x = searchartist.find('~')
@@ -389,6 +425,8 @@ try:
                                     dict6[searchartists[z]]
                     if mbids:
                         WINDOW.setProperty('srh.MBIDS', mbids)
+                    else:
+                        WINDOW.setProperty('srh.MBIDS', mbid)
                     was_playing = track
                     log("Was playing is set to [%s]" % was_playing)
                     et = set_timer(delay)
@@ -418,7 +456,7 @@ try:
             log("Not an internet stream", xbmc.LOGDEBUG)
         if (xbmc.Player().isPlayingAudio() == False) or (not xbmc.getCondVisibility("Player.IsInternetStream")):
             log("Not playing audio or not an internet stream")
-            save_pickle(dict1, dict2, dict3, dict4, dict5, dict6, dict7)
+            save_pickle(dict1, dict2, dict3, dict4, dict5, dict6, dict7, dict8, dict9, dict10, dict11, dict12)
             script_exit()
 
 except Exception as e:
@@ -431,6 +469,6 @@ except Exception as e:
         5000)
     exc_type, exc_value, exc_traceback = sys.exc_info()
     log(repr(traceback.format_exception(exc_type, exc_value, exc_traceback)), xbmc.LOGERROR)
-    save_pickle(dict1, dict2, dict3, dict4, dict5, dict6, dict7)
+    save_pickle(dict1, dict2, dict3, dict4, dict5, dict6, dict7, dict8 , dict9, dict10, dict11, dict12)
 
     script_exit()

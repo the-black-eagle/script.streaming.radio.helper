@@ -15,7 +15,7 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 #
-# (C) Black_eagle 2016
+# (C) Black_eagle 2016 - 2018
 #
 
 import xbmc, xbmcvfs, xbmcaddon
@@ -43,14 +43,21 @@ addonpath = addon.getAddonInfo('path').decode('utf-8')
 addonid = addon.getAddonInfo('id').decode('utf-8')
 language = addon.getLocalizedString
 
-# variables
+# Global variables
 BaseString = addon.getSetting('musicdirectory')     # Base directory for Music albums
 logostring = xbmc.translatePath('special://profile/addon_data/' + addonid + '/').decode('utf-8')  # Base directory to store downloaded logos
 logfile = xbmc.translatePath('special://temp/srh.log').decode('utf-8')
 pathToAlbumCover = None
 albumtitle = ""
+keydata = None
+tadb_albumid = None
+RealAlbumThumb = None
+RealCDArt = None
+AlbumDescription = None
+AlbumReview = None
 was_playing = ""
 local_logo = False
+localCover = False
 got_info = 0
 bbc_first_time = 0
 bbc_delay = 5
@@ -63,6 +70,11 @@ dict4 = {}  # Key = Artist Name, Value = URL to artist thumb
 dict5 = {}  # Key = Artist Name, Value = URL to artist banner
 dict6 = {}  # Key = artist Name, value = MBID
 dict7 = {}  # Key = Artistname+trackname, value = Track details
+dict8 = {}  # Key = Albumname, value = recordlabel
+dict9 = {}  # Key = Albumname, value = album thumb
+dict10 = {} # Key = Albumname, value - CD thumb
+dict11 = {} # key = Albumname, value = Album description
+dict12 = {} # Key = Albumname, value = Album review
 time_diff = datetime.timedelta(days=7)  # date to next check
 todays_date = datetime.datetime.combine(datetime.date.today(), datetime.datetime.min.time())
 BaseString = xbmc.validatePath(BaseString)
@@ -193,11 +205,24 @@ def load_pickle():
     except:
         d7 = {}
         log("Created new pickle data for track information")
+    try:
+        d8 = pickle.load(pfile)
+        d9 = pickle.load(pfile)
+        d10 = pickle.load(pfile)
+        d11 = pickle.load(pfile)
+        d12 = pickle.load(pfile)
+    except:
+        d8 = {}
+        d9 = {}
+        d10 = {}
+        d11 = {}
+        d12 = {}
+        log("New pickle data created for album information")
     pfile.close()
-    return d1, d2, d3, d4, d5, d6, d7
+    return d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12
 
 
-def save_pickle(d1, d2, d3, d4, d5, d6, d7):
+def save_pickle(d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12):
     """
     Saves local cache data to file in the addon_data directory of the script
     """
@@ -215,6 +240,12 @@ def save_pickle(d1, d2, d3, d4, d5, d6, d7):
     pickle.dump(d5, pfile)
     pickle.dump(d6, pfile)
     pickle.dump(d7, pfile)
+    pickle.dump(d8, pfile)
+    pickle.dump(d9, pfile)
+    pickle.dump(d10, pfile)
+    pickle.dump(d11, pfile)
+    pickle.dump(d12, pfile)
+
     pfile.close()
 
 
@@ -222,7 +253,8 @@ def load_url(url):
 
     try:
         response = urllib.urlopen(url).read().decode('utf-8')
-
+        if response is None:
+            response = "!DOCTYPE"
         return response
     except IOError as e:
         if hasattr(e,'reason'):
@@ -230,34 +262,48 @@ def load_url(url):
             log("Error returned was [%s]" %e.reason, xbmc.LOGERROR)
         elif hasattr(e,'code'):
            log("Error getting url [%s]  Error code was [%s]" % ( url, e.code ) , xbmc.LOGERROR)
+        return response
 
 
 def get_local_cover(BaseString, artist, track, albumtitle):
 
+    localCover = False
+    pathToCDArt = ""
     try:
         if albumtitle:
+            pathToCDArt = xbmc.validatePath(BaseString + artist + "/" + albumtitle + "/cdart.png" )
+            if not xbmcvfs.exists( pathToCDArt ):
+                pathToCDArt = ""
             pathToAlbumCover = xbmc.validatePath(BaseString + artist + "/" + albumtitle + "/cover.png")
             log("Looking for an album cover in %s" % pathToAlbumCover, xbmc.LOGDEBUG)
             if xbmcvfs.exists(pathToAlbumCover):
                 log("Found a local 'cover.png' and set AlbumCover to [%s]" % pathToAlbumCover, xbmc.LOGDEBUG)
-                return pathToAlbumCover
+                localCover = True
+
+                return 1, pathToAlbumCover, pathToCDArt
             pathToAlbumCover = xbmc.validatePath(BaseString + artist + "/" + albumtitle + "/folder.jpg")
             log("Looking for an album cover in %s" % pathToAlbumCover, xbmc.LOGDEBUG)
             if xbmcvfs.exists(pathToAlbumCover):
                 log("Found a local 'folder.jpg' and set AlbumCover to [%s]" % pathToAlbumCover, xbmc.LOGDEBUG)
-                return pathToAlbumCover
+                localCover = True
+                return 1, pathToAlbumCover, pathToCDArt
         pathToAlbumCover = xbmc.validatePath(BaseString + artist + "/" + track + "/folder.jpg")
+        pathToCDArt = xbmc.validatePath(BaseString + artist + "/" + track + "/cdart.png" )
+        if not xbmcvfs.exists( pathToCDArt ):
+            pathToCDArt = ""
         if xbmcvfs.exists(pathToAlbumCover):
             log("Found a local 'folder.jpg' and set AlbumCover to [%s]" % pathToAlbumCover, xbmc.LOGDEBUG)
-            return pathToAlbumCover
+            localCover = True
+            return 1, pathToAlbumCover, pathToCDArt
         pathToAlbumCover = xbmc.validatePath(BaseString + artist + "/" + track + "/cover.png")
         log("Looking for an album cover in %s (last attempt before using thumbnail)" % pathToAlbumCover, xbmc.LOGDEBUG)
         if xbmcvfs.exists(pathToAlbumCover):
             log("Found a local 'cover.png' and set AlbumCover to [%s]" % pathToAlbumCover, xbmc.LOGDEBUG)
-            return pathToAlbumCover
+            localCover = True
+            return 1, pathToAlbumCover, pathToCDArt
         if artist in dict4:
-            return dict4[artist]
-        return None
+            return 2, dict4[artist], None
+        return 0, None, None
 
     except Exception as e:
         log("Got an error trying to look for a cover!! [%s]" % str(e), xbmc.LOGERROR)
@@ -321,6 +367,161 @@ def check_station(file_playing):
             e), xbmc.LOGERROR)
         return 'Online Radio', file_playing
 
+def get_album_data(artist, track, albumtitle, dict8, dict9, dict10, dict11, dict12, RealCDArt, RealAlbumThumb, AlbumDescription, AlbumReview):
+
+    log("----------------------------------------------------", xbmc.LOGDEBUG)
+    log("          Entered routine 'get_album_data'          ", xbmc.LOGDEBUG)
+    log("----------------------------------------------------", xbmc.LOGDEBUG)
+
+    tadb_url = 'https://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
+    tadb_url = tadb_url + '/searchalbum.php?s=%s&a=%s' % (artist.encode('utf-8'), albumtitle.encode('utf-8'))
+    log(tadb_url)
+    albumkeydata = albumtitle.replace(' ', '').lower()
+    num = len(dict8)
+    log("%d albums in cache" % num)
+    try:
+        datechecked = dict3[keydata]
+    except:
+        datechecked = (todays_date - time_diff)
+        pass
+    if albumkeydata in dict8:
+        log("Seen this album before")
+        if (datechecked < (todays_date - time_diff)) or (xbmcvfs.exists(logostring + "refreshdata")): # might need to look up data again
+            if ((dict8[albumkeydata] == None ) or (xbmcvfs.exists(logostring + "refreshdata"))):
+                log("looking up album data")
+                try:
+                    response = urllib.urlopen(tadb_url).read().decode('utf-8')
+                    if response:
+                        tadb_album_data = _json.loads(response)
+                    else:
+                        dict8[albumkeydata] = None
+                        dict9[albumkeydata] = None
+                        dict10[albumkeydata] = None
+                        dict11[albumkeydata] = None
+                        dict12[albumkeydata] = None
+                        return None, None, None, None
+                except:
+                    log("Error trying to get album data", xbmc.LOGERROR)
+                    pass
+                try:
+                    RecordLabel = tadb_album_data['album'][0]['strLabel']
+                    dict8[albumkeydata] = RecordLabel
+                except Exception as e:
+                    log("Couldn't get required data !!")
+                    log("Error was %s" % str(e))
+                    dict8[albumkeydata] = None
+                    pass
+                try:
+                    RealAlbumThumb = tadb_album_data['album'][0]['strAlbumThumb']
+                    dict9[albumkeydata] = RealAlbumThumb
+                except:
+                    RealAlbumThumb = None
+                    dict9[albumkeydata] = None
+                    pass
+                try:
+                    RealCDArt = tadb_album_data['album'][0]['strAlbumCDart']
+                    dict10[albumkeydata] = RealCDArt
+                except:
+                    RealCDArt = None
+                    dict10[albumkeydata] = None
+                    pass
+                try:
+                    AlbumDescription = ['album'][0]['strDescriptionEN']
+                    dict11[albumkeydata] = AlbumDescription
+                except:
+                    AlbumDescription = None
+                    dict11[albumkeydata] = None
+                    pass
+                try:
+                    AlbumReview = ['album'][0]['strReview']
+                    dict12[albumkeydata] = AlbumReview
+                except:
+                    AlbumReview = None
+                    dict12[albumkeydata] = None
+                try:
+                    WINDOW.setProperty("srh.RecordLabel",tadb_album_data['album'][0]['strLabel'].encode('utf-8'))
+                    log("record label set to [%s]" % tadb_album_data['album'][0]['strLabel'].encode('utf-8'))
+                except:
+                    WINDOW.setProperty("srh.RecordLabel","")
+                pass
+        else:
+            WINDOW.setProperty("srh.RecordLabel", dict8[albumkeydata])
+            RealAlbumThumb = dict9[albumkeydata]
+            RealCDArt = dict10[albumkeydata]
+            if RealAlbumThumb:
+                log("real album thumb found! path is %s" % RealAlbumThumb)
+            if RealCDArt:
+                log("Real cd art found! path is %s" % RealCDArt)
+            return RealAlbumThumb, RealCDArt, AlbumDescription, AlbumReview
+    else: # Album not in cache yet.
+        log("New album - looking up data")
+        try:
+            response = urllib.urlopen(tadb_url).read().decode('utf-8')
+            if response:
+                tadb_album_data = _json.loads(response)
+            else:
+                dict8[albumkeydata] = None
+                dict9[albumkeydata] = None
+                dict10[albumkeydata] = None
+                dict11[albumkeydata] = None
+                dict12[albumkeydata] = None
+                log("No response from tadb", xbmc.LOGERROR)
+                return None, None, None, None
+        except:
+            log("Error trying to get album data", xbmc.LOGERROR)
+            pass
+        try:
+            RecordLabel = tadb_album_data['album'][0]['strLabel']
+            dict8[albumkeydata] = RecordLabel
+        except Exception as e:
+            log("Couldn't get required data !!")
+            log("Error was %s" % str(e))
+            dict8[albumkeydata] = None
+            pass
+        try:
+            RealAlbumThumb = tadb_album_data['album'][0]['strAlbumThumb']
+            dict9[albumkeydata] = RealAlbumThumb
+        except:
+            RealAlbumThumb = None
+            dict9[albumkeydata] = None
+            pass
+        try:
+            RealCDArt = tadb_album_data['album'][0]['strAlbumCDart']
+            dict10[albumkeydata] = RealCDArt
+        except:
+            RealCDArt = None
+            dict10[albumkeydata] = None
+            pass
+        try:
+            AlbumDescription = ['album'][0]['strDescriptionEN']
+            dict11[albumkeydata] = AlbumDescription.encode( 'utf-8' )
+        except:
+            AlbumDescription = None
+            dict11[albumkeydata] = None
+            pass
+        try:
+            AlbumReview = ['album'][0]['strReview']
+            dict12[albumkeydata] = AlbumReview.encode( 'utf-8' )
+        except:
+            AlbumReview = None
+            dict12[albumkeydata] = None
+        try:
+            WINDOW.setProperty("srh.RecordLabel",tadb_album_data['album'][0]['strLabel'].encode('utf-8'))
+            log("record label set to [%s]" % tadb_album_data['album'][0]['strLabel'].encode('utf-8'))
+        except:
+            WINDOW.setProperty("srh.RecordLabel","")
+        pass
+    if AlbumDescription:
+        log("Album Description - %s" % AlbumDescription.encode('utf-8'))
+    if AlbumReview:
+        log("Album Review - %s" %AlbumReview.encode('utf-8'))
+    if RealAlbumThumb:
+        log("real album thumb found! path is %s" % RealAlbumThumb)
+    if RealCDArt:
+        log("Real cd art found! path is %s" % RealCDArt)
+    albumdatasize = len(dict8)
+    log("Album data cache is size %d" % albumdatasize)
+    return RealAlbumThumb, RealCDArt, AlbumDescription, AlbumReview
 
 def get_year(artist, track, dict1, dict2, dict3, dict7, already_checked):
     """
@@ -405,6 +606,8 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
         searchtrack = searchtrack.replace("(Radio Edit)","").strip()  # remove 'radio edit' from track name
     if "(Live)" in searchtrack:
         searchtrack = searchtrack.replace("(Live)","").strip()
+    if "(live" in searchtrack:
+        searchtrack = searchtrack.replace("(live", "").replace(")", "").strip()
     if "+&+" in searchtrack:
         searchtrack = searchtrack.replace("+&+"," and ").strip()
     url = 'https://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
@@ -429,6 +632,11 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
         except:
             album_title = None
             pass
+        try:
+            tadb_albumid = searching['track'][0]['idAlbum']
+        except:
+            tadb_albumid = None
+            pass
         trackinfo = None
         try:
             trackinfo = searching['track'][0]['strDescriptionEN']
@@ -447,26 +655,28 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
             log("LastFM url is [%s] " % lastfmurl, xbmc.LOGDEBUG)
             try:
                 response = load_url(lastfmurl)
-                stuff = json.loads(response)
+                stuff = _json.loads(response)
                 searching = stuff['track']
-            except:
+                log("Searching from last.fm is [%s]" % searching)
+            except Exception as e:
                 searching = []
+                log("Some sort of error searching last.fm [%s]" % e, xbmc.LOGERROR)
                 pass
             if 'wiki' in searching:
                     try:
                         trackinfo = searching['wiki']['content']
                     except:
                         pass
-                    try:
-                        trackinfo = searching['wiki']['summary']
-                    except:
-                        pass
+                        try:
+                            trackinfo = searching['wiki']['summary']
+                        except:
+                            pass
             if trackinfo:
                 trackinfo = clean_string(trackinfo)
-            log("Trackinfo - [%s]" % trackinfo, xbmc.LOGDEBUG)
-            if trackinfo is not None and len(trackinfo) < 3:
-                log ("No track info found", xbmc.LOGDEBUG)
-                trackinfo = None
+                log("Trackinfo - [%s]" % trackinfo, xbmc.LOGDEBUG)
+                if trackinfo is not None and len(trackinfo) < 3:
+                    log ("No track info found", xbmc.LOGDEBUG)
+                    trackinfo = None
             else:
                 log("No track info found on lastFM", xbmc.LOGDEBUG)
         if keydata:
@@ -597,7 +807,7 @@ def check_cached_logo(logopath, url):
             log("Logo has already been downloaded and is in cache. Path is %s" % logopath, xbmc.LOGDEBUG)
             return logopath
         else:
-            log("No local logo and no cached logo", xbmc.LOGERROR)
+            log("No local logo and no cached logo", xbmc.LOGDEBUG)
             return None
 
 
@@ -855,6 +1065,47 @@ def get_bbc_radio_info(bbc_channel):
     except Exception as e:
         log("[get_bbc_radio_info] error [%s] " %str(e), xbmc.LOGERROR)
         return ''
+
+
+def get_cached_info(mbid, testpath, local_logo, searchartist, dict4, dict5):
+    log("Testpath is [%s]" % testpath)
+    cache_path = logostring + mbid + '/'
+    log("Cache path is [%s]" %cache_path)
+    logopath = None
+    if not local_logo:
+        logopath = check_cached_logo(cache_path, None)
+    if searchartist in dict4:
+        return logopath, dict4[searchartist], dict5[searchartist]
+    else:
+        return logopath, None, None
+
+
+def get_remaining_cache(artist, track, dict1, dict2, dict7):
+
+    keydata = artist.replace(" ","").lower() + track.replace(" ","").lower()
+    if keydata in dict1:
+        albumtitle = dict1[keydata]
+    else:
+        albumtitle = None
+    try:
+        albumyear = dict2[keydata]
+    except:
+        albumyear = None
+        pass
+    try:
+        trackinfo = dict7[keydata]
+    except:
+        trackinfo = None
+        pass
+    return True, albumtitle, albumyear, trackinfo
+
+
+def split_artists(artist):
+    searchartist = artist.replace(' feat. ', ' ~ ').replace(' ft. ', ' ~ ').replace(' feat ', ' ~ ').replace(' ft ', ' ~ ')
+    searchartist = searchartist.replace(' & ', ' ~ ').replace(' and ', ' ~ ').replace(' And ', ' ~ ').replace(' ~ the ', ' and the ').replace(' ~ The ',
+                                ' and The ')
+    searchartist = searchartist.replace(' vs ', ' ~ ').replace(', ', ' ~ ')
+    return searchartist
 
 
 def slice_string(string1, string2, n):
