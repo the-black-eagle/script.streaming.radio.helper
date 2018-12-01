@@ -165,3 +165,11 @@ msgstr ""
 msgctxt "#32039"
 msgid "Station 10"
 msgstr ""
+
+msgctxt "#32040"
+msgid "Use central cache instead of local"
+msgstr ""
+
+msgctxt "#32041"
+msgid "Path to central cache (must be writable)"
+msgstr ""

@@ -63,6 +63,8 @@ bbc_first_time = 0
 bbc_delay = 5
 bbc_channel = 2
 albumtitle = None
+if addon.getSetting('centralcache') == 'true':
+    logostring = addon.getSetting('cachepath')
 dict1 = {}  # Key = artistname+trackname, value = Album name
 dict2 = {}  # Key = artistname+trackname, value = Album year
 dict3 = {}  # Key = artistname+trackname, value = date last looked up
@@ -659,8 +661,7 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
                 searching = stuff['track']
                 log("Searching from last.fm is [%s]" % searching)
             except Exception as e:
-                searching = []
-                log("Some sort of error searching last.fm [%s]" % e, xbmc.LOGERROR)
+                searching = [] # no track info from last.fm
                 pass
             if 'wiki' in searching:
                     try:

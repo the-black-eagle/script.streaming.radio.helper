@@ -22,13 +22,15 @@ The script also looks up artist thumbs and banners on theaudiodb and caches the 
 Further, the script attempts to match the currently playing track to an album and year.  This is done with
 a search on theaudiodb. To avoid excessive lookups, track, album and year data is cached by the script and online
 lookups are performed if the track has not been played before, or the cached data is older than 7 days.
-Cached data is saved either when the script stops or every 15 minutes when its running.
+Cached data is saved either when the script stops or every 15 minutes when its running. Local art (album covers & CDArt) will be used in preference to online art.
 
-The script now also attempts to fetch track data as well as artist data if it is available.  Track data for the currently
+The script attempts to fetch track data as well as artist data if it is available.  Track data for the currently
 playing track is scraped from theaudiodb and lastFM if no details are found on the former.
 
+The script also attempts to find album data (assuming an album name was found) which could include album description, album review, album cover and cdArt (depending on the information available for that album).  Data is cached in the same way as artist and track info and is only looked up again after the cache expiry time if some info is missing.
+
 In the event that theaudiodb and lastFM are unavailable for some reason, the script will use any cached data that is available to it,
-including cached thumbnail and banner URL's.  Because of Kodi's own thumbnail caching, this means that the thumbs/banners can
+including cached thumbnail, cover, CDArt and banner URL's.  Because of Kodi's own thumbnail caching, this means that the thumbs/banners can
 still be displayed in spite of theaudiodb / lastFM being unavailable.
 
 The script has been updated to work with BBC iPlayer (currently only Radio 1 & 2 are supported).  iPlayer does not transmit artist or
@@ -60,14 +62,17 @@ it's possible to set a couple of strings here to change what is displayed in the
 eg - set 'replace' to 'planetrock' and 'with' to 'Planet Rock' to pretty format the name.
 
 The actual stream will be something like 'http://some-streaming-radio-server/station-related-name.mp3'
+
+**NOTE** For V18-Leia the actual stream is **not** available.  The stream name will either be the name of the playlist file containing the url to the radio station (EG absolutecr.m3u - containg a URL to Absolute Classic Rock) **or** the radio station ID if using the rad.io addon (EG 11524 for Planet Rock).  In these cases,  **Station 'x'** under the setting **Station Names** should be set to (EG **11524**) and the corresponding **pretty name** (Replace -) should be set to the name you want to display (in this case **Planet Rock**)
+
 Without setting any replacement strings, the addon will display 'station-related-name'
 You can use replace 'station-related-name' with 'Proper Station Name'
 
-This can be done for five radio stations.
+This can be done for ten radio stations.
 
 
 ***
-Some radio stations transmit the artist - track information the opposite way around to how the helper expects it (Note that this seems to be a recent change in January 2017).  There is a toggle for each radio station you define to switch the order for that particular radio station.  (Note that you must have defined a 'pretty name' for the station for this to work.
+Some radio stations transmit the artist - track information the opposite way around to how the helper expects it (Note that this seems to be a recent change in January 2017).  There is a toggle for each radio station you define to switch the order for that particular radio station.  (Note that you must have defined a 'pretty name' for the station for this to work). If this is not toggled, the track name and artist name will be reversed and logo and album lookups will **not** work.
 
 ### Strings to remove
 ***
@@ -77,6 +82,16 @@ E.G. A radio station may add 'Top 40 hits' on the end of the artist and track in
 a removal string of 'Top 40'.  This would remove everything from the start of that string to the end of the line.  Three strings
 can be set for removal, the first one that matches will be used.  All strings are case sensitive and can include leading and
 trailing spaces.
+***
+
+### Artist Substitution
+***
+
+Sometimes the name of an artist (as set by a radio station) doesn't correspond to an actual artist name on the AudioDB.  You can make the helper change the name of an artist by using <radio-station-name>=<theAudioDB-name>.  This setting is called **Replace artist -** .  You should enter the name of an artist (as supplied by the radio station) followed by **=** followed by the name you want to change it to.  Artists are separated by a comma (**,**).
+    
+    EG ELO=Electric light orchestra, Florence & The Machine=Florence + The Machine,E.L.O.=Electric Light Orchestra
+    
+All artist names and substitutions are CaSe sensitive and space aware. As long as you follow the format <radio-station-artist-name>=<tadb_artist-name>,<radio-station-name>=<tadb-artist-name> you can substitute as many <radio-station-names> as you need to.
 
 Window properties set by the script
 ---
@@ -91,16 +106,23 @@ srh.Logopath - String. Fully qualified path to any logo found.
 
 srh.Album - String. Title of an album the track is on, if found
 
-srh.Year - String. Year of the album, if found
+srh.Year - String. Year of  srh.album, if found
 
 srh.Artist.Thumb - String. Fully qualified URL to an artist thumbnail on theaudiodb
 
 srh.Artist.Banner - String. Fully qualified URL to an artist banner on theaudiodb
 
-srh.MBIDS - String. Contains comma separated MBID's for either display or for modded script.artistslideshow to use.
+srh.MBIDS - String. Contains comma separated MBID's for either display or for modded script.artistslideshow to use
 
 srh.TrackInfo - String. Contains any track information found on TADB or last.fm for the current track
 
+srh. RealCDArt - string. Contains a path to a) local CDArt if it exists, else b) path to online CDArt (if found), else empty string
+
+srh.AlbumDescription - String. Contains the album description if found, else empty string
+
+srh.AlbumReview - string.  Contains the album review if found, else empty string
+
+srh.RecordLabel - String.  Contains the name of the record label the album was released on (if found)
 
 Window properties can be used as follows -
 
