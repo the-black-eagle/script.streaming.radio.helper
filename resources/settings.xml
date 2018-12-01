@@ -21,6 +21,9 @@
         <setting type="sep"/>
         <setting type="bool" default="true" label="32030" id="luma" />
         <setting type="labelenum" id="delay" label="32029" values="10|15|20|25|30|35|40|45|50|55|60" default="30"/>
+        <setting type="bool" id="centralcache" default="false" label ="32040"/>
+        <setting id="cachepath" label="32041" type="folder" enable="eq(-1,true)"/>
+        <setting type="sep"/>
         <setting id="debug" label="32023" type="bool" default="false"/>
     </category>
     <category label="32005">

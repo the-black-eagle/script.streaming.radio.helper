@@ -165,7 +165,7 @@ def get_info(local_logo, tadb_json_data, testpath, searchartist, artist, multi_a
         WINDOW.setProperty("srh.Artist.Banner", ArtistBanner)
     WINDOW.setProperty("srh.Musicpath", BaseString)
 
-    if checked_all_artists is True:integration
+    if checked_all_artists is True:
         already_checked, albumtitle, theyear, trackinfo = get_remaining_cache(artist, track, dict1, dict2, dict7)
 
     if not already_checked:
