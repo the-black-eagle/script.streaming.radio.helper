@@ -400,73 +400,19 @@ def get_album_data(artist, track, albumtitle, dict8, dict9, dict10, dict11, dict
         pass
     if albumkeydata in dict8:
         log("Seen this album before")
-        if (datechecked < (todays_date - time_diff)) or (xbmcvfs.exists(logostring + "refreshdata")): # might need to look up data again
-            if ((dict8[albumkeydata] == None ) or (xbmcvfs.exists(logostring + "refreshdata"))):
-                log("looking up album data")
-                try:
-                    response = urllib.urlopen(tadb_url).read().decode('utf-8')
-                    if response:
-                        tadb_album_data = _json.loads(response)
-                    else:
-                        dict8[albumkeydata] = None
-                        dict9[albumkeydata] = None
-                        dict10[albumkeydata] = None
-                        dict11[albumkeydata] = None
-                        dict12[albumkeydata] = None
-                        return None, None, None, None
-                except:
-                    log("Error trying to get album data", xbmc.LOGERROR)
-                    pass
-                try:
-                    RecordLabel = tadb_album_data['album'][0]['strLabel']
-                    dict8[albumkeydata] = RecordLabel
-                except Exception as e:
-                    log("Couldn't get required data !!")
-                    log("Error was %s" % str(e))
-                    dict8[albumkeydata] = None
-                    pass
-                try:
-                    RealAlbumThumb = tadb_album_data['album'][0]['strAlbumThumb']
-                    dict9[albumkeydata] = RealAlbumThumb
-                except:
-                    RealAlbumThumb = None
-                    dict9[albumkeydata] = None
-                    pass
-                try:
-                    RealCDArt = tadb_album_data['album'][0]['strAlbumCDart']
-                    dict10[albumkeydata] = RealCDArt
-                except:
-                    RealCDArt = None
-                    dict10[albumkeydata] = None
-                    pass
-                try:
-                    AlbumDescription = ['album'][0]['strDescriptionEN']
-                    dict11[albumkeydata] = AlbumDescription
-                except:
-                    AlbumDescription = None
-                    dict11[albumkeydata] = None
-                    pass
-                try:
-                    AlbumReview = ['album'][0]['strReview']
-                    dict12[albumkeydata] = AlbumReview
-                except:
-                    AlbumReview = None
-                    dict12[albumkeydata] = None
-                try:
-                    WINDOW.setProperty("srh.RecordLabel",tadb_album_data['album'][0]['strLabel'].encode('utf-8'))
-                    log("record label set to [%s]" % tadb_album_data['album'][0]['strLabel'].encode('utf-8'))
-                except:
-                    WINDOW.setProperty("srh.RecordLabel","")
-                pass
-        else:
+        if not ((datechecked < (todays_date - time_diff)) or (xbmcvfs.exists(logostring + "refreshdata"))): # might need to look up data again
             WINDOW.setProperty("srh.RecordLabel", dict8[albumkeydata])
             RealAlbumThumb = dict9[albumkeydata]
             RealCDArt = dict10[albumkeydata]
+            AlbumDescription = dict11[albumkeydata]
+            AlbumReview = dict12[albumkeydata]
             if RealAlbumThumb:
                 log("real album thumb found! path is %s" % RealAlbumThumb)
             if RealCDArt:
                 log("Real cd art found! path is %s" % RealCDArt)
             return RealAlbumThumb, RealCDArt, AlbumDescription, AlbumReview
+        else:
+            log("Refreshing album data (treating as new album)")
     else: # Album not in cache yet.
         log("New album - looking up data")
         try:
@@ -520,8 +466,8 @@ def get_album_data(artist, track, albumtitle, dict8, dict9, dict10, dict11, dict
             AlbumReview = None
             dict12[albumkeydata] = None
         try:
-            WINDOW.setProperty("srh.RecordLabel",tadb_album_data['album'][0]['strLabel'].encode('utf-8'))
-            log("record label set to [%s]" % tadb_album_data['album'][0]['strLabel'].encode('utf-8'))
+            WINDOW.setProperty("srh.RecordLabel",dict8[albumkeydata])
+            log("record label set to [%s]" % dict8[albumkeydata])
         except:
             WINDOW.setProperty("srh.RecordLabel","")
             log("No record label found for this album")
