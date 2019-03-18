@@ -33,9 +33,7 @@ In the event that theaudiodb and lastFM are unavailable for some reason, the scr
 including cached thumbnail, cover, CDArt and banner URL's.  Because of Kodi's own thumbnail caching, this means that the thumbs/banners can
 still be displayed in spite of theaudiodb / lastFM being unavailable.
 
-The script has been updated to work with BBC iPlayer (currently only Radio 1 & 2 are supported).  iPlayer does not transmit artist or
-track info, however the information *is* scrobbled to last.fm so we get the artist/track info from there. As there is no 'callback'
-from last.fm as to when the data changes, the script checks every 5 seconds if the stream is from the BBC.
+The script has been updated to work with BBC iPlayer.  iPlayer does not transmit artist or track info, however the information *is* scrobbled to last.fm so we get the artist/track info from there. As there is no 'callback' from last.fm as to when the data changes, the script checks every 5 seconds if the data is coming from last.fm.  Provided you know the username of the station scrobbling to last.fm, this should work for any station that does so, not just BBC stations.
 
 All window properties are set for the full screen visualisation window (12006).
 
@@ -74,6 +72,10 @@ This can be done for ten radio stations.
 ***
 Some radio stations transmit the artist - track information the opposite way around to how the helper expects it (Note that this seems to be a recent change in January 2017).  There is a toggle for each radio station you define to switch the order for that particular radio station.  (Note that you must have defined a 'pretty name' for the station for this to work). If this is not toggled, the track name and artist name will be reversed and logo and album lookups will **not** work.
 
+***
+For stations that scrobble to last.fm, there is now a setting to get the information from there.  Turning this **on** for a station will disble the 'reverse artist/track info' option as it makes no sense in this situation, and **enables** a text field for entry of the username of the station on last.fm EG, for BBC Radio 2, the username would be **bbcradio2**.
+
+---------------------
 ### Strings to remove
 ***
 
@@ -91,7 +93,7 @@ Sometimes the name of an artist (as set by a radio station) doesn't correspond t
     
     EG ELO=Electric light orchestra, Florence & The Machine=Florence + The Machine,E.L.O.=Electric Light Orchestra
     
-All artist names and substitutions are CaSe sensitive and space aware. As long as you follow the format <radio-station-artist-name>=<tadb_artist-name>,<radio-station-name>=<tadb-artist-name> you can substitute as many <radio-station-names> as you need to.
+All artist names and substitutions are CaSe sensitive and space aware. As long as you follow the format 'radio-station-artist-name'='tadb_artist-name','radio-station-name'='tadb-artist-name' you can substitute as many 'radio-station-names' as you need to.
 
 Window properties set by the script
 ---
