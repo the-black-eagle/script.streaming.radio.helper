@@ -340,13 +340,6 @@ def check_station(file_playing):
     the name of the file <containing> the url or a station ID if using the rad.io addon
     """
     station_list = ''
-#    if 'BBC Radio 2' in file_playing:
-#        return "BBC Radio Two", file_playing
-#    if '1Xtra' in file_playing:
-#        return 'BBC Radio 1xtra', file_playing
-#    if 'BBC Radio 1' in file_playing:
-#        return "BBC Radio One", file_playing
-
     try:
         if 'icy-' in file_playing:  # looking at an ICY stream
             x = file_playing.rfind('/')
