@@ -57,7 +57,6 @@ AlbumDescription = None
 AlbumReview = None
 was_playing = ""
 local_logo = False
-localCover = False
 got_info = 0
 lastfm_first_time = 0
 lastfm_delay = 5
@@ -294,7 +293,6 @@ def load_url(url):
 
 def get_local_cover(BaseString, artist, track, albumtitle):
 
-    localCover = False
     pathToCDArt = ""
     try:
         if albumtitle:
@@ -305,14 +303,12 @@ def get_local_cover(BaseString, artist, track, albumtitle):
             log("Looking for an album cover in %s" % pathToAlbumCover, xbmc.LOGDEBUG)
             if xbmcvfs.exists(pathToAlbumCover):
                 log("Found a local 'cover.png' and set AlbumCover to [%s]" % pathToAlbumCover, xbmc.LOGDEBUG)
-                localCover = True
 
                 return 1, pathToAlbumCover, pathToCDArt
             pathToAlbumCover = xbmc.validatePath(BaseString + artist + "/" + albumtitle + "/folder.jpg")
             log("Looking for an album cover in %s" % pathToAlbumCover, xbmc.LOGDEBUG)
             if xbmcvfs.exists(pathToAlbumCover):
                 log("Found a local 'folder.jpg' and set AlbumCover to [%s]" % pathToAlbumCover, xbmc.LOGDEBUG)
-                localCover = True
                 return 1, pathToAlbumCover, pathToCDArt
         pathToAlbumCover = xbmc.validatePath(BaseString + artist + "/" + track + "/folder.jpg")
         pathToCDArt = xbmc.validatePath(BaseString + artist + "/" + track + "/cdart.png" )
@@ -320,13 +316,11 @@ def get_local_cover(BaseString, artist, track, albumtitle):
             pathToCDArt = ""
         if xbmcvfs.exists(pathToAlbumCover):
             log("Found a local 'folder.jpg' and set AlbumCover to [%s]" % pathToAlbumCover, xbmc.LOGDEBUG)
-            localCover = True
             return 1, pathToAlbumCover, pathToCDArt
         pathToAlbumCover = xbmc.validatePath(BaseString + artist + "/" + track + "/cover.png")
         log("Looking for an album cover in %s (last attempt before using thumbnail)" % pathToAlbumCover, xbmc.LOGDEBUG)
         if xbmcvfs.exists(pathToAlbumCover):
             log("Found a local 'cover.png' and set AlbumCover to [%s]" % pathToAlbumCover, xbmc.LOGDEBUG)
-            localCover = True
             return 1, pathToAlbumCover, pathToCDArt
         if artist in dict4:
             return 2, dict4[artist], None
