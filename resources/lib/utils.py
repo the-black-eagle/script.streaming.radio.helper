@@ -59,9 +59,10 @@ was_playing = ""
 local_logo = False
 localCover = False
 got_info = 0
-bbc_first_time = 0
-bbc_delay = 5
-bbc_channel = 2
+lastfm_first_time = 0
+lastfm_delay = 5
+use_lastfm = False
+lastfm_username = ''
 albumtitle = None
 if addon.getSetting('centralcache') == 'true':
     logostring = addon.getSetting('cachepath')
@@ -102,6 +103,7 @@ addon.getSetting('st10find').strip(): addon.getSetting('st10rep').strip()}
 #addon.getSetting('artist5').strip(): addon.getSetting('artistrep5').strip()}
 
 
+# st1rep = station name (as repaced)
 swaplist = {addon.getSetting('st1rep').strip(): addon.getSetting('rev1'), \
 addon.getSetting('st2rep').strip(): addon.getSetting('rev2'), \
 addon.getSetting('st3rep').strip(): addon.getSetting('rev3'), \
@@ -112,6 +114,29 @@ addon.getSetting('st7rep').strip(): addon.getSetting('rev7'), \
 addon.getSetting('st8rep').strip(): addon.getSetting('rev8'), \
 addon.getSetting('st9rep').strip(): addon.getSetting('rev9'), \
 addon.getSetting('st10rep').strip(): addon.getSetting('rev10')}
+
+use_lastfm_setting = {addon.getSetting('st1rep').strip(): addon.getSetting('scrobble1'), \
+addon.getSetting('st2rep').strip(): addon.getSetting('scrobble2'), \
+addon.getSetting('st3rep').strip(): addon.getSetting('scrobble3'), \
+addon.getSetting('st4rep').strip(): addon.getSetting('scrobble4'), \
+addon.getSetting('st5rep').strip(): addon.getSetting('scrobble5'), \
+addon.getSetting('st6rep').strip(): addon.getSetting('scrobble6'), \
+addon.getSetting('st7rep').strip(): addon.getSetting('scrobble7'), \
+addon.getSetting('st8rep').strip(): addon.getSetting('scrobble8'), \
+addon.getSetting('st9rep').strip(): addon.getSetting('scrobble9'), \
+addon.getSetting('st10rep').strip(): addon.getSetting('scrobble10')}
+
+lastfm_usernames = {addon.getSetting('st1rep').strip(): addon.getSetting('url1'), \
+addon.getSetting('st2rep').strip(): addon.getSetting('url2'), \
+addon.getSetting('st3rep').strip(): addon.getSetting('url3'), \
+addon.getSetting('st4rep').strip(): addon.getSetting('url4'), \
+addon.getSetting('st5rep').strip(): addon.getSetting('url5'), \
+addon.getSetting('st6rep').strip(): addon.getSetting('url6'), \
+addon.getSetting('st7rep').strip(): addon.getSetting('url7'), \
+addon.getSetting('st8rep').strip(): addon.getSetting('url8'), \
+addon.getSetting('st9rep').strip(): addon.getSetting('url9'), \
+addon.getSetting('st10rep').strip(): addon.getSetting('url10')}
+
 
 replace1 = addon.getSetting('remove1').decode('utf-8')
 replace2 = addon.getSetting('remove2').decode('utf-8')
@@ -321,12 +346,12 @@ def check_station(file_playing):
     the name of the file <containing> the url or a station ID if using the rad.io addon
     """
     station_list = ''
-    if 'BBC Radio 2' in file_playing:
-        return "BBC Radio Two", file_playing
-    if '1Xtra' in file_playing:
-        return 'BBC Radio 1xtra', file_playing
-    if 'BBC Radio 1' in file_playing:
-        return "BBC Radio One", file_playing
+#    if 'BBC Radio 2' in file_playing:
+#        return "BBC Radio Two", file_playing
+#    if '1Xtra' in file_playing:
+#        return 'BBC Radio 1xtra', file_playing
+#    if 'BBC Radio 1' in file_playing:
+#        return "BBC Radio One", file_playing
 
     try:
         if 'icy-' in file_playing:  # looking at an ICY stream
@@ -512,6 +537,7 @@ def get_album_data(artist, track, albumtitle, dict8, dict9, dict10, dict11, dict
             log("record label set to [%s]" % tadb_album_data['album'][0]['strLabel'].encode('utf-8'))
         except:
             WINDOW.setProperty("srh.RecordLabel","")
+            log("No record label found for this album")
         pass
     if AlbumDescription:
         log("Album Description - %s" % AlbumDescription.encode('utf-8'))
@@ -744,7 +770,7 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
             return None, None, None
 
 
-def get_mbid(artist, dict6):
+def get_mbid(artist, track, dict6):
     """
     Gets the MBID for a given artist name.
     Note that radio stations often omit 'The' from band names so this may return the wrong MBID
@@ -757,15 +783,20 @@ def get_mbid(artist, dict6):
 
     log("Getting mbid for artist %s " % artist, xbmc.LOGDEBUG)
     em_mbid = str(uuid.uuid5(uuid.NAMESPACE_DNS, artist.encode('utf-8')))  # generate an emergency mbid in case lookup fails
+    keydata = artist.replace(" ","").lower() + track.replace(" ","").lower()
+
     try:
         if '/' in artist:
             artist = artist.replace('/',' ')
         elif artist.lower() == 'acdc':
             artist = "AC DC"
-        if artist in dict6:
-            log("Using cached MBID for artist [%s]" % artist)
-            return dict6[artist]
-        url = 'http://musicbrainz.org/ws/2/artist/?query=artist:%s' % artist
+        datechecked = dict3[keydata]
+        if not (datechecked < (todays_date - time_diff)) or (xbmcvfs.exists(logostring + "refreshdata")):
+            if artist in dict6:
+                log("Using cached MBID for artist [%s]" % artist)
+                return dict6[artist]
+        temp_artist = urllib.quote(artist)
+        url = 'https://musicbrainz.org/ws/2/artist/?query=artist:%s' % temp_artist
         url = url.encode('utf-8')
         response = urllib.urlopen(url).read()
         if (response == '') or ("MusicBrainz web server" in response):
@@ -1029,13 +1060,13 @@ def parse_data(artist, searching, searchartist, dict4, dict5, mbid):
         return artist, url, dict4, dict5, mbid
 
 
-def get_bbc_radio_info(bbc_channel):
+def get_lastfm_info(lastfm_username):
     """
     Looks up the currently playing track on BBC Radio (1:2) on last.fm as the BBC scrobble their tracks to it
     Always returns a single artist name with any featured artists appended to the track name
     """
 
-    lastfmurl = "http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=bbcradio%s" % bbc_channel
+    lastfmurl = "http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=%s" % lastfm_username
     lastfmurl = lastfmurl +"&api_key=%s" % happy_hippo.decode( 'base64' )
     lastfmurl = lastfmurl  + "&format=json&limit=1"
     try:
@@ -1043,7 +1074,7 @@ def get_bbc_radio_info(bbc_channel):
         response = load_url(lastfmurl)
         stuff = _json.loads(response)
         if stuff.has_key('message'):
-            log("Error getting BBC data from last.fm", xbmc.LOGERROR)
+            log("Error getting data from last.fm", xbmc.LOGERROR)
             log("%s" %str(stuff), xbmc.LOGERROR)
             return ''
         track = stuff['recenttracks']['track'][0]['name']
@@ -1061,10 +1092,14 @@ def get_bbc_radio_info(bbc_channel):
         artist=artist.replace(', ',' & ')
         for _artists in range(0,len(_featuredartists)):
             artist = artist + " & " + _featuredartists[_artists].strip()
-#            log("BBC RADIO INFO - GOT [%s] - [%s]" %(track, artist), xbmc.LOGINFO)
-        return track + " - " + artist
+#            log("last.fm INFO - GOT [%s] - [%s]" %(track, artist), xbmc.LOGINFO)
+        if isinstance(artist, str):
+            artist = artist.decode('utf-8')
+        if isinstance(track, str):
+            track = track.decode('utf-8')
+        return track + ' - ' + artist
     except Exception as e:
-        log("[get_bbc_radio_info] error [%s] " %str(e), xbmc.LOGERROR)
+        log("[get_lastfm_info] error [%s] " %str(e), xbmc.LOGERROR)
         return ''
 
 

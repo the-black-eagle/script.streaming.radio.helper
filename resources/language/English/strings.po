@@ -173,3 +173,11 @@ msgstr ""
 msgctxt "#32041"
 msgid "Path to central cache (must be writable)"
 msgstr ""
+
+msgctxt "#32042"
+msgid "Station scrobbles tracks to last.fm"
+msgstr ""
+
+msgctxt "#32043"
+msgid "Username of station on last.fm"
+msgstr ""

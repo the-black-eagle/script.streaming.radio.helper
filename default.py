@@ -138,7 +138,7 @@ def get_info(local_logo, tadb_json_data, testpath, searchartist, artist, multi_a
 
 
     if onlinelookup == "true":
-        mbid = get_mbid(searchartist, dict6)
+        mbid = get_mbid(searchartist, track, dict6)
     else:
         mbid = None
     if checked_all_artists is True:
@@ -288,11 +288,11 @@ try:
     # Main Loop
     while (not xbmc.abortRequested):
         if xbmc.getCondVisibility("Player.IsInternetStream"):
-            if bbc_first_time == 1:
+            if lastfm_first_time == 1:
                 ct = datetime.datetime.now().time().second
-                if bbc_delay == ct:
-                    current_track = get_bbc_radio_info(bbc_channel)
-                    bbc_delay = set_timer(5)
+                if lastfm_delay == ct:
+                    current_track = get_lastfm_info(lastfm_username)
+                    lastfm_delay = set_timer(5)
             else:
                 current_track = xbmc.getInfoLabel("Player.Title")
                 json_query = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "xbmc.GetInfoLabels", "params":{"labels": ["player.Filename"]}, "id": 1}' )
@@ -313,15 +313,16 @@ try:
                 log("Station name was : %s - changed to %s" %
                     (station_list, station), xbmc.LOGDEBUG)
                 WINDOW.setProperty("srh.Stationname", station)
-            if "BBC Radio" in station:
-                if "Two" in station:
-                    bbc_channel = 2
-                else:
-                    bbc_channel = 1
-                if bbc_first_time == 0:
-                    bbc_delay = set_timer(5)
-                    bbc_first_time = 1
-                    current_track = get_bbc_radio_info(bbc_channel)
+            if use_lastfm_setting.get(station) == 'true':
+                lastfm_username = lastfm_usernames.get(station)
+                use_lastfm = True
+            else:
+                use_lastfm = False
+            if use_lastfm:
+                if lastfm_first_time == 0:
+                    lastfm_delay = set_timer(5)
+                    lastfm_first_time = 1
+                    current_track = get_lastfm_info(lastfm_username)
             if "T - Rex" in current_track:
                 current_track = current_track.replace(
                     "T - Rex", "T. Rex") # fix artist name for tadb (even though 'T - Rex' is technically correct)
@@ -347,16 +348,16 @@ try:
                             if pos != -1:
                                 track = track[:pos]
                     track = track.strip()
-                    if swaplist.get(station) == "true":
+                    if (swaplist.get(station) == "true") and (use_lastfm == False):
                         temp1 = track
                         track = artist
                         artist = temp1
                 except Exception as e:
                     log("[Exception %s] while trying to slice current_track %s" % (
                         str(e), current_track), xbmc.LOGDEBUG)
-                if (artist.upper() == "ELO") or (artist.upper() ==
-                                                 "E.L.O") or (artist.upper() == "E.L.O."):
-                    artist = "Electric Light Orchestra"
+                #if (artist.upper() == "ELO") or (artist.upper() ==
+                                                 #"E.L.O") or (artist.upper() == "E.L.O."):
+                    #artist = "Electric Light Orchestra"
                 try:
                     artist = next(v for k, v in artistlist.items()
                                   if k == (artist))

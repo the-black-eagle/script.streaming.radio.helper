@@ -30,43 +30,63 @@
         <setting type="lsep" label="32006"/>
         <setting type="text" label="32007" id="st1find" default="Not Set"/>
         <setting type="text" label="32008" id="st1rep" default=""/>
-        <setting type="bool" label="32031" id="rev1" default="false"/>
+        <setting type="bool" label="32042" id="scrobble1" default="false"/>
+        <setting type="bool" label="32031" id="rev1" default="false" enable="eq(-1,false)"/>
+        <setting type="text" label="32043" id="url1" default="" enable="eq(-2,true)"/>
         <setting type="lsep" label="32009"/>
         <setting type="text" label="32007" id="st2find" default="Not Set"/>
         <setting type="text" label="32008" id="st2rep" default=""/>
-        <setting type="bool" label="32031" id="rev2" default="false"/>
+        <setting type="bool" label="32042" id="scrobble2" default="false"/>
+        <setting type="bool" label="32031" id="rev2" default="false" enable="eq(-1,false)"/>
+        <setting type="text" label="32043" id="url2" default="" enable="eq(-2,true)"/>
         <setting type="lsep" label="32010"/>
         <setting type="text" label="32007" id="st3find" default="Not Set"/>
         <setting type="text" label="32008" id="st3rep" default=""/>
-        <setting type="bool" label="32031" id="rev3" default="false"/>
+        <setting type="bool" label="32042" id="scrobble3" default="false"/>
+        <setting type="bool" label="32031" id="rev3" default="false" enable="eq(-1,false)"/>
+        <setting type="text" label="32043" id="url3" default="" enable="eq(-2,true)"/>
         <setting type="lsep" label="32011"/>
         <setting type="text" label="32007" id="st4find" default="Not Set"/>
         <setting type="text" label="32008" id="st4rep" default=""/>
-        <setting type="bool" label="32031" id="rev4" default="false"/>
+        <setting type="bool" label="32042" id="scrobble4" default="false"/>
+        <setting type="bool" label="32031" id="rev4" default="false" enable="eq(-1,false)"/>
+        <setting type="text" label="32043" id="url4" default="" enable="eq(-2,true)"/>
         <setting type="lsep" label="32012"/>
         <setting type="text" label="32007" id="st5find" default="Not Set"/>
         <setting type="text" label="32008" id="st5rep" default=""/>
-        <setting type="bool" label="32031" id="rev5" default="false"/>
+        <setting type="bool" label="32042" id="scrobble5" default="false"/>
+        <setting type="bool" label="32031" id="rev5" default="false" enable="eq(-1,false)"/>
+        <setting type="text" label="32043" id="url5" default="" enable="eq(-2,true)"/>
         <setting type="lsep" label="32035"/>
         <setting type="text" label="32007" id="st6find" default="Not Set"/>
         <setting type="text" label="32008" id="st6rep" default=""/>
-        <setting type="bool" label="32031" id="rev6" default="false"/>
+        <setting type="bool" label="32042" id="scrobble6" default="false"/>
+        <setting type="bool" label="32031" id="rev6" default="false" enable="eq(-1,false)"/>
+        <setting type="text" label="32043" id="url6" default="" enable="eq(-2,true)"/>
         <setting type="lsep" label="32036"/>
         <setting type="text" label="32007" id="st7find" default="Not Set"/>
         <setting type="text" label="32008" id="st7rep" default=""/>
-        <setting type="bool" label="32031" id="rev7" default="false"/>
+        <setting type="bool" label="32042" id="scrobble7" default="false"/>
+        <setting type="bool" label="32031" id="rev7" default="false" enable="eq(-1,false)"/>
+        <setting type="text" label="32043" id="url7" default="" enable="eq(-2,true)"/>
         <setting type="lsep" label="32037"/>
         <setting type="text" label="32007" id="st8find" default="Not Set"/>
         <setting type="text" label="32008" id="st8rep" default=""/>
-        <setting type="bool" label="32031" id="rev8" default="false"/>
+        <setting type="bool" label="32042" id="scrobble8" default="false"/>
+        <setting type="bool" label="32031" id="rev8" default="false" enable="eq(-1,false)"/>
+        <setting type="text" label="32043" id="url8" default="" enable="eq(-2,true)"/>
         <setting type="lsep" label="32038"/>
         <setting type="text" label="32007" id="st9find" default="Not Set"/>
         <setting type="text" label="32008" id="st9rep" default=""/>
-        <setting type="bool" label="32031" id="rev9" default="false"/>
+        <setting type="bool" label="32042" id="scrobble9" default="false"/>
+        <setting type="bool" label="32031" id="rev9" default="false" enable="eq(-1,false)"/>
+        <setting type="text" label="32043" id="url9" default="" enable="eq(-2,true)"/>
         <setting type="lsep" label="32039"/>
         <setting type="text" label="32007" id="st10find" default="Not Set"/>
         <setting type="text" label="32008" id="st10rep" default=""/>
-        <setting type="bool" label="32031" id="rev10" default="false"/>
+        <setting type="bool" label="32042" id="scrobble10" default="false"/>
+        <setting type="bool" label="32031" id="rev10" default="false" enable="eq(-1,false)"/>
+        <setting type="text" label="32043" id="url10" default="" enable="eq(-2,true)"/>
     </category>
     <category label="32024">
         <setting type="lsep" label="32025"/>
