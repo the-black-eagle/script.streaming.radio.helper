@@ -392,6 +392,7 @@ def get_album_data(artist, track, albumtitle, dict8, dict9, dict10, dict11, dict
     log(tadb_url)
     albumkeydata = albumtitle.replace(' ', '').lower()
     num = len(dict8)
+    log("Keydata check [get_album_data] - keydata is [%s]" % keydata, xbmc.LOGERROR)
     log("%d albums in cache" % num)
     try:
         datechecked = dict3[keydata]
@@ -703,7 +704,7 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
             return None, None, None
 
 
-def get_mbid(artist, track, dict6):
+def get_mbid(artist, track, dict6, dict3):
     """
     Gets the MBID for a given artist name.
     Note that radio stations often omit 'The' from band names so this may return the wrong MBID
@@ -717,20 +718,21 @@ def get_mbid(artist, track, dict6):
     log("Getting mbid for artist %s " % artist, xbmc.LOGDEBUG)
     em_mbid = str(uuid.uuid5(uuid.NAMESPACE_DNS, artist.encode('utf-8')))  # generate an emergency mbid in case lookup fails
     keydata = artist.replace(" ","").lower() + track.replace(" ","").lower()
-
     try:
         if '/' in artist:
             artist = artist.replace('/',' ')
         elif artist.lower() == 'acdc':
             artist = "AC DC"
-        datechecked = dict3[keydata]
+        try:
+            datechecked = dict3[keydata]
+        except:     # no keydata (new artist/track combo probably) still might have artist mbid cached
+            datechecked = todays_date # set date to today (use cached mbid if there is one)
         if not (datechecked < (todays_date - time_diff)) or (xbmcvfs.exists(logostring + "refreshdata")):
             if artist in dict6:
-                log("Using cached MBID for artist [%s]" % artist)
+                log("Using cached MBID for artist [%s]" % artist, xbmc.LOGDEBUG)
                 return dict6[artist]
-        temp_artist = urllib.quote(artist)
+        temp_artist = urllib.quote(artist.encode('utf-8'))
         url = 'https://musicbrainz.org/ws/2/artist/?query=artist:%s' % temp_artist
-        url = url.encode('utf-8')
         response = urllib.urlopen(url).read()
         if (response == '') or ("MusicBrainz web server" in response):
             log("Unable to contact Musicbrainz to get an MBID", xbmc.LOGERROR)
@@ -1070,7 +1072,7 @@ def get_remaining_cache(artist, track, dict1, dict2, dict7):
 
 
 def split_artists(artist):
-    searchartist = artist.replace(' feat. ', ' ~ ').replace(' ft. ', ' ~ ').replace(' feat ', ' ~ ').replace(' ft ', ' ~ ')
+    searchartist = artist.replace(' feat. ', ' ~ ').replace(' ft. ', ' ~ ').replace(' feat ', ' ~ ').replace(' ft ', ' ~ ').replace(' Feat ', ' ~ ').replace(' Feat. ', ' ~ ')
     searchartist = searchartist.replace(' & ', ' ~ ').replace(' and ', ' ~ ').replace(' And ', ' ~ ').replace(' ~ the ', ' and the ').replace(' ~ The ',
                                 ' and The ')
     searchartist = searchartist.replace(' vs ', ' ~ ').replace(', ', ' ~ ')

@@ -138,7 +138,7 @@ def get_info(local_logo, tadb_json_data, testpath, searchartist, artist, multi_a
 
 
     if onlinelookup == "true":
-        mbid = get_mbid(searchartist, track, dict6)
+        mbid = get_mbid(searchartist, track, dict6, dict3)
     else:
         mbid = None
     if checked_all_artists is True:
