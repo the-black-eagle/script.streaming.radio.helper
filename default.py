@@ -131,7 +131,7 @@ def no_track():
     return False, False
 
 
-def get_info(local_logo, tadb_json_data, testpath, searchartist, artist, multi_artist, already_checked, checked_all_artists):
+def get_info(local_logo, testpath, searchartist, artist, multi_artist, already_checked, checked_all_artists):
 
     RealAlbumThumb = None
     AlbumDescription = None
@@ -161,7 +161,7 @@ def get_info(local_logo, tadb_json_data, testpath, searchartist, artist, multi_a
         logopath, ArtistThumb, ArtistBanner = get_cached_info(mbid, testpath, local_logo, searchartist, dict4, dict5)
     else:
         if tadb == "true":
-            artist, logopath, ArtistThumb, ArtistBanner = search_tadb(tadb_json_data, local_logo, mbid, searchartist, dict4, dict5, checked_all_artists)
+            artist, logopath, ArtistThumb, ArtistBanner = search_tadb( local_logo, mbid, searchartist, dict4, dict5, checked_all_artists)
         else:
             logopath = ""
             ArtistThumb = ""
@@ -396,15 +396,15 @@ try:
                     testpath = BaseString + artist + "/logo.png"
                     testpath = xbmc.validatePath(testpath)
 
-                    tadb_json_data = {}
+                    mbid_json_data = {}
                     try:
 
-                        _url = 'https://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
-                        url = _url + '/search.php?s=' + artist.replace( ' ', '+' ).encode('utf-8')
-                        log( "Initial lookup on tadb for artist [%s]" % artist)
-                        response = load_url(url)  # see if this is a valid artist before we try splitting the string
-                        tadb_json_data = _json.loads(response)
-                        if tadb_json_data['artists'] is None:
+                        url = 'https://musicbrainz.org/ws/2/artist/?query=artist:%s&fmt=json' % urllib.quote(artist.encode('utf-8'))
+
+                        log( "Initial lookup on mbrainz for artist [%s]" % artist)
+                        response = load_url(url)                            # see if this is a valid artist before we try splitting the string
+                        mbid_json_data = _json.loads(response)              # if we get a match, keep the current artist as is - else try and split to individual artists
+                        if mbid_json_data['artists'][0]['score'] < 80 :
                             searchartist = split_artists(artist)
                         else:
                             searchartist = artist
@@ -427,7 +427,7 @@ try:
                     mbids = ""
                     first_time = True
                     artist_index = 0
-                    already_checked = get_info(local_logo, tadb_json_data,
+                    already_checked = get_info(local_logo,
                         testpath,
                         searchartists[artist_index].strip(),
                         artist,
@@ -461,7 +461,7 @@ try:
                         if artist_index == num_artists:
                             artist_index = 0
                             checked_all_artists = True
-                        already_checked = get_info(local_logo, tadb_json_data,
+                        already_checked = get_info(local_logo,
                             testpath,
                             searchartists[artist_index].strip(),
                             artist,

@@ -714,10 +714,6 @@ def get_mbid(artist, track, dict6, dict3, counts):
     em_mbid = str(uuid.uuid5(uuid.NAMESPACE_DNS, artist.encode('utf-8')))  # generate an emergency mbid in case lookup fails
     keydata = artist.replace(" ","").lower() + track.replace(" ","").lower()
     try:
-        if '/' in artist:
-            artist = artist.replace('/',' ')
-        elif artist.lower() == 'acdc':
-            artist = "AC DC"
         try:
             datechecked = dict3[keydata]
         except:     # no keydata (new artist/track combo probably) still might have artist mbid cached
@@ -726,20 +722,29 @@ def get_mbid(artist, track, dict6, dict3, counts):
             if artist in dict6:
                 log("Using cached MBID for artist [%s]" % artist, xbmc.LOGDEBUG)
                 return dict6[artist]
-        temp_artist = urllib.quote(artist.encode('utf-8'))
-        url = 'https://musicbrainz.org/ws/2/artist/?query=artist:%s' % temp_artist
+#        temp_artist = urllib.quote(artist.encode('utf-8'))
+        url = 'https://musicbrainz.org/ws/2/artist/?query=artist:%s&fmt=json' % urllib.quote(artist.encode('utf-8'))
+#       'https://musicbrainz.org/ws/2/artist/?query=artist:%s' % temp_artist
         response = urllib.urlopen(url).read()
         if (response == '') or ("MusicBrainz web server" in response):
             log("Unable to contact Musicbrainz to get an MBID", xbmc.LOGERROR)
             log("using %s as emergency MBID" % em_mbid)
             return em_mbid
-        index1 = response.find("artist id")
-        index2 = response.find("type")
-        mbid = response[index1+11:index2-2].strip()
-        if '"' in mbid:
-            mbid = mbid.strip('"')
-        if len(mbid )> 36:
-            mbid = mbid[0:36]
+#        index1 = response.find("artist id")
+#        index2 = response.find("type")
+#        mbid = response[index1+11:index2-2].strip()
+#        if '"' in mbid:
+#            mbid = mbid.strip('"')
+#        if len(mbid )> 36:
+#            mbid = mbid[0:36]
+
+        mb_data = _json.loads(response)
+
+        artist_name = mb_data['artists'][0]['name']
+        score = mb_data['artists'][0]['score']
+        if score > 95:
+            mbid = mb_data['artists'][0]['id']
+
         log('Got an MBID of : %s' % mbid, xbmc.LOGDEBUG)
         if mbid == '':
             log("Didn't get an MBID for artist : %s" % artist, xbmc.LOGDEBUG)
@@ -843,7 +848,7 @@ def get_hdlogo(mbid, artist):
         return None
 
 
-def search_tadb(tadb_json_data, local_logo, mbid, artist, dict4, dict5,checked_all_artists):
+def search_tadb( local_logo, mbid, artist, dict4, dict5,checked_all_artists):
     """
     Checks to see if there is an existing logo locally in the scripts addon_data directory.
     If not, attempts to find a logo on theaudiodb and download it into the cache. As radio stations often
@@ -869,40 +874,36 @@ def search_tadb(tadb_json_data, local_logo, mbid, artist, dict4, dict5,checked_a
     logopath = ''
     url = ''
     response = None
-    if (tadb_json_data) and (tadb_json_data['artists'] )is not None: # already got some data to work with
-        searchartist = artist.replace(" ", "+")
-        searching = tadb_json_data
-        artist, url, dict4, dict5, mbid = parse_data(artist, searching, searchartist, dict4, dict5, mbid)
-    else:
-        log("Looking up %s on tadb.com" % artist, xbmc.LOGDEBUG)
-        searchartist = artist.replace( " ", "+" )
-        log ("[search_tadb] : searchartist = %s" % searchartist)
+
+    log("Looking up %s on tadb.com" % artist, xbmc.LOGDEBUG)
+    searchartist = artist.replace( " ", "+" )
+    log ("[search_tadb] : searchartist = %s" % searchartist)
+    tadburl = 'https://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
+    searchurl = tadburl + '/search.php?s=' + (searchartist.encode('utf-8'))
+
+    log("URL for TADB is : %s" % searchurl, xbmc.LOGDEBUG)
+
+    response = load_url(searchurl)
+    log(str(response))
+
+    if (response == '{"artists":null}') or (response == '') or ('!DOCTYPE' in response) or (response == None):
+        searchartist = 'The+' + searchartist
         tadburl = 'https://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
         searchurl = tadburl + '/search.php?s=' + (searchartist.encode('utf-8'))
-
-        log("URL for TADB is : %s" % searchurl, xbmc.LOGDEBUG)
-
+        log("Looking up %s on tadb.com with URL %s" % (searchartist, searchurl), xbmc.LOGDEBUG)
         response = load_url(searchurl)
-        log(str(response))
-
-        if (response == '{"artists":null}') or (response == '') or ('!DOCTYPE' in response) or (response == None):
-            searchartist = 'The+' + searchartist
-            tadburl = 'https://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
-            searchurl = tadburl + '/search.php?s=' + (searchartist.encode('utf-8'))
-            log("Looking up %s on tadb.com with URL %s" % (searchartist, searchurl), xbmc.LOGDEBUG)
-            response = load_url(searchurl)
-            log(response, xbmc.LOGDEBUG)
-        if (response == '{"artists":null}') or (response == '') or ('!DOCTYPE' in response) or (response == None):
-            log("Artist not found on tadb", xbmc.LOGDEBUG)
-                # Lookup failed on name - try with MBID
-            log("Looking up with MBID", xbmc.LOGDEBUG)
-            tadburl = 'https://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
-            searchurl = tadburl + '/artist-mb.php?i=' + mbid
-            log("MBID URL is : %s" % searchurl, xbmc.LOGDEBUG)
-            response = load_url(searchurl)
-        if not response:
-            log("Failed to find any artist info on theaudiodb", xbmc.LOGDEBUG)
-            return artist, None, None, None
+        log(response, xbmc.LOGDEBUG)
+    if (response == '{"artists":null}') or (response == '') or ('!DOCTYPE' in response) or (response == None):
+        log("Artist not found on tadb", xbmc.LOGDEBUG)
+            # Lookup failed on name - try with MBID
+        log("Looking up with MBID", xbmc.LOGDEBUG)
+        tadburl = 'https://www.theaudiodb.com/api/v1/json/%s' % rusty_gate.decode( 'base64' )
+        searchurl = tadburl + '/artist-mb.php?i=' + mbid
+        log("MBID URL is : %s" % searchurl, xbmc.LOGDEBUG)
+        response = load_url(searchurl)
+    if not response:
+        log("Failed to find any artist info on theaudiodb", xbmc.LOGDEBUG)
+        return artist, None, None, None
 
     if response is not None:
         searching = _json.loads(response)
