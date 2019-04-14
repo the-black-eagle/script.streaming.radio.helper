@@ -15,7 +15,7 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 #
-# (C) Black_eagle 2016 - 2018
+# (C) Black_eagle 2016 - 2019
 #
 
 import xbmc, xbmcvfs, xbmcaddon
@@ -63,6 +63,7 @@ lastfm_delay = 5
 use_lastfm = False
 lastfm_username = ''
 albumtitle = None
+counts = {}
 if addon.getSetting('centralcache') == 'true':
     logostring = addon.getSetting('cachepath')
 dict1 = {}  # Key = artistname+trackname, value = Album name
@@ -94,12 +95,6 @@ addon.getSetting('st7find').strip(): addon.getSetting('st7rep').strip(), \
 addon.getSetting('st8find').strip(): addon.getSetting('st8rep').strip(), \
 addon.getSetting('st9find').strip(): addon.getSetting('st9rep').strip(), \
 addon.getSetting('st10find').strip(): addon.getSetting('st10rep').strip()}
-
-#artistlist={addon.getSetting('artist1').strip(): addon.getSetting('artistrep1').strip(), \
-#addon.getSetting('artist2').strip(): addon.getSetting('artistrep2').strip(), \
-#addon.getSetting('artist3').strip(): addon.getSetting('artistrep3').strip(), \
-#addon.getSetting('artist4').strip(): addon.getSetting('artistrep4').strip(), \
-#addon.getSetting('artist5').strip(): addon.getSetting('artistrep5').strip()}
 
 
 # st1rep = station name (as repaced)
@@ -248,7 +243,7 @@ def load_pickle():
     return d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12
 
 
-def save_pickle(d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12):
+def save_pickle(d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, counts):
     """
     Saves local cache data to file in the addon_data directory of the script
     """
@@ -257,7 +252,7 @@ def save_pickle(d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12):
     log("----------------------------------------------------", xbmc.LOGDEBUG)
 
     log("Saving data to pickle file")
-
+    counts['no_of_tracks'] += len(d7)
     pfile = open(logostring + 'data.pickle',"wb")
     pickle.dump(d1, pfile)
     pickle.dump(d2, pfile)
@@ -392,7 +387,6 @@ def get_album_data(artist, track, albumtitle, dict8, dict9, dict10, dict11, dict
     log(tadb_url)
     albumkeydata = albumtitle.replace(' ', '').lower()
     num = len(dict8)
-    log("Keydata check [get_album_data] - keydata is [%s]" % keydata, xbmc.LOGERROR)
     log("%d albums in cache" % num)
     try:
         datechecked = dict3[keydata]
@@ -485,7 +479,7 @@ def get_album_data(artist, track, albumtitle, dict8, dict9, dict10, dict11, dict
     log("Album data cache is size %d" % albumdatasize)
     return RealAlbumThumb, RealCDArt, AlbumDescription, AlbumReview
 
-def get_year(artist, track, dict1, dict2, dict3, dict7, already_checked):
+def get_year(artist, track, dict1, dict2, dict3, dict7, already_checked, counts):
     """
     Look in local cache for album and year data corresponding to current track and artist.
     Return the local data if present, unless it is older than 7 days in which case re-lookup online.
@@ -514,24 +508,24 @@ def get_year(artist, track, dict1, dict2, dict3, dict7, already_checked):
         except Exception as e:
             log("Updating info for track [%s]" % track, xbmc.LOGDEBUG)
             lun = True
-            dict1[keydata], dict2[keydata], dict7[keydata] = tadb_trackdata(artist, track, dict1, dict2, dict3, dict7)
+            dict1[keydata], dict2[keydata], dict7[keydata] = tadb_trackdata(artist, track, dict1, dict2, dict3, dict7, counts)
             dict3[keydata] = datetime.datetime.combine(datetime.date.today(), datetime.datetime.min.time())
         log("Data for track '%s' on album '%s' last checked %s" % (track, dict1[keydata], str(datechecked.strftime("%d-%m-%Y"))), xbmc.LOGDEBUG)
         if (datechecked < (todays_date - time_diff)) or (xbmcvfs.exists(logostring + "refreshdata")):
             log( "Data might need refreshing", xbmc.LOGDEBUG)
             if ((dict1[keydata] == '') or (dict1[keydata] == None) or (dict1[keydata] == 'None') or (dict1[keydata] == 'null') or (xbmcvfs.exists(logostring + "refreshdata"))) and (lun == False):
                 log("No album data - checking TADB again [%s]" % lun, xbmc.LOGDEBUG)
-                dict1[keydata], dict2[keydata], dict7[keydata] = tadb_trackdata(artist, track, dict1, dict2, dict3, dict7)
+                dict1[keydata], dict2[keydata], dict7[keydata] = tadb_trackdata(artist, track, dict1, dict2, dict3, dict7, counts)
                 dict3[keydata] = datetime.datetime.combine(datetime.date.today(),datetime.datetime.min.time())
                 log("Data refreshed")
             elif ((dict2[keydata] == None) or (dict2[keydata] == '0') or (dict2[keydata] == '')) and (lun == False):
                 log("No year data for album %s - checking TADB again [%s]" % (dict1[keydata], lun), xbmc.LOGDEBUG)
-                dict1[keydata], dict2[keydata], dict7[keydata] = tadb_trackdata(artist, track, dict1, dict2, dict3, dict7)
+                dict1[keydata], dict2[keydata], dict7[keydata] = tadb_trackdata(artist, track, dict1, dict2, dict3, dict7, counts)
                 dict3[keydata] = datetime.datetime.combine(datetime.date.today(),datetime.datetime.min.time())
                 log("Data refreshed", xbmc.LOGDEBUG)
             elif ((dict7[keydata] == None) or (dict7[keydata] == "None") or (dict7[keydata] == "")) and (lun == False): # don't lookup again if we have just done it (Line 196)
                 log("No text data for track - re-checking TADB [%s]" % lun, xbmc.LOGDEBUG)
-                dict1[keydata], dict2[keydata], dict7[keydata] = tadb_trackdata(artist,track,dict1,dict2,dict3, dict7)
+                dict1[keydata], dict2[keydata], dict7[keydata] = tadb_trackdata(artist,track,dict1,dict2,dict3, dict7, counts)
                 dict3[keydata] = datetime.datetime.combine(datetime.date.today(),datetime.datetime.min.time())
             elif lun == True:
                 log("Track data just looked up. No need to refresh other data right now!", xbmc.LOGDEBUG)
@@ -543,14 +537,13 @@ def get_year(artist, track, dict1, dict2, dict3, dict7, already_checked):
             return True, dict1[keydata],dict2[keydata], dict7[keydata]
     elif already_checked == False:
         log("New track - get data for %s : %s" %(artist, track), xbmc.LOGDEBUG)
-        dict1[keydata], dict2[keydata], dict7[keydata] = tadb_trackdata(artist,track,dict1,dict2,dict3, dict7)
-
+        dict1[keydata], dict2[keydata], dict7[keydata] = tadb_trackdata(artist,track,dict1,dict2,dict3, dict7, counts)
         dict3[keydata] = datetime.datetime.combine(datetime.date.today(),datetime.datetime.min.time())
         log( "New data has been cached", xbmc.LOGDEBUG)
         return True, dict1[keydata], dict2[keydata], dict7[keydata]
 
 
-def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
+def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7, counts):
     """
     Searches theaudiodb for an album containing track.  If a album is found, attempts
     to get the year of the album.  Returns album name and year if both are found, just the album name if
@@ -640,6 +633,8 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
                     trackinfo = None
             else:
                 log("No track info found on lastFM", xbmc.LOGDEBUG)
+        if trackinfo:
+            counts['new_track_info'] += 1
         if keydata:
             dict7[keydata] = trackinfo
         if (album_title == "") or (album_title == "null") or (album_title == None):
@@ -704,7 +699,7 @@ def tadb_trackdata(artist,track,dict1,dict2,dict3, dict7):
             return None, None, None
 
 
-def get_mbid(artist, track, dict6, dict3):
+def get_mbid(artist, track, dict6, dict3, counts):
     """
     Gets the MBID for a given artist name.
     Note that radio stations often omit 'The' from band names so this may return the wrong MBID
@@ -727,7 +722,7 @@ def get_mbid(artist, track, dict6, dict3):
             datechecked = dict3[keydata]
         except:     # no keydata (new artist/track combo probably) still might have artist mbid cached
             datechecked = todays_date # set date to today (use cached mbid if there is one)
-        if not (datechecked < (todays_date - time_diff)) or (xbmcvfs.exists(logostring + "refreshdata")):
+        if not ((datechecked < (todays_date - time_diff)) or (xbmcvfs.exists(logostring + "refreshdata"))):
             if artist in dict6:
                 log("Using cached MBID for artist [%s]" % artist, xbmc.LOGDEBUG)
                 return dict6[artist]
@@ -752,6 +747,9 @@ def get_mbid(artist, track, dict6, dict3):
             return em_mbid
         if artist not in dict6:
             log("Caching mbid [%s] for artist [%s]" %(mbid, artist), xbmc.LOGDEBUG)
+            dict6[artist] = mbid
+            counts['new_artists'] += 1
+        elif (artist in dict6 and mbid != dict6[artist]):
             dict6[artist] = mbid
         return mbid
     except Exception as e:
@@ -1072,6 +1070,8 @@ def get_remaining_cache(artist, track, dict1, dict2, dict7):
 
 
 def split_artists(artist):
+    if artist.lower() == 'y&t':
+        return 'y & t'
     searchartist = artist.replace(' feat. ', ' ~ ').replace(' ft. ', ' ~ ').replace(' feat ', ' ~ ').replace(' ft ', ' ~ ').replace(' Feat ', ' ~ ').replace(' Feat. ', ' ~ ')
     searchartist = searchartist.replace(' & ', ' ~ ').replace(' and ', ' ~ ').replace(' And ', ' ~ ').replace(' ~ the ', ' and the ').replace(' ~ The ',
                                 ' and The ')

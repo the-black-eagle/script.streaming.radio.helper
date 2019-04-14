@@ -69,7 +69,22 @@ else:
 
 from threading import Timer
 
-def script_exit():
+def do_count_notifications(counts):
+
+    dialog_text = 'Added %s artists this run, %s tracks with new info [CR] Cache holds %s tracks ' % (counts['new_artists'], counts['new_track_info'], counts['no_of_tracks'])
+    xbmcgui.Dialog().notification(
+        'Radio Streaming Helper',
+        dialog_text,
+        xbmcgui.NOTIFICATION_INFO,
+        5000)
+    dialog_text = dialog_text.replace('[CR] ', '')
+    log(dialog_text, xbmc.LOGNOTICE)
+
+    return
+
+
+
+def script_exit(counts):
     """Clears all the window properties and stops the timer used for auto-saving the data"""
 
     WINDOW.clearProperty("streaming-radio-helper-running")
@@ -90,6 +105,7 @@ def script_exit():
     WINDOW.clearProperty("srh.AlbumDescription")
     WINDOW.clearProperty("srh.AlbumReview")
     rt.stop()
+    do_count_notifications(counts)
     log("Script Stopped", xbmc.LOGNOTICE)
     exit()
 
@@ -138,7 +154,7 @@ def get_info(local_logo, tadb_json_data, testpath, searchartist, artist, multi_a
 
 
     if onlinelookup == "true":
-        mbid = get_mbid(searchartist, track, dict6, dict3)
+        mbid = get_mbid(searchartist, track, dict6, dict3, counts)
     else:
         mbid = None
     if checked_all_artists is True:
@@ -171,7 +187,7 @@ def get_info(local_logo, tadb_json_data, testpath, searchartist, artist, multi_a
     if not already_checked:
         log("Not checked the album and year data yet for this artist", xbmc.LOGDEBUG)
         already_checked, albumtitle, theyear, trackinfo = get_year(
-            artist, track, dict1, dict2, dict3, dict7, already_checked)
+            artist, track, dict1, dict2, dict3, dict7, already_checked, counts)
 
     if albumtitle and not multi_artist:
         # set if single artist and got album
@@ -278,11 +294,15 @@ try:
         dict1, dict2, dict3, dict4, dict5, dict6, dict7, dict8, dict9, dict10, dict11, dict12 = load_pickle()
     my_size = len(dict1)
     log("Cache contains %d tracks" % my_size, xbmc.LOGNOTICE)
+    counts['orig_no_of_tracks'] = my_size
+    counts['new_artists'] = 0
+    counts['new_track_info'] = 0
+    counts['no_of_tracks'] = 0
     cut_off_date = todays_date - time_diff
     log("Cached data obtained before before %s will be refreshed if details are missing" %
         (cut_off_date.strftime("%d-%m-%Y")), xbmc.LOGNOTICE)
     rt = RepeatedTimer(900, save_pickle, dict1, dict2,
-                       dict3, dict4, dict5, dict6, dict7, dict8, dict9, dict10, dict11, dict12)
+                       dict3, dict4, dict5, dict6, dict7, dict8, dict9, dict10, dict11, dict12, counts)
 
 
     # Main Loop
@@ -457,8 +477,8 @@ try:
             log("Not an internet stream", xbmc.LOGDEBUG)
         if (xbmc.Player().isPlayingAudio() == False) or (not xbmc.getCondVisibility("Player.IsInternetStream")):
             log("Not playing audio or not an internet stream")
-            save_pickle(dict1, dict2, dict3, dict4, dict5, dict6, dict7, dict8, dict9, dict10, dict11, dict12)
-            script_exit()
+            save_pickle(dict1, dict2, dict3, dict4, dict5, dict6, dict7, dict8, dict9, dict10, dict11, dict12, counts)
+            script_exit(counts)
 
 except Exception as e:
     log("Radio Streaming Helper has encountered an error in the main loop and needs to close - %s" %
@@ -470,6 +490,6 @@ except Exception as e:
         5000)
     exc_type, exc_value, exc_traceback = sys.exc_info()
     log(repr(traceback.format_exception(exc_type, exc_value, exc_traceback)), xbmc.LOGERROR)
-    save_pickle(dict1, dict2, dict3, dict4, dict5, dict6, dict7, dict8 , dict9, dict10, dict11, dict12)
+    save_pickle(dict1, dict2, dict3, dict4, dict5, dict6, dict7, dict8 , dict9, dict10, dict11, dict12, counts)
 
-    script_exit()
+    script_exit(counts)
