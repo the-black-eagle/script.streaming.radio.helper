@@ -81,7 +81,7 @@ dict12 = {} # Key = Albumname, value = Album review
 time_diff = datetime.timedelta(days=7)  # date to next check
 todays_date = datetime.datetime.combine(datetime.date.today(), datetime.datetime.min.time())
 BaseString = xbmc.validatePath(BaseString)
-
+featured_artist_match = ['ft.','Ft.','Feat.','feat.',' / ','vs.','Vs.','ft','Ft','Feat','feat']
 onlinelookup = addon.getSetting('onlinelookup')
 fanart = addon.getSetting('usefanarttv')
 tadb = addon.getSetting('usetadb')
@@ -722,7 +722,7 @@ def get_mbid(artist, track, dict6, dict3, counts):
             if artist in dict6:
                 log("Using cached MBID for artist [%s]" % artist, xbmc.LOGDEBUG)
                 return dict6[artist]
-#        temp_artist = urllib.quote(artist.encode('utf-8'))
+        xbmc.sleep(500) # wait a little to avoid hitting musicbrainz too heavily
         url = 'https://musicbrainz.org/ws/2/artist/?query=artist:%s&fmt=json' % urllib.quote(artist.encode('utf-8'))
 #       'https://musicbrainz.org/ws/2/artist/?query=artist:%s' % temp_artist
         response = urllib.urlopen(url).read()
@@ -1073,9 +1073,9 @@ def get_remaining_cache(artist, track, dict1, dict2, dict7):
 def split_artists(artist):
     if artist.lower() == 'y&t':
         return 'y & t'
-    searchartist = artist.replace(' feat. ', ' ~ ').replace(' ft. ', ' ~ ').replace(' feat ', ' ~ ').replace(' ft ', ' ~ ').replace(' Feat ', ' ~ ').replace(' Feat. ', ' ~ ')
+    searchartist = artist.replace(' feat. ', ' ~ ').replace(' ft. ', ' ~ ').replace(' Ft. ', ' ~ ').replace(' feat ', ' ~ ').replace(' ft ', ' ~ ').replace(' Feat ', ' ~ ').replace(' Feat. ', ' ~ ')
     searchartist = searchartist.replace(' & ', ' ~ ').replace(' and ', ' ~ ').replace(' And ', ' ~ ').replace(' ~ the ', ' and the ').replace(' ~ The ',
-                                ' and The ')
+                                ' and The ').replace(' , ', ' ~ ')
     searchartist = searchartist.replace(' vs ', ' ~ ').replace(', ', ' ~ ')
     return searchartist
 

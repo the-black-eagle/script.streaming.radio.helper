@@ -397,20 +397,22 @@ try:
                     testpath = xbmc.validatePath(testpath)
 
                     mbid_json_data = {}
-                    try:
+                    if not any(matches in artist for matches in featured_artist_match):
+                        try:
 
-                        url = 'https://musicbrainz.org/ws/2/artist/?query=artist:%s&fmt=json' % urllib.quote(artist.encode('utf-8'))
+                            url = 'https://musicbrainz.org/ws/2/artist/?query=artist:%s&fmt=json' % urllib.quote(artist.encode('utf-8'))
 
-                        log( "Initial lookup on mbrainz for artist [%s]" % artist)
-                        response = load_url(url)                            # see if this is a valid artist before we try splitting the string
-                        mbid_json_data = _json.loads(response)              # if we get a match, keep the current artist as is - else try and split to individual artists
-                        if mbid_json_data['artists'][0]['score'] < 80 :
+                            log( "Initial lookup on mbrainz for artist [%s]" % artist)
+                            response = load_url(url)                            # see if this is a valid artist before we try splitting the string
+                            mbid_json_data = _json.loads(response)              # if we get a match, keep the current artist as is - else try and split to individual artists
+                            if mbid_json_data['artists'][0]['score'] < 80 :
+                                searchartist = split_artists(artist)
+                            else:
+                                searchartist = artist
+                        except:
                             searchartist = split_artists(artist)
-                        else:
-                            searchartist = artist
-                    except:
+                    else:
                         searchartist = split_artists(artist)
-
 
                     log("Searchartist is %s" % searchartist)
                     x = searchartist.find('~')
