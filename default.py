@@ -131,7 +131,7 @@ def no_track():
     return False, False
 
 
-def get_info(local_logo, testpath, searchartist, artist, multi_artist, already_checked, checked_all_artists):
+def get_info(track, local_logo, testpath, searchartist, artist, multi_artist, already_checked, checked_all_artists):
 
     RealAlbumThumb = None
     AlbumDescription = None
@@ -145,6 +145,28 @@ def get_info(local_logo, testpath, searchartist, artist, multi_artist, already_c
     if multi_artist:
         orig_artist = artist
     log("Checked all artists is %s" %checked_all_artists, xbmc.LOGDEBUG)
+    try:
+        local_info = xbmc.executeJSONRPC('{"jsonrpc":"2.0","id":1,"method":"audioLibrary.GetSongs","params": {"sort":{"method":"year","order":"ascending"},"filter": {"and": [{"field": "artist", "operator": "is", "value": '+ '"' + artist +'"' + '},{"field": "title", "operator":"contains", "value": ' + '"' + track + '"' +'}]},"properties":["artist","sortartist", "displayartist","artistid","comment","art", "musicbrainzartistid","musicbrainzalbumid","albumartist", "album"]}}')
+
+        local_data = _json.loads(local_info)
+        log("Looking for local info", xbmc.LOGNOTICE)
+        try:
+            album_title = local_data['result']['songs'][0]['album']
+            artist_id = local_data['result']['songs'][0]['artistid']
+            artistid = artist_id[0] # get first artist ID only
+
+            log('Found an album in local library - album is %s' % album_title, xbmc.LOGNOTICE)
+        except:
+            log("No local info in library", xbmc.LOGNOTICE)
+            album_title = None
+    except:
+        log("ERROR getting json data from local library", xbmc.LOGERROR)
+        pass
+    if album_title is not None:
+        some_json_data = xbmc.executeJSONRPC('{"jsonrpc":"2.0","id":1,"method":"audioLibrary.GetArtistDetails","params": {"artistid":' + str(artistid) + ',"properties":["musicbrainzartistid","description"]}}')
+        _some_json_data = _json.loads(some_json_data)
+        the_artist_bio = _some_json_data['result']['artistdetails']['description']
+        log('Local artist Bio - %s' % the_artist_bio, xbmc.LOGNOTICE)
     if xbmcvfs.exists(testpath):     # See if there is a logo in the music directory
         local_logo = True
         log("Logo in Music Directory : Path is %s" %
@@ -289,7 +311,7 @@ try:
     log("Setting up addon", xbmc.LOGNOTICE)
     artistlist = load_artist_subs()
     already_checked = False
-    log("aready_checked is set to [%s] " % str(already_checked))
+    log("aready_checked is set to [%s] " % str(already_checked),  xbmc.LOGDEBUG)
     if xbmcvfs.exists(logostring + "data.pickle"):
         dict1, dict2, dict3, dict4, dict5, dict6, dict7, dict8, dict9, dict10, dict11, dict12 = load_pickle()
     my_size = len(dict1)
@@ -374,7 +396,7 @@ try:
                         artist = temp1
                 except Exception as e:
                     log("[Exception %s] while trying to slice current_track %s" % (
-                        str(e), current_track), xbmc.LOGDEBUG)
+                        str(e), current_track), xbmc.LOGERROR)
                 #if (artist.upper() == "ELO") or (artist.upper() ==
                                                  #"E.L.O") or (artist.upper() == "E.L.O."):
                     #artist = "Electric Light Orchestra"
@@ -402,26 +424,45 @@ try:
 
                             url = 'https://musicbrainz.org/ws/2/artist/?query=artist:%s&fmt=json' % urllib.quote(artist.encode('utf-8'))
 
-                            log( "Initial lookup on mbrainz for artist [%s]" % artist)
+                            log( "Initial lookup on mbrainz for artist [%s]" % artist, xbmc.LOGDEBUG)
                             response = load_url(url)                            # see if this is a valid artist before we try splitting the string
                             mbid_json_data = _json.loads(response)              # if we get a match, keep the current artist as is - else try and split to individual artists
-                            if mbid_json_data['artists'][0]['score'] < 80 :
-                                searchartist = split_artists(artist)
+                            artist_name = mbid_json_data['artists'][0]['name'].lower()
+                            amp_pos = artist.find('&')      # Is there a '&' in the name ?
+                            if amp_pos != -1:
+                                artist_temp1 = artist[:amp_pos-1].lower()
+                                artist_temp2 = artist[amp_pos + 2:].lower() # Get both sides of '&' if so
+                                if (artist_temp1 in artist_name) and (artist_temp2 in artist_name):
+                                    log("Looks like a band name", xbmc.LOGDEBUG)
+                                    searchartist = artist
+                                else:
+                                    log("Looks like more than one artist - duet or similar", xbmc.LOGDEBUG)
+                                    searchartist = split_artists(artist)
                             else:
+                                log("This appears to be a single artist or a band", xbmc.LOGDEBUG)
                                 searchartist = artist
-                        except:
+
+                        except Exception as e:
+                            log("Ooops, error trying to do the fancy band stuff !!", xbmc.LOGDEBUG)
+                            log("The error was [ %s ]" % str(e), xbmc.LOGDEBUG)
                             searchartist = split_artists(artist)
                     else:
+                        log("Looks like more than one artist here [ %s ]" % artist, xbmc.LOGDEBUG)
                         searchartist = split_artists(artist)
 
-                    log("Searchartist is %s" % searchartist)
+                    log("Searchartist is %s" % searchartist, xbmc.LOGDEBUG)
                     x = searchartist.find('~')
-                    log("searchartist.find('~') result was %s" % str(x))
+                    log("searchartist.find('~') result was %s" % str(x), xbmc.LOGDEBUG)
                     if x != -1:
                         searchartists = searchartist.split('~')
                     else:
                         searchartists.append(searchartist)
                     num_artists = len(searchartists)
+                    for each_artist in range(0, num_artists):
+                        try:
+                            searchartists[each_artist] = next(v for k, v in artistlist.items() if k == (searchartists[each_artist].strip()))
+                        except StopIteration:
+                            pass
                     if num_artists > 1 and luma:
                         multi_artist = True
                     else:
@@ -429,7 +470,7 @@ try:
                     mbids = ""
                     first_time = True
                     artist_index = 0
-                    already_checked = get_info(local_logo,
+                    already_checked = get_info(track,local_logo,
                         testpath,
                         searchartists[artist_index].strip(),
                         artist,
@@ -439,7 +480,7 @@ try:
                     for z in range(0, len(searchartists)):
                         if searchartists[z] in dict6:
                             log("Setting mbid for artist %s to %s" %
-                                (searchartists[z], dict6[searchartists[z]]))
+                                (searchartists[z], dict6[searchartists[z]]), xbmc.LOGDEBUG)
                             if first_time:
                                 mbids = mbids + dict6[searchartists[z]]
                                 first_time = False
@@ -451,14 +492,14 @@ try:
                     else:
                         WINDOW.setProperty('srh.MBIDS', mbid)
                     was_playing = track
-                    log("Was playing is set to [%s]" % was_playing)
+                    log("Was playing is set to [%s]" % was_playing, xbmc.LOGDEBUG)
                     et = set_timer(delay)
                     if multi_artist:
-                        log("et is [%d]" % (et))
+                        log("et is [%d]" % (et), xbmc.LOGDEBUG)
                 if multi_artist:
                     cs = datetime.datetime.now().time().second
                     if cs == et:
-                        log("Lookup next artist")
+                        log("Lookup next artist", xbmc.LOGDEBUG)
                         artist_index += 1
                         if artist_index == num_artists:
                             artist_index = 0
@@ -471,7 +512,7 @@ try:
                             already_checked,
                             checked_all_artists)
                         et = set_timer(delay)
-                        log("et is now [%d]" % et)
+                        log("et is now [%d]" % et, xbmc.LOGDEBUG)
             else:
                 checked_all_artists, already_checked = no_track()
             xbmc.sleep(1000)
@@ -490,6 +531,7 @@ except Exception as e:
         'A fatal error has occured. Please check the Kodi Log',
         xbmcgui.NOTIFICATION_INFO,
         5000)
+    WINDOW.clearProperty("streaming-radio-helper-running")
     exc_type, exc_value, exc_traceback = sys.exc_info()
     log(repr(traceback.format_exception(exc_type, exc_value, exc_traceback)), xbmc.LOGERROR)
     save_pickle(dict1, dict2, dict3, dict4, dict5, dict6, dict7, dict8 , dict9, dict10, dict11, dict12, counts)
